@@ -5,6 +5,7 @@ import com.salestrack.presentation.theme.SalesTrackTheme
 import com.salestrack.presentation.ui.auth.LoginScreen
 import com.salestrack.presentation.ui.dashboard.DashboardScreen
 import com.salestrack.presentation.viewmodel.AuthViewModel
+import com.salestrack.presentation.viewmodel.AuthState
 import org.koin.compose.KoinContext
 import org.koin.compose.koinInject
 
@@ -18,12 +19,17 @@ fun App() {
             val productViewModel: com.salestrack.presentation.viewmodel.ProductViewModel = koinInject()
             val reportViewModel: com.salestrack.presentation.viewmodel.ReportViewModel = koinInject()
 
+            val authState by authViewModel.authState.collectAsState()
+            val user = (authState as? AuthState.Authenticated)?.user
+            val role = user?.role ?: com.salestrack.domain.model.UserRole.VENDOR
+
             when (currentScreen) {
                 Screen.Login -> LoginScreen(
                     viewModel = authViewModel,
                     onLoginSuccess = { currentScreen = Screen.Dashboard }
                 )
                 Screen.Dashboard -> DashboardScreen(
+                    userRole = role,
                     onLogout = {
                         authViewModel.logout()
                         currentScreen = Screen.Login
@@ -37,6 +43,7 @@ fun App() {
                     onBack = { currentScreen = Screen.Dashboard }
                 )
                 Screen.Catalog -> com.salestrack.presentation.ui.catalog.CatalogScreen(
+                    userRole = role,
                     viewModel = productViewModel,
                     onBack = { currentScreen = Screen.Dashboard },
                     onNavigateToAddProduct = { currentScreen = Screen.AddProduct }

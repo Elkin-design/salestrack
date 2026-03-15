@@ -6,10 +6,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.salestrack.domain.model.UserRole
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
+    userRole: UserRole,
     onLogout: () -> Unit,
     onNavigateToRegisterSale: () -> Unit,
     onNavigateToCatalog: () -> Unit,
@@ -50,13 +52,15 @@ fun DashboardScreen(
                 Text("Ver Catálogo de Productos")
             }
 
-            Spacer(Modifier.height(8.dp))
+            if (userRole != UserRole.VENDOR) {
+                Spacer(Modifier.height(8.dp))
 
-            Button(
-                onClick = onNavigateToReports,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Ver Reportes y Estadísticas")
+                Button(
+                    onClick = onNavigateToReports,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Ver Reportes y Estadísticas")
+                }
             }
         }
     }

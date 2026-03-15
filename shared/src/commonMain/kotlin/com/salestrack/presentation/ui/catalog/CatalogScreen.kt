@@ -11,9 +11,12 @@ import com.salestrack.domain.model.Product
 import com.salestrack.presentation.viewmodel.ProductViewModel
 import kotlinx.coroutines.launch
 
+import com.salestrack.domain.model.UserRole
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CatalogScreen(
+    userRole: UserRole,
     viewModel: ProductViewModel,
     onBack: () -> Unit,
     onNavigateToAddProduct: () -> Unit
@@ -31,36 +34,36 @@ fun CatalogScreen(
                     TextButton(onClick = onBack) { Text("Atrás") }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        val csv = viewModel.exportCsv()
-                        // In a real app, save to file. Here we show a tip.
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Catálogo exportado (Copiado al sistema de logs)")
-                            println("--- EXPORTED CSV ---\n$csv\n--------------------")
+                    if (userRole != UserRole.VENDOR) {
+                        IconButton(onClick = {
+                            val csv = viewModel.exportCsv()
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Catálogo exportado")
+                            }
+                        }) {
+                            Text("Exp")
                         }
-                    }) {
-                        Text("Exp")
-                    }
-                    IconButton(onClick = {
-                        // Mock import for demonstration
-                        val sampleCsv = """
-                            Nombre,Descripción,Precio,Unidad,Stock,Umbral Mínimo,Código de Barras
-                            "Producto Importado 1","Desc 1",10.5,"Und",100,10,"123456"
-                            "Producto Importado 2","Desc 2",15.0,"Kg",50,5,"789012"
-                        """.trimIndent()
-                        viewModel.importCsv(sampleCsv)
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Datos de ejemplo importados")
+                        IconButton(onClick = {
+                            val sampleCsv = """
+                                Nombre,Descripción,Precio,Unidad,Stock,Umbral Mínimo,Código de Barras
+                                "Producto Importado 1","Desc 1",10.5,"Und",100,10,"123456"
+                            """.trimIndent()
+                            viewModel.importCsv(sampleCsv)
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Datos importados")
+                            }
+                        }) {
+                            Text("Imp")
                         }
-                    }) {
-                        Text("Imp")
                     }
                 }
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onNavigateToAddProduct) {
-                Text("+", style = MaterialTheme.typography.headlineSmall)
+            if (userRole != UserRole.VENDOR) {
+                FloatingActionButton(onClick = onNavigateToAddProduct) {
+                    Text("+", style = MaterialTheme.typography.headlineSmall)
+                }
             }
         }
     ) { padding ->
