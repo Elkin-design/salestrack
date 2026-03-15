@@ -1,0 +1,51 @@
+CREATE TABLE ProductEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL,
+    price REAL NOT NULL,
+    unitOfMeasure TEXT NOT NULL,
+    barcode TEXT,
+    categoryId TEXT NOT NULL,
+    stock INTEGER AS Int NOT NULL DEFAULT 0,
+    minStockThreshold INTEGER AS Int NOT NULL DEFAULT 0
+);
+
+CREATE TABLE SaleEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    productName TEXT NOT NULL,
+    productId TEXT,
+    quantity INTEGER AS Int NOT NULL,
+    unitPrice REAL NOT NULL,
+    discount REAL NOT NULL DEFAULT 0.0,
+    totalAmount REAL NOT NULL,
+    categoryId TEXT NOT NULL,
+    vendorId TEXT NOT NULL,
+    platform TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    isDeleted INTEGER AS Boolean NOT NULL DEFAULT 0,
+    isSynced INTEGER AS Boolean NOT NULL DEFAULT 0
+);
+
+-- Queries
+selectAllProducts:
+SELECT * FROM ProductEntity;
+
+insertProduct:
+INSERT OR REPLACE INTO ProductEntity(id, name, description, price, unitOfMeasure, barcode, categoryId, stock, minStockThreshold)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateStock:
+UPDATE ProductEntity SET stock = ? WHERE id = ?;
+
+selectAllSales:
+SELECT * FROM SaleEntity WHERE isDeleted = 0;
+
+insertSale:
+INSERT OR REPLACE INTO SaleEntity(id, productName, productId, quantity, unitPrice, discount, totalAmount, categoryId, vendorId, platform, timestamp, isDeleted, isSynced)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectUnsyncedSales:
+SELECT * FROM SaleEntity WHERE isSynced = 0;
+
+markSaleSynced:
+UPDATE SaleEntity SET isSynced = 1 WHERE id = ?;
