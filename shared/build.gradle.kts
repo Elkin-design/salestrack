@@ -50,6 +50,9 @@ kotlin {
                 // Firebase (using GitLive for KMP)
                 implementation("dev.gitlive:firebase-auth:${project.property("firebase.kmp.version")}")
                 implementation("dev.gitlive:firebase-firestore:${project.property("firebase.kmp.version")}")
+
+                // Apache POI for Excel
+                implementation("org.apache.poi:poi-ooxml:${project.property("poi.version")}")
             }
         }
         val commonTest by getting {
@@ -89,6 +92,8 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.common)
                 implementation("app.cash.sqldelight:sqlite-driver:${project.property("sqldelight.version")}")
+                // PDF for Desktop
+                implementation("com.github.librepdf:openpdf:1.3.30")
             }
         }
     }

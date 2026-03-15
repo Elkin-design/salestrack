@@ -2,6 +2,8 @@ package com.salestrack.di
 
 import com.salestrack.db.SalesTrackDatabase
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
+import com.salestrack.domain.util.ReportGenerator
+import com.salestrack.util.DesktopReportGenerator
 import app.cash.sqldelight.adapter.primitive.IntColumnAdapter
 import app.cash.sqldelight.ColumnAdapter
 import com.salestrack.db.ProductEntity
@@ -29,4 +31,5 @@ actual fun platformModule(): Module = module {
             )
         )
     }
+    single<ReportGenerator> { DesktopReportGenerator() }
 }

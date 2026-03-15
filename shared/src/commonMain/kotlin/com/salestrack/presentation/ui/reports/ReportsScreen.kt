@@ -47,6 +47,47 @@ fun ReportsScreen(
                     }
                 }
                 
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { reportViewModel.exportToPdf("Reporte_Ventas", sales) },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Exportar PDF")
+                    }
+                    Button(
+                        onClick = { reportViewModel.exportToExcel("Reporte_Ventas", sales) },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Exportar Excel")
+                    }
+                }
+
+                val exportStatus by reportViewModel.exportState.collectAsState()
+                
+                when (val status = exportStatus) {
+                    is ReportViewModel.ExportStatus.Loading -> {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    }
+                    is ReportViewModel.ExportStatus.Success -> {
+                        Text(
+                            "Exportado con éxito: ${status.fileName}",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    is ReportViewModel.ExportStatus.Error -> {
+                        Text(
+                            "Error: ${status.message}",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    else -> {}
+                }
+                
                 Spacer(Modifier.height(8.dp))
                 Text("Desglose por Categoría", style = MaterialTheme.typography.titleMedium)
                 report.categoryBreakdown.forEach { (cat, amount) ->
