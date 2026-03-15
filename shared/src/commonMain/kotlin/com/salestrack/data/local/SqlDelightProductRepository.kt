@@ -63,4 +63,14 @@ class SqlDelightProductRepository(
     override suspend fun updateStock(productId: String, newStock: Int) {
         queries.updateStock(newStock, productId)
     }
+
+    override suspend fun getProductByBarcode(barcode: String): Product? {
+        return queries.selectProductByBarcode(barcode).executeAsOneOrNull()?.let { entity ->
+            Product(
+                entity.id, entity.name, entity.description, entity.price,
+                entity.unitOfMeasure, entity.barcode, entity.categoryId,
+                entity.stock, entity.minStockThreshold
+            )
+        }
+    }
 }

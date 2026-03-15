@@ -5,18 +5,21 @@ import com.salestrack.db.SalesTrackDatabase
 import com.salestrack.domain.model.Sale
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 class SyncManager(
     private val database: SalesTrackDatabase,
-    private val remoteDataSource: FirebaseSalesDataSource,
-    private val businessId: String // This should be dynamic based on current user
+    private val remoteDataSource: FirebaseSalesDataSource
 ) {
+    var businessId: String? = null
     private val queries = database.salesTrackDatabaseQueries
-    private val syncScope = CoroutineScope(Dispatchers.Default)
+    private val syncScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     fun startSync() {
+        val bizId = businessId ?: return
         syncScope.launch {
+            println("--- SYNC STARTED for $bizId ---")
             // Check for unsynced sales
             val unsyncedSalesEntities = queries.selectUnsyncedSales().executeAsList()
             unsyncedSalesEntities.forEach { entity ->
@@ -26,7 +29,7 @@ class SyncManager(
                     entity.vendorId, entity.platform, entity.timestamp, entity.isDeleted
                 )
                 try {
-                    remoteDataSource.uploadSale(businessId, sale)
+                    remoteDataSource.uploadSale(bizId, sale)
                     queries.markSaleSynced(entity.id)
                 } catch (e: Exception) {
                     // Log error or retry later

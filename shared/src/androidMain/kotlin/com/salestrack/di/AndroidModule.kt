@@ -8,6 +8,8 @@ import app.cash.sqldelight.adapter.primitive.IntColumnAdapter
 import app.cash.sqldelight.ColumnAdapter
 import com.salestrack.db.ProductEntity
 import com.salestrack.db.SaleEntity
+import com.salestrack.util.BarcodeScanner
+import com.salestrack.util.AndroidBarcodeScanner
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -31,4 +33,5 @@ actual fun platformModule(): Module = module {
         )
     }
     single<ReportGenerator> { AndroidReportGenerator() }
+    single<BarcodeScanner> { AndroidBarcodeScanner(get()) }
 }

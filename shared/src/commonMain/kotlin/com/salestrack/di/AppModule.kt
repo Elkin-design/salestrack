@@ -20,9 +20,9 @@ fun commonModule() = module {
     single<AuthRepository> { FirebaseAuthRepository() }
     single<ProductRepository> { SqlDelightProductRepository(get()) }
     single<SalesRepository> { SqlDelightSalesRepository(get()) }
-    single { SyncManager(get(), get(), "default_biz") }
+    single { SyncManager(get(), get()) }
     
-    factory { SalesViewModel(get()) }
+    factory { SalesViewModel(get(), get()) }
     factory { AuthViewModel(get()) }
     factory { ProductViewModel(get()) }
     factory { ReportViewModel(get(), get()) }

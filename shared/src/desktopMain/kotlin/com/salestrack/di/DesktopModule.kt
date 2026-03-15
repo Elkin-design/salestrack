@@ -32,4 +32,5 @@ actual fun platformModule(): Module = module {
         )
     }
     single<ReportGenerator> { DesktopReportGenerator() }
+    single<BarcodeScanner> { DesktopBarcodeScanner() }
 }

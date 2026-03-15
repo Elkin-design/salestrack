@@ -1,6 +1,8 @@
 package com.salestrack.presentation.viewmodel
 
+import com.salestrack.domain.model.Product
 import com.salestrack.domain.model.Sale
+import com.salestrack.domain.repository.ProductRepository
 import com.salestrack.domain.repository.SalesRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -18,6 +20,7 @@ import kotlin.test.assertEquals
 class SalesViewModelTest {
 
     private val repository: SalesRepository = mockk()
+    private val productRepository: ProductRepository = mockk()
     private lateinit var viewModel: SalesViewModel
     private val testDispatcher = StandardTestDispatcher()
 
@@ -25,7 +28,7 @@ class SalesViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         coEvery { repository.getSales() } returns flowOf(emptyList())
-        viewModel = SalesViewModel(repository)
+        viewModel = SalesViewModel(repository, productRepository)
     }
 
     @Test
@@ -35,7 +38,7 @@ class SalesViewModelTest {
         )
         coEvery { repository.getSales() } returns flowOf(sales)
 
-        viewModel = SalesViewModel(repository)
+        viewModel = SalesViewModel(repository, productRepository)
         testDispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(sales, viewModel.salesState.value)
@@ -50,5 +53,17 @@ class SalesViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify { repository.addSale(sale) }
+    }
+
+    @Test
+    fun `findProductByBarcode updates scannedProduct`() {
+        val barcode = "12345"
+        val product = Product("p1", "Prod1", "Desc", 10.0, "Unit", barcode, "cat1", 10, 5)
+        coEvery { productRepository.getProductByBarcode(barcode) } returns product
+
+        viewModel.findProductByBarcode(barcode)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(product, viewModel.scannedProduct.value)
     }
 }

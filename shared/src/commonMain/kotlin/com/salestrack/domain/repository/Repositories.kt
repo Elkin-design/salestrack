@@ -19,4 +19,5 @@ interface ProductRepository {
     suspend fun updateProduct(product: Product)
     suspend fun deleteProduct(productId: String)
     suspend fun updateStock(productId: String, newStock: Int)
+    suspend fun getProductByBarcode(barcode: String): Product?
 }

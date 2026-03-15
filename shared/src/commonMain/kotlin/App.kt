@@ -18,10 +18,19 @@ fun App() {
             val salesViewModel: com.salestrack.presentation.viewmodel.SalesViewModel = koinInject()
             val productViewModel: com.salestrack.presentation.viewmodel.ProductViewModel = koinInject()
             val reportViewModel: com.salestrack.presentation.viewmodel.ReportViewModel = koinInject()
+            val barcodeScanner: com.salestrack.util.BarcodeScanner = koinInject()
+            val syncManager: com.salestrack.data.sync.SyncManager = koinInject()
 
             val authState by authViewModel.authState.collectAsState()
-            val user = (authState as? AuthState.Authenticated)?.user
+            val user = (authState as? com.salestrack.presentation.viewmodel.AuthState.Authenticated)?.user
             val role = user?.role ?: com.salestrack.domain.model.UserRole.VENDOR
+
+            LaunchedEffect(user) {
+                user?.let {
+                    syncManager.businessId = it.businessId
+                    syncManager.startSync()
+                }
+            }
 
             when (currentScreen) {
                 Screen.Login -> LoginScreen(
@@ -40,6 +49,7 @@ fun App() {
                 )
                 Screen.RegisterSale -> com.salestrack.presentation.ui.sales.SalesRegistrationScreen(
                     viewModel = salesViewModel,
+                    barcodeScanner = barcodeScanner,
                     onBack = { currentScreen = Screen.Dashboard }
                 )
                 Screen.Catalog -> com.salestrack.presentation.ui.catalog.CatalogScreen(

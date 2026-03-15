@@ -11,6 +11,9 @@ import com.salestrack.domain.model.Product
 import com.salestrack.presentation.viewmodel.ProductViewModel
 import kotlinx.coroutines.launch
 
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import com.salestrack.domain.model.UserRole
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,48 +31,43 @@ fun CatalogScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            SmallTopAppBar(
-                title = { Text("Catálogo de Productos") },
+            TopAppBar(
+                title = { Text("Catálogo", style = MaterialTheme.typography.headlineSmall) },
                 navigationIcon = {
                     TextButton(onClick = onBack) { Text("Atrás") }
                 },
                 actions = {
                     if (userRole != UserRole.VENDOR) {
-                        IconButton(onClick = {
-                            val csv = viewModel.exportCsv()
-                            scope.launch {
-                                snackbarHostState.showSnackbar("Catálogo exportado")
-                            }
-                        }) {
-                            Text("Exp")
-                        }
-                        IconButton(onClick = {
-                            val sampleCsv = """
-                                Nombre,Descripción,Precio,Unidad,Stock,Umbral Mínimo,Código de Barras
-                                "Producto Importado 1","Desc 1",10.5,"Und",100,10,"123456"
-                            """.trimIndent()
+                        TextButton(onClick = {
+                            viewModel.exportCsv()
+                            scope.launch { snackbarHostState.showSnackbar("Exportado") }
+                        }) { Text("Exportar") }
+                        
+                        TextButton(onClick = {
+                            val sampleCsv = "Nombre,Precio\nProducto,10.0"
                             viewModel.importCsv(sampleCsv)
-                            scope.launch {
-                                snackbarHostState.showSnackbar("Datos importados")
-                            }
-                        }) {
-                            Text("Imp")
-                        }
+                            scope.launch { snackbarHostState.showSnackbar("Importado") }
+                        }) { Text("Importar") }
                     }
                 }
             )
         },
         floatingActionButton = {
             if (userRole != UserRole.VENDOR) {
-                FloatingActionButton(onClick = onNavigateToAddProduct) {
-                    Text("+", style = MaterialTheme.typography.headlineSmall)
+                LargeFloatingActionButton(
+                    onClick = onNavigateToAddProduct,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White
+                ) {
+                    Text("+", style = MaterialTheme.typography.headlineMedium)
                 }
             }
         }
     ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             items(products) { product ->
                 ProductItem(product)
@@ -81,16 +79,20 @@ fun CatalogScreen(
 @Composable
 fun ProductItem(product: Product) {
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(product.name, style = MaterialTheme.typography.titleMedium)
-            Text("Precio: $${product.price}", style = MaterialTheme.typography.bodyMedium)
-            Text("Stock: ${product.stock} ${product.unitOfMeasure}", style = MaterialTheme.typography.bodySmall)
-            
-            if (product.stock <= product.minStockThreshold) {
-                Text("STOCK BAJO", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(product.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text("Stock: ${product.stock} ${product.unitOfMeasure}", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
             }
+            Text("$${product.price}", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
         }
     }
 }

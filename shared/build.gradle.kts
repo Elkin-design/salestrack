@@ -69,6 +69,14 @@ kotlin {
                 api("androidx.core:core-ktx:1.10.1")
                 
                 implementation("app.cash.sqldelight:android-driver:${project.property("sqldelight.version")}")
+                
+                // ML Kit Barcode Scanning
+                implementation("com.google.mlkit:barcode-scanning:${project.property("mlkit.barcode.version")}")
+                
+                // CameraX
+                implementation("androidx.camera:camera-camera2:${project.property("camerax.version")}")
+                implementation("androidx.camera:camera-lifecycle:${project.property("camerax.version")}")
+                implementation("androidx.camera:camera-view:${project.property("camerax.version")}")
             }
         }
         val androidUnitTest by getting {

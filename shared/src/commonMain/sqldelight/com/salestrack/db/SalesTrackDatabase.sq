@@ -49,3 +49,6 @@ SELECT * FROM SaleEntity WHERE isSynced = 0;
 
 markSaleSynced:
 UPDATE SaleEntity SET isSynced = 1 WHERE id = ?;
+
+selectProductByBarcode:
+SELECT * FROM ProductEntity WHERE barcode = ?;
