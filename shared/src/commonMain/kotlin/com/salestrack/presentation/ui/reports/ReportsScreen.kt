@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.dp
 import com.salestrack.presentation.viewmodel.ReportViewModel
 import com.salestrack.presentation.viewmodel.SalesViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportsScreen(
     reportViewModel: ReportViewModel,

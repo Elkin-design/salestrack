@@ -3,8 +3,9 @@ package com.salestrack.data.local
 import com.salestrack.db.SalesTrackDatabase
 import com.salestrack.domain.model.Sale
 import com.salestrack.domain.repository.SalesRepository
-import com.squareup.sqldelight.runtime.coroutines.asFlow
-import com.squareup.sqldelight.runtime.coroutines.mapToList
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 
 class SqlDelightSalesRepository(
@@ -15,7 +16,7 @@ class SqlDelightSalesRepository(
     override fun getSales(): Flow<List<Sale>> {
         return queries.selectAllSales { id, productName, productId, quantity, unitPrice, discount, totalAmount, categoryId, vendorId, platform, timestamp, isDeleted, isSynced ->
             Sale(id, productName, productId, quantity, unitPrice, discount, totalAmount, categoryId, vendorId, platform, timestamp, isDeleted)
-        }.asFlow().mapToList()
+        }.asFlow().mapToList(Dispatchers.Default)
     }
 
     override suspend fun addSale(sale: Sale) {

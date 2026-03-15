@@ -15,6 +15,7 @@ interface SalesRepository {
 interface ProductRepository {
     fun getProducts(): Flow<List<Product>>
     suspend fun addProduct(product: Product)
+    suspend fun addProducts(products: List<Product>)
     suspend fun updateProduct(product: Product)
     suspend fun deleteProduct(productId: String)
     suspend fun updateStock(productId: String, newStock: Int)

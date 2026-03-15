@@ -57,4 +57,19 @@ class ProductViewModelTest {
 
         coVerify { repository.updateStock("1", 15) }
     }
+
+    @Test
+    fun `importCsv calls repository addProducts with parsed data`() {
+        val csvData = """
+            Nombre,Descripción,Precio,Unidad,Stock,Umbral Mínimo,Código de Barras
+            "Prod1","Desc1",10.0,"Und",100,5,"123"
+        """.trimIndent()
+        
+        coEvery { repository.addProducts(any()) } returns Unit
+
+        viewModel.importCsv(csvData)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify { repository.addProducts(match { it.size == 1 && it[0].name == "Prod1" }) }
+    }
 }

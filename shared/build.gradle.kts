@@ -26,17 +26,21 @@ kotlin {
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material)
+                implementation(compose.material3)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 implementation(compose.components.resources)
                 
                 // DateTime
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:${project.property("kotlinx.datetime.version")}")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${project.property("coroutines.version")}")
 
                 // Koin
                 implementation("io.insert-koin:koin-core:${project.property("koin.version")}")
+                implementation("io.insert-koin:koin-compose:${project.property("koin.compose.version")}")
                 
                 // SQLDelight
                 implementation("app.cash.sqldelight:coroutines-extensions:${project.property("sqldelight.version")}")
+                implementation("app.cash.sqldelight:primitive-adapters:${project.property("sqldelight.version")}")
                 
                 // Ktor
                 implementation("io.ktor:ktor-client-core:${project.property("ktor.version")}")
@@ -51,6 +55,7 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${project.property("coroutines.version")}")
                 implementation("io.insert-koin:koin-test:${project.property("koin.version")}")
             }
         }

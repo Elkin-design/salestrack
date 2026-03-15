@@ -6,15 +6,15 @@ CREATE TABLE ProductEntity (
     unitOfMeasure TEXT NOT NULL,
     barcode TEXT,
     categoryId TEXT NOT NULL,
-    stock INTEGER AS Int NOT NULL DEFAULT 0,
-    minStockThreshold INTEGER AS Int NOT NULL DEFAULT 0
+    stock INTEGER AS kotlin.Int NOT NULL DEFAULT 0,
+    minStockThreshold INTEGER AS kotlin.Int NOT NULL DEFAULT 0
 );
 
 CREATE TABLE SaleEntity (
     id TEXT NOT NULL PRIMARY KEY,
     productName TEXT NOT NULL,
     productId TEXT,
-    quantity INTEGER AS Int NOT NULL,
+    quantity INTEGER AS kotlin.Int NOT NULL,
     unitPrice REAL NOT NULL,
     discount REAL NOT NULL DEFAULT 0.0,
     totalAmount REAL NOT NULL,
@@ -22,8 +22,8 @@ CREATE TABLE SaleEntity (
     vendorId TEXT NOT NULL,
     platform TEXT NOT NULL,
     timestamp INTEGER NOT NULL,
-    isDeleted INTEGER AS Boolean NOT NULL DEFAULT 0,
-    isSynced INTEGER AS Boolean NOT NULL DEFAULT 0
+    isDeleted INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0,
+    isSynced INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0
 );
 
 -- Queries

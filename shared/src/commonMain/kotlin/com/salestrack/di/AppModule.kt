@@ -9,6 +9,9 @@ import com.salestrack.domain.repository.AuthRepository
 import com.salestrack.domain.repository.ProductRepository
 import com.salestrack.domain.repository.SalesRepository
 import com.salestrack.presentation.viewmodel.SalesViewModel
+import com.salestrack.presentation.viewmodel.AuthViewModel
+import com.salestrack.presentation.viewmodel.ProductViewModel
+import com.salestrack.presentation.viewmodel.ReportViewModel
 import org.koin.core.module.Module
 import org.koin.dsl.module
 

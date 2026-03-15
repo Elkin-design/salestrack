@@ -9,6 +9,7 @@ import com.salestrack.domain.model.Sale
 import com.salestrack.presentation.viewmodel.SalesViewModel
 import kotlinx.datetime.Clock
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SalesRegistrationScreen(
     viewModel: SalesViewModel,

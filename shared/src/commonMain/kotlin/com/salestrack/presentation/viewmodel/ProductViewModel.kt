@@ -43,4 +43,44 @@ class ProductViewModel(private val repository: ProductRepository) : BaseViewMode
             }
         }
     }
+
+    fun importCsv(csvData: String) {
+        viewModelScope.launch {
+            val rows = com.salestrack.util.CsvParser.parse(csvData)
+            if (rows.size <= 1) return@launch // Only header or empty
+
+            val products = rows.drop(1).mapNotNull { row ->
+                if (row.size < 5) return@mapNotNull null
+                
+                Product(
+                    id = kotlinx.datetime.Clock.System.now().toEpochMilliseconds().toString() + "_" + row[0].hashCode(),
+                    name = row[0],
+                    description = row[1],
+                    price = row[2].toDoubleOrNull() ?: 0.0,
+                    unitOfMeasure = row[3],
+                    barcode = if (row.size > 6) row[6] else null,
+                    categoryId = "default",
+                    stock = row[4].toIntOrNull() ?: 0,
+                    minStockThreshold = row[5].toIntOrNull() ?: 5
+                )
+            }
+            repository.addProducts(products)
+        }
+    }
+
+    fun exportCsv(): String {
+        val headers = listOf("Nombre", "Descripción", "Precio", "Unidad", "Stock", "Umbral Mínimo", "Código de Barras")
+        val rows = _productsState.value.map { p ->
+            listOf(
+                p.name,
+                p.description,
+                p.price.toString(),
+                p.unitOfMeasure,
+                p.stock.toString(),
+                p.minStockThreshold.toString(),
+                p.barcode ?: ""
+            )
+        }
+        return com.salestrack.util.CsvParser.toCsv(headers, rows)
+    }
 }
