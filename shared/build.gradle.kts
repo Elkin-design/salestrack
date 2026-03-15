@@ -28,6 +28,9 @@ kotlin {
                 implementation(compose.material)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 implementation(compose.components.resources)
+                
+                // DateTime
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:${project.property("kotlinx.datetime.version")}")
 
                 // Koin
                 implementation("io.insert-koin:koin-core:${project.property("koin.version")}")

@@ -22,6 +22,7 @@ fun commonModule() = module {
     factory { SalesViewModel(get()) }
     factory { AuthViewModel(get()) }
     factory { ProductViewModel(get()) }
+    factory { ReportViewModel(get()) }
 }
 
 expect fun platformModule(): Module
