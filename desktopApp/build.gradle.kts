@@ -11,7 +11,8 @@ kotlin {
         val jvmMain by getting  {
             dependencies {
                 implementation(compose.desktop.currentOs)
-                implementation(project(":shared"))
+                implementation(project(":composeApp"))
+                implementation("io.insert-koin:koin-core:3.5.3")
             }
         }
     }

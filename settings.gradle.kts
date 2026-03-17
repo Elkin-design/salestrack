@@ -1,8 +1,7 @@
 rootProject.name = "MyApplication"
 
-include(":androidApp")
-include(":shared")
 include(":desktopApp")
+include(":composeApp")
 
 pluginManagement {
     repositories {
