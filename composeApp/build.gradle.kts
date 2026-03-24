@@ -1,6 +1,7 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+@Suppress("DEPRECATION")
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
@@ -9,6 +10,7 @@ plugins {
     alias(libs.plugins.composeHotReload)
 }
 
+@Suppress("DEPRECATION")
 kotlin {
     androidTarget {
         compilerOptions {
@@ -42,6 +44,8 @@ kotlin {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
