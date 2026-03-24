@@ -1,81 +1,49 @@
 package org.salestrack.app
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
-import com.salestrack.domain.model.UserRole
-import com.salestrack.presentation.viewmodel.AuthState
-import com.salestrack.presentation.viewmodel.AuthViewModel
-import com.salestrack.presentation.viewmodel.ProductViewModel
-import com.salestrack.presentation.viewmodel.ReportViewModel
-import com.salestrack.presentation.viewmodel.SalesViewModel
-import com.salestrack.presentation.ui.auth.LoginScreen
-import com.salestrack.presentation.ui.dashboard.DashboardScreen
-import com.salestrack.presentation.ui.catalog.CatalogScreen
-import com.salestrack.presentation.ui.sales.SalesRegistrationScreen
-import com.salestrack.presentation.ui.reports.ReportsScreen
-import com.salestrack.util.BarcodeScanner
-import org.koin.compose.koinInject
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import org.jetbrains.compose.resources.painterResource
 
-private val PrimaryBlue = Color(0xFF1E88E5)
-private val IndigoPurple = Color(0xFF5E35B1)
-private val AccentTeal = Color(0xFF00BCD4)
-
-enum class Screen { Login, Dashboard, Catalog, Sales, Reports }
+import salestrack.composeapp.generated.resources.Res
+import salestrack.composeapp.generated.resources.compose_multiplatform
 
 @Composable
+@Preview
 fun App() {
-    val colorScheme = lightColorScheme(
-        primary = PrimaryBlue,
-        secondary = IndigoPurple,
-        tertiary = AccentTeal
-    )
-
-    MaterialTheme(colorScheme = colorScheme) {
-        val authViewModel: AuthViewModel = koinInject()
-        val salesViewModel: SalesViewModel = koinInject()
-        val productViewModel: ProductViewModel = koinInject()
-        val reportViewModel: ReportViewModel = koinInject()
-        val barcodeScanner: BarcodeScanner = koinInject()
-
-        val authState by authViewModel.authState.collectAsState()
-        var currentScreen by remember { mutableStateOf(Screen.Login) }
-        val userRole = if (authState is AuthState.Authenticated) UserRole.VENDOR else UserRole.VENDOR
-
-        LaunchedEffect(authState) {
-            if (authState is AuthState.Authenticated) currentScreen = Screen.Dashboard
-            else if (authState is AuthState.Idle) currentScreen = Screen.Login
-        }
-
-        when (currentScreen) {
-            Screen.Login -> LoginScreen(
-                viewModel = authViewModel,
-                onLoginSuccess = { currentScreen = Screen.Dashboard }
-            )
-            Screen.Dashboard -> DashboardScreen(
-                userRole = userRole,
-                onLogout = { authViewModel.logout(); currentScreen = Screen.Login },
-                onNavigateToRegisterSale = { currentScreen = Screen.Sales },
-                onNavigateToCatalog = { currentScreen = Screen.Catalog },
-                onNavigateToReports = { currentScreen = Screen.Reports }
-            )
-            Screen.Catalog -> CatalogScreen(
-                userRole = userRole,
-                viewModel = productViewModel,
-                onBack = { currentScreen = Screen.Dashboard },
-                onNavigateToAddProduct = { currentScreen = Screen.Catalog }
-            )
-            Screen.Sales -> SalesRegistrationScreen(
-                viewModel = salesViewModel,
-                barcodeScanner = barcodeScanner,
-                onBack = { currentScreen = Screen.Dashboard }
-            )
-            Screen.Reports -> ReportsScreen(
-                reportViewModel = reportViewModel,
-                salesViewModel = salesViewModel,
-                onBack = { currentScreen = Screen.Dashboard }
-            )
+    MaterialTheme {
+        var showContent by remember { mutableStateOf(false) }
+        Column(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .safeContentPadding()
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Button(onClick = { showContent = !showContent }) {
+                Text("Click me!")
+            }
+            AnimatedVisibility(showContent) {
+                val greeting = remember { Greeting().greet() }
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Image(painterResource(Res.drawable.compose_multiplatform), null)
+                    Text("Compose: $greeting")
+                }
+            }
         }
     }
 }
