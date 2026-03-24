@@ -1,16 +1,24 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidApplication)
-    alias(libs.plugins.composeMultiplatform)
-    id("app.cash.sqldelight") version "2.0.1"
-    kotlin("plugin.serialization") version "1.9.21"
-    id("com.google.gms.google-services") version "4.3.15"
+    id("com.android.application")
+    id("org.jetbrains.kotlin.multiplatform")
+    id("org.jetbrains.compose")
+    id("org.jetbrains.kotlin.plugin.compose")
+    id("org.jetbrains.kotlin.plugin.serialization")
+    id("app.cash.sqldelight")
+    id("com.google.gms.google-services")
 }
 
 kotlin {
-    androidTarget()
+    jvmToolchain(17)
+
+    androidTarget {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
     
     listOf(
         iosArm64(),
@@ -22,7 +30,11 @@ kotlin {
         }
     }
     
-    jvm()
+    jvm {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
     
     sourceSets {
         androidMain.dependencies {
@@ -41,8 +53,9 @@ kotlin {
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
             implementation(libs.compose.uiToolingPreview)
-            implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-            implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+            // Lifecycle for Multiplatform
+            implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
+            implementation("org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose:2.8.0")
             
             // DateTime
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
@@ -58,8 +71,14 @@ kotlin {
             implementation("app.cash.sqldelight:primitive-adapters:2.0.1")
             
             // Firebase
-            implementation("dev.gitlive:firebase-auth:1.11.1")
-            implementation("dev.gitlive:firebase-firestore:1.11.1")
+            implementation("dev.gitlive:firebase-auth:1.11.1") {
+                exclude("androidx.lifecycle")
+                exclude("android.arch.lifecycle")
+            }
+            implementation("dev.gitlive:firebase-firestore:1.11.1") {
+                exclude("androidx.lifecycle")
+                exclude("android.arch.lifecycle")
+            }
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -124,6 +143,12 @@ android {
                 force("com.google.firebase:firebase-firestore:24.10.0")
                 force("com.google.firebase:firebase-common-ktx:20.4.2")
             }
+        }
+        
+        resolutionStrategy.dependencySubstitution {
+            substitute(module("org.jetbrains.androidx.lifecycle:lifecycle-common")).using(module("androidx.lifecycle:lifecycle-common:2.8.5"))
+            substitute(module("org.jetbrains.androidx.lifecycle:lifecycle-runtime")).using(module("androidx.lifecycle:lifecycle-runtime:2.8.5"))
+            substitute(module("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel")).using(module("androidx.lifecycle:lifecycle-viewmodel:2.8.5"))
         }
     }
 }

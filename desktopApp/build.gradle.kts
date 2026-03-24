@@ -1,12 +1,20 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("multiplatform")
+    id("org.jetbrains.kotlin.multiplatform")
     id("org.jetbrains.compose")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 kotlin {
-    jvm()
+    jvmToolchain(17)
+
+    jvm {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
     sourceSets {
         val jvmMain by getting  {
             dependencies {
@@ -20,12 +28,25 @@ kotlin {
 
 compose.desktop {
     application {
-        mainClass = "MainKt"
+        mainClass = "org.salestrack.app.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "KotlinMultiplatformComposeDesktopApplication"
             packageVersion = "1.0.0"
         }
+    }
+}
+
+configurations.configureEach {
+    resolutionStrategy {
+        force("androidx.lifecycle:lifecycle-common:2.7.0")
+        force("androidx.lifecycle:lifecycle-common-jvm:2.7.0")
+        force("androidx.lifecycle:lifecycle-runtime:2.7.0")
+        force("androidx.lifecycle:lifecycle-runtime-desktop:2.7.0")
+        force("androidx.lifecycle:lifecycle-viewmodel:2.7.0")
+        force("androidx.lifecycle:lifecycle-viewmodel-desktop:2.7.0")
+        force("androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0")
+        force("androidx.lifecycle:lifecycle-viewmodel-savedstate-desktop:2.7.0")
     }
 }
