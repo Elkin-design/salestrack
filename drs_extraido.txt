@@ -1,0 +1,1150 @@
+ 
+📦 
+SalesTrack 
+Inventory & Sales Manager 
+📱  Android 🖥️  Desktop  (Windows · macOS · Linux) 
+ 
+Documento de Requerimientos de Software  —  DRS v3.0 
+Paridad total de funcionalidades Android ↔ Desktop  ·  KMP + Firebase 
+Versión 
+3.0 — Marzo 2026 
+Framework 
+Kotlin Multiplatform 
+Base de Datos 
+Firebase Firestore 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Confidencial — Solo uso interno del equipo de desarrollo 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+1.  Principio Rector de la Aplicación 
+ 
+PARIDAD TOTAL DE FUNCIONALIDADES: Todo lo que el usuario puede hacer en Android debe 
+poder hacerlo exactamente igual en Desktop, y viceversa. Las diferencias entre plataformas son 
+ÚNICAMENTE de interacción (táctil vs teclado/mouse) y de integración con el sistema operativo, 
+NUNCA de capacidades funcionales. Ninguna funcionalidad de negocio es exclusiva de una sola 
+plataforma. 
+ 
+Permitido diferenciar por plataforma NO permitido diferenciar por plataforma 
+Gestos táctiles (swipe, pinch) vs shortcuts de teclado Registrar ventas 
+FAB flotante vs botones en barra lateral Ver reportes (dia / semana / mes / ano) 
+Notificación push FCM vs notificación nativa del SO Gestionar catálogo de productos 
+Escáner de camara vs entrada de código 
+manual/lector USB Controlar y ajustar inventario 
+Compartir vía SO Android vs dialogo Guardar como Exportar PDF y Excel 
+Widget de pantalla de inicio (exclusivo Android) Consultar ventas del equipo 
+Impresión Bluetooth/WiFi vs impresora local del SO Recibir alertas de stock bajo 
+Tamaño adaptativo de pantalla Importar datos por CSV 
+ 
+2.  Información del Proyecto 
+ 
+Nombre del Proyecto SalesTrack Inventory & Sales Manager 
+Versión del Documento 3.0 — Paridad total Android y Desktop 
+Fecha de Elaboración Marzo 2026 
+Plataformas v1.0 Android 8.0+ (API 26)  |  Windows 10+  |  macOS 12+  |  Linux Ubuntu 20.04+ 
+Plataforma futura v2.0 iOS 15+ / iPadOS (arquitectura KMP ya preparada) 
+Framework Kotlin Multiplatform (KMP) — lógica compartida al 100% en modulo :shared 
+UI Android Jetpack Compose con Material Design 3 
+UI Desktop Compose Multiplatform (Compose for Desktop) 
+Base de datos remota Firebase Firestore — sincronización en tiempo real 
+Autenticación Firebase Authentication (Email/Password + Google Sign-In) 
+Almacenamiento offline SQLDelight (KMP) — persistencia local con sync automático 
+Clasificación Confidencial — Uso Interno 
+ 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+3.  Alcance del Sistema 
+3.1  Descripción General 
+SalesTrack es una aplicacion multiplataforma KMP que permite a cualquier miembro del equipo — desde un 
+vendedor de campo en su telefono Android hasta el administrador frente a su PC Windows — realizar 
+exactamente las mismas operaciones: registrar ventas, consultar reportes, gestionar el catalogo, controlar el 
+inventario, exportar datos y recibir alertas de stock bajo. 
+El modulo :shared de KMP contiene el 100% de la lógica de negocio, casos de uso, ViewModels y acceso a 
+datos. Android y Desktop únicamente aportan su capa de UI nativa (Compose + Compose Multiplatform). 
+Esto garantiza comportamiento idéntico en ambas plataformas. 
+ 
+3.2  Plataformas Objetivo v1.0 
+ 
+Plataforma Versión Minima UI Framework Estado 
+📱 Android Android 8.0 (API 26) Jetpack Compose (Material 3) Incluida en v1.0 
+🖥️ Windows Windows 10 x64 Compose Multiplatform Incluida en v1.0 
+🖥️ macOS macOS 12 Monterey Compose Multiplatform Incluida en v1.0 
+🖥️ Linux Ubuntu 20.04 LTS Compose Multiplatform Incluida en v1.0 
+🍎 iOS / iPadOS iOS 15+ SwiftUI + KMP Shared Futuro v2.0 
+ 
+4.  Partes Interesadas y Usuarios 
+ 
+Parte Interesada Plataforma 
+Principal Rol / Necesidad Principal Prioridad 
+Vendedor de campo 📱 Android / 🖥️ 
+Desktop 
+Registra ventas en tiempo real durante la 
+jornada Alta 
+Administrador / Dueno 📱 Android / 🖥️ 
+Desktop 
+Revisa reportes, gestiona catalogo, controla 
+inventario Alta 
+Supervisor de tienda 📱 Android / 🖥️ 
+Desktop 
+Consulta ventas del equipo, recibe alertas de 
+stock bajo Alta 
+Contador / Analista 📱 Android / 🖥️ 
+Desktop 
+Exporta reportes PDF / Excel para contabilidad 
+y análisis Alta 
+Equipo de Desarrollo Todas Implementa la solución; requiere documentacion 
+tecnica clara Alta 
+Cliente del Proyecto Todas Define requerimientos, valida entregables y 
+aprueba lanzamientos Alta 
+ 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+Todos los roles tienen acceso COMPLETO desde ambas plataformas. Un supervisor puede 
+consultar ventas del equipo tanto en su teléfono Android como en su PC. Un administrador puede 
+exportar Excel tanto desde la app móvil como desde la aplicación de escritorio. 
+ 
+5.  Requerimientos Funcionales 
+La columna Plataforma indica el ámbito de cada requerimiento. Todos los requerimientos de negocio son 
+AMBAS plataformas. Solo se marca una plataforma especifica cuando la diferencia es estrictamente técnica 
+(hardware del dispositivo o integración con el SO). 
+ 
+5.1  Autenticación y Gestión de Cuenta 
+ 
+ID Requisito Descripción Plataforma Prioridad 
+RF-
+001 Registro de usuario 
+Creación de cuenta con correo y contraseña via 
+Firebase Authentication. Validación de formato y 
+fortaleza mínima (8 caracteres, 1 mayúscula, 1 
+numero). 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+002 Inicio de sesión 
+Autenticación con email/contrasena. Sesión 
+persistente con token Firebase; renovación 
+automatica en segundo plano. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+003 Google Sign-In 
+Inicio de sesión con cuenta Google mediante 
+Firebase Auth Google Provider. Disponible en 
+ambas plataformas. 
+📱 Android   
+🖥️ Desktop Media 
+RF-
+004 
+Recuperación de 
+contrasena 
+El sistema envía correo de restablecimiento 
+mediante Firebase Autenticación. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+005 Cierre de sesión 
+Cierre de sesión desde el menu de perfil. Los 
+datos en cache local se limpian. Disponible en 
+ambas plataformas. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+006 Perfil del negocio 
+Configuración de nombre del negocio, moneda, 
+zona horaria y logo. Los cambios se sincronizan en 
+todos los dispositivos del usuario. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+007 
+Sincronización 
+multi-dispositivo 
+Los datos se sincronizan en tiempo real entre 
+todos los dispositivos del mismo usuario (Android + 
+Desktop simultáneamente) via Firestore listeners. 
+📱 Android   
+🖥️ Desktop Alta 
+ 
+5.2  Registro de Ventas 
+ 
+PARIDAD: El registro de ventas debe ser igual de rápido y completo en Android y en Desktop. 
+Android usa FAB + bottom sheet con gestos. Desktop usa panel lateral + modal con soporte 
+completo de teclado (Tab, Enter, Esc). Todas las funciones de esta sección aplican a AMBAS 
+plataformas. 
+ 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+ID Requisito Descripción Plataforma Prioridad 
+RF-
+008 
+Agregar venta 
+rápida 
+Formulario con: producto (texto libre o del 
+catalogo), cantidad, precio unitario, categoría y 
+nota opcional. El total se calcula automáticamente 
+en tiempo real. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+009 
+Autocompletado de 
+producto 
+Al escribir el nombre, el sistema sugiere 
+coincidencias del catalogo con precio precargado. 
+Funciona igual en Android (teclado táctil) y 
+Desktop (teclado físico). 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+010 Editar venta 
+Modificación de cualquier campo de una venta 
+existente. Se registra historial de cambios con 
+timestamp y plataforma de origen. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+011 Eliminar venta 
+Eliminación con dialogo de confirmación. El total 
+del periodo se recalcula automáticamente. Soft-
+delete en Firestore. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+012 
+Registro con 
+timestamp 
+Cada venta almacena fecha y hora UTC 
+automáticamente, ademas de la hora local según 
+zona horaria configurada. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+013 Categorías de venta 
+Asignación de categorias personalizables. 
+Categorías predeterminadas: General, Comidas, 
+Bebidas, Ropa, Electrónica, Servicios. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+014 
+Descuentos y 
+devoluciones 
+Registro de descuento (porcentaje o valor fijo) o 
+devolución sobre una venta. El total neto se 
+recalcula y el stock se ajusta si el producto esta en 
+catalogo. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+015 
+Escáner de codigo 
+de barras 
+Android: escáner via camara con ML Kit. Desktop: 
+lectura de lector USB/Bluetooth HID (plug-and-
+play, el lector actúa como teclado). Ambos cargan 
+el producto del catalogo automáticamente. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+016 
+Importación masiva 
+por CSV 
+El usuario importa un archivo CSV con múltiples 
+ventas para cargarlas en lote. En Android vía 
+selector de archivos del SO; en Desktop vía 
+dialogo de apertura de archivo. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+017 
+Atajos de teclado 
+(Desktop) 
+Shortcuts que aceleran el flujo: Ctrl+N nueva 
+venta, Enter confirmar, Esc cancelar, Tab navegar 
+campos. Complementa la velocidad de registro en 
+Desktop. 
+🖥️ Desktop Media 
+ 
+5.3  Dashboard y Resumen Diario 
+ 
+ID Requisito Descripción Plataforma Prioridad 
+RF-
+018 
+Dashboard 
+principal 
+Pantalla de inicio con: total vendido hoy, numero 
+de transacciones del día, producto mas vendido, 
+acceso rápido a registrar venta y estado de 
+sincronización. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+019 
+Lista de ventas del 
+día 
+Listado cronológico de ventas del día con 
+producto, cantidad, total y hora. Permite búsqueda 
+por nombre de producto y filtrado por categoría. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+020 
+Actualización en 
+tiempo real 
+Dashboard y totales actualizados vía Firestore 
+listeners. Una venta registrada en Android aparece 
+en el Desktop del mismo usuario en menos de 5 
+segundos. 
+📱 Android   
+🖥️ Desktop Alta 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+ID Requisito Descripción Plataforma Prioridad 
+RF-
+021 
+Resumen por 
+categoría 
+Desglose del total diario agrupado por categoría 
+con monto y porcentaje de participación de cada 
+una. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+022 
+Widget de pantalla 
+inicio 
+Widget Android de pantalla de inicio que muestra 
+el total vendido del día sin abrir la app. No aplica 
+en Desktop (sustituido por notificaciones del SO). 
+📱 Android Baja 
+ 
+5.4  Reportes y Estadísticas 
+ 
+PARIDAD: Todos los reportes (diario, semanal, mensual, anual, rango personalizado) deben estar 
+disponibles en Android y Desktop. Desktop adiciona tabla con columnas ordenables y modo pantalla 
+completa para presentaciones, pero el contenido informativo es idéntico. 
+ 
+ID Requisito Descripción Plataforma Prioridad 
+RF-
+023 Reporte diario 
+Vista de un día especifico: total, numero de ventas, 
+promedio por venta, desglose por categoría y lista 
+completa de transacciones. Navegación entre dias. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+024 Reporte semanal 
+Ventas de los 7 días de la semana seleccionada 
+con grafica de barras, total semanal y comparación 
+porcentual vs semana anterior. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+025 Reporte mensual 
+Ventas agrupadas por semana dentro del mes. 
+Total mensual, semana pico y comparación 
+porcentual vs mes anterior. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+026 Reporte anual 
+Ventas agrupadas por mes del ano. Total anual, 
+mes pico y comparación porcentual vs ano 
+anterior. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+027 
+Rango 
+personalizado 
+El usuario define un rango arbitrario de fechas 
+(desde - hasta) para generar reporte ad hoc con 
+todos los cálculos aplicados. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+028 
+Graficas 
+interactivas 
+Graficas de barras y línea para reportes semanal, 
+mensual y anual. En Android con tap para ver 
+detalle; en Desktop con hover para tooltip y zoom. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+029 Filtro por categoría 
+Todos los reportes se pueden filtrar por una o 
+varias categorías para analisis segmentado. Filtros 
+persistentes durante la sesión. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+030 
+Producto mas 
+vendido 
+Sección en todos los reportes que destaca: 
+producto con mayor volumen (unidades) y 
+producto con mayor ingreso (valor total) en el 
+periodo seleccionado. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+031 
+Tabla con 
+columnas 
+ordenables 
+Los datos del reporte se presentan en tabla con 
+columnas ordenables (fecha, producto, cantidad, 
+monto). Disponible en ambas plataformas 
+adaptado a la pantalla. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+032 
+Modo pantalla 
+completa 
+Los reportes y graficas pueden verse en pantalla 
+completa. Android: landscape con pantalla 
+expandida. Desktop: ventana maximizada sin 
+barras de herramienta. 
+📱 Android   
+🖥️ Desktop Media 
+ 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+5.5  Consulta de Ventas del Equipo 
+ 
+NUEVO MODULO: Permite a supervisores y administradores ver el desempeño de todos los 
+vendedores del equipo. Funciona en Android y Desktop con exactamente la misma información. 
+ 
+ID Requisito Descripción Plataforma Prioridad 
+RF-
+033 Gestión de equipo 
+El administrador puede agregar miembros al 
+equipo invitándolos por correo. Los miembros 
+invitados comparten el mismo espacio de negocio 
+en Firestore. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+034 
+Vista de ventas por 
+vendedor 
+Panel que muestra las ventas de cada miembro 
+del equipo para el periodo seleccionado: nombre 
+del vendedor, total vendido, numero de 
+transacciones y ticket promedio. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+035 Ranking del equipo 
+Clasificación de vendedores por total vendido en el 
+periodo. Se visualiza como lista ordenada con 
+posición, nombre, total y grafica de barra 
+comparativa. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+036 
+Reporte 
+consolidado del 
+equipo 
+Reporte que suma las ventas de todos los 
+miembros para el periodo. Diferencia del reporte 
+individual: incluye columna de vendedor en cada 
+transacción. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+037 Roles de acceso 
+Roles: Administrador (acceso total + gestión de 
+equipo), Supervisor (ver reportes del equipo, sin 
+gestión de usuarios), Vendedor (solo sus propias 
+ventas). 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+038 Filtrar por vendedor 
+En cualquier reporte del equipo, el usuario puede 
+seleccionar uno o varios vendedores específicos 
+para ver solo sus datos. 
+📱 Android   
+🖥️ Desktop Alta 
+ 
+5.6  Catalogo de Productos e Inventario 
+ 
+PARIDAD: Todas las operaciones de catalogo e inventario están disponibles en Android y Desktop. 
+Android optimiza la UI para pantalla táctil; Desktop ofrece tabla con ordenamiento y edición rapida 
+inline. 
+ 
+ID Requisito Descripción Plataforma Prioridad 
+RF-
+039 Crear producto 
+Alta de producto: nombre, descripción, precio de 
+venta, unidad de medida, código de barras 
+(opcional), categoría y stock inicial. Disponible en 
+ambas plataformas. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+040 
+Editar / Eliminar 
+producto 
+Modificación o eliminacion de productos. Desktop 
+permite edición inline directamente en la tabla del 
+catalogo sin abrir formulario separado. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+041 
+Descuento 
+automático de 
+stock 
+Al registrar una venta de un producto del catalogo, 
+el stock disponible se descuenta automáticamente. 
+El ajuste se refleja en tiempo real en todos los 
+dispositivos. 
+📱 Android   
+🖥️ Desktop Alta 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+ID Requisito Descripción Plataforma Prioridad 
+RF-
+042 
+Ajuste manual de 
+stock 
+El usuario ajusta el stock manualmente (entrada de 
+mercancía, inventario fisico, perdida) con campo 
+de motivo obligatorio. Registro en historial de 
+movimientos. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+043 
+Historial de 
+movimientos 
+Registro completo de todos los movimientos de 
+stock: ventas, ajustes, devoluciones. Columnas: 
+fecha, tipo, cantidad, motivo, vendedor y 
+plataforma de origen. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+044 Alerta de stock bajo 
+Notificación cuando el stock de un producto 
+alcanza o cae por debajo del umbral mínimo 
+configurado. Android: FCM + notificación local. 
+Desktop: notificación nativa del SO (Windows 
+toast, macOS banner, Linux notify-send). 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+045 
+Umbral de stock 
+por producto 
+Cada producto tiene su propio umbral mínimo de 
+stock configurable. El usuario puede definirlo al 
+crear o editar el producto. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+046 
+Búsqueda y filtrado 
+de catalogo 
+Búsqueda por nombre, categoria o código de 
+barras. Android: teclado táctil + escaneo. Desktop: 
+campo de búsqueda + tabla con ordenamiento de 
+columnas. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+047 
+Importar catalogo 
+por CSV 
+Importación masiva de productos mediante CSV 
+(nombre, descripción, precio, stock, codigo). 
+Android vía selector de archivos; Desktop vía 
+dialogo de apertura. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+048 Exportar catalogo 
+Exportación del catalogo completo con stock actual 
+a Excel o CSV. Android vía selector de destino / 
+compartir. Desktop vía dialogo Guardar como. 
+📱 Android   
+🖥️ Desktop Media 
+ 
+5.7  Exportación de Reportes 
+ 
+PARIDAD: Exportar a PDF y Excel es una función disponible en Android y Desktop. La diferencia es 
+únicamente como el usuario elige el destino del archivo (selector del SO Android vs dialogo de 
+escritorio). 
+ 
+ID Requisito Descripción Plataforma Prioridad 
+RF-
+049 Exportar a PDF 
+Cualquier reporte se exporta como PDF: logo del 
+negocio, periodo, tabla de transacciones con 
+columna de vendedor (si es reporte de equipo), 
+totales y graficas. Generación local en el 
+dispositivo. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+050 
+Exportar a Excel 
+(XLSX) 
+Cualquier reporte se exporta como archivo Excel 
+(.xlsx) compatible con Microsoft Excel y Google 
+Sheets. Incluye hoja de resumen + hoja de detalle 
+con todas las transacciones del periodo. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+051 Exportar a CSV 
+Exportación de datos en CSV plano para 
+integración con sistemas externos, ERP o 
+herramientas de análisis de datos. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+052 
+Destino de 
+exportación 
+Android: cuadro de compartir del SO (WhatsApp, 
+email, Drive, Dropbox, etc.) + opción de guardar en 
+📱 Android   
+🖥️ Desktop Alta 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+ID Requisito Descripción Plataforma Prioridad 
+almacenamiento local. Desktop: dialogo nativo 
+Guardar como con ruta personalizable. 
+RF-
+053 Impresión directa 
+Android: impresión via WiFi/Bluetooth (Android 
+Print Framework). Desktop: envió directo a 
+impresora local o de red configurada en el SO. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+054 
+Exportación de 
+ventas del equipo 
+Los reportes del equipo (consolidados y por 
+vendedor) pueden exportarse a PDF y Excel igual 
+que los reportes individuales, con columna de 
+vendedor incluida. 
+📱 Android   
+🖥️ Desktop Alta 
+ 
+5.8  Configuración y Preferencias 
+ 
+ID Requisito Descripción Plataforma Prioridad 
+RF-
+055 
+Moneda y formato 
+numerico 
+Configuracion global: simbolo de moneda, 
+separador de miles/decimales, posicion del 
+simbolo. Aplica a toda la app en todos los 
+dispositivos del usuario. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+056 Zona horaria 
+Seleccion de zona horaria del negocio para que los 
+reportes diarios coincidan con la jornada, 
+independientemente de UTC de Firebase. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+057 
+Categorias 
+personalizadas 
+Alta, edicion y eliminacion de categorias propias. 
+Los cambios se sincronizan entre todos los 
+dispositivos en tiempo real. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+058 Tema visual 
+Seleccion de tema claro / oscuro / automatico 
+segun el SO. Desktop incluye tambien ajuste de 
+tamano de fuente. 
+📱 Android   
+🖥️ Desktop Media 
+RF-
+059 
+Copia de seguridad 
+completa 
+Exportacion de todos los datos historicos del 
+usuario (ventas, catalogo, movimientos) en formato 
+JSON + Excel como respaldo personal. 
+📱 Android   
+🖥️ Desktop Alta 
+RF-
+060 
+Notificaciones de 
+recordatorio 
+Notificacion diaria configurable tipo Registro tus 
+ventas de hoy. Android: notificacion local + FCM. 
+Desktop: notificacion nativa del SO con hora 
+configurable. 
+📱 Android   
+🖥️ Desktop Media 
+RF-
+061 
+Gestion de 
+miembros del 
+equipo 
+El administrador puede invitar, editar roles y 
+eliminar miembros del equipo desde la seccion de 
+configuracion. 
+📱 Android   
+🖥️ Desktop Alta 
+ 
+6.  Matriz de Paridad de Funcionalidades 
+La siguiente tabla confirma que todas las funcionalidades de negocio son iguales en ambas plataformas. 
+Solo la mecanica de interaccion varia. 
+ 
+Funcionalidad Android Desktop Paridad 
+Registrar venta FAB + bottom sheet tactil Ctrl+N + modal con teclado TOTAL 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+Funcionalidad Android Desktop Paridad 
+Editar / eliminar venta Swipe o tap en item de lista Click derecho o boton en 
+tabla TOTAL 
+Escaneo de codigo de barras Camara integrada (ML Kit) Lector HID USB/Bluetooth TOTAL 
+Importar ventas CSV Selector de archivos del SO 
+Android 
+Dialogo de apertura de 
+archivo TOTAL 
+Ver reporte diario Tarjeta con lista y totales Panel con lista y totales TOTAL 
+Ver reporte semanal Grafica compacta + lista Grafica expandida + tabla 
+ordenable TOTAL 
+Ver reporte mensual Grafica por semanas + totales Grafica por semanas + tabla TOTAL 
+Ver reporte anual Grafica por meses + totales Grafica por meses + tabla TOTAL 
+Rango personalizado Selector de fechas nativo 
+Android 
+Selector de fechas Compose 
+Desktop TOTAL 
+Filtrar por categoria Chips de seleccion Checkboxes o dropdown TOTAL 
+Consultar ventas del equipo Lista y ranking de vendedores Tabla ordenable + ranking TOTAL 
+Reporte consolidado equipo PDF/Excel descargable PDF/Excel descargable + 
+imprimir TOTAL 
+Crear / editar producto Formulario en pantalla nueva Formulario modal o inline en 
+tabla TOTAL 
+Ajustar stock manualmente Formulario tactil Formulario con teclado TOTAL 
+Historial de movimientos Lista cronologica con filtros Tabla ordenable con filtros TOTAL 
+Alerta de stock bajo Notificacion FCM + local Notificacion nativa del SO TOTAL 
+Importar catalogo CSV Selector de archivos Android Dialogo de apertura archivo TOTAL 
+Exportar catalogo Compartir / guardar Android Guardar como en el SO TOTAL 
+Exportar PDF Compartir / guardar Android Guardar como + imprimir TOTAL 
+Exportar Excel (XLSX) Compartir / guardar Android Guardar como + imprimir TOTAL 
+Exportar CSV Compartir / guardar Android Guardar como TOTAL 
+Impresion directa WiFi / Bluetooth Print Impresora local / red del SO TOTAL 
+Copia de seguridad Exportar JSON+Excel via 
+compartir 
+Exportar JSON+Excel via 
+Guardar como TOTAL 
+Notificacion recordatorio FCM + notificacion local (hora 
+configurable) 
+Notificacion nativa del SO 
+(hora configurable) TOTAL 
+Gestion de equipo Invitar / editar roles / eliminar Invitar / editar roles / eliminar TOTAL 
+Configuracion de moneda Pantalla de ajustes Pantalla de ajustes TOTAL 
+Tema claro / oscuro Segun SO o manual Segun SO o manual TOTAL 
+ 
+7.  Diferencias de Interaccion por Plataforma (Solo UX) 
+ 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+Aspecto de UX 📱 Android 🖥️ Desktop 
+Navegacion principal Bottom Navigation Bar con 5 tabs Sidebar lateral siempre visible 
+Registro de venta FAB (+) flotante, formulario en bottom 
+sheet Ctrl+N, modal centrado o panel derecho 
+Atajos de teclado No aplica (teclado tactil) Ctrl+N nueva venta, Ctrl+E exportar, 
+Ctrl+P imprimir, Ctrl+R reportes 
+Escaneo de codigo Camara del dispositivo Lector de codigo USB/Bluetooth HID 
+Tablas de datos Listas deslizables con cards Tablas con columnas ordenables por click 
+en cabecera 
+Graficas Compactas con tap para detalle Expandidas con hover para tooltip y zoom 
+Modo pantalla 
+completa Rotacion landscape + pantalla expandida Ventana maximizada sin barras de 
+herramientas 
+Exportar / compartir Intent compartir del SO Android Dialogo Guardar como del SO 
+Imprimir Android Print Framework (WiFi/BT) Impresora local o de red configurada en el 
+SO 
+Notificaciones Firebase Cloud Messaging + notificacion 
+local 
+Notificacion nativa: toast (Windows), 
+banner (macOS), notify-send (Linux) 
+Widget Widget de pantalla de inicio (Android) No aplica (icono en barra de tareas con 
+total del dia en tooltip) 
+Tamano de pantalla 5" a 12" con layout adaptativo (tablet 
+mode) 
+Ventana redimensionable; minimo 1024 x 
+768; sin maximo 
+Instalacion Google Play Store / APK sideload .exe (Windows), .dmg (macOS), .deb / 
+.AppImage (Linux) 
+ 
+8.  Requerimientos No Funcionales 
+8.1  Rendimiento 
+• Registro de venta: la escritura en SQLDelight local debe completarse en menos de 500 ms en ambas 
+plataformas. 
+• La sincronización con Firestore opera en corutinas en segundo plano; nunca bloquea la UI.  
+• Dashboard principal: carga inicial en menos de 2 s con hasta 500 ventas del día. 
+• Reportes mensuales y anuales con hasta 10,000 registros: generación en menos de 5 s. 
+• Desktop: inicio de la aplicación en menos de 4 s en hardware con 4 GB de RAM. 
+• Exportación de Excel con 10,000 filas: generación en menos de 10 s.  
+ 
+8.2  Disponibilidad y Modo Offline 
+• La aplicación opera completamente sin internet: SQLDelight como fuente de verdad local en ambas 
+plataformas. 
+• Al recuperar conectividad, los datos pendientes se sincronizan automáticamente (Firestore offline 
+persistence + SyncManager propio). 
+• El indicador de estado (Sincronizado / Pendiente / Error) es visible en la UI en ambas plataformas.  
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+• Todas las funciones de negocio (registro, reportes, catalogo, inventario) están disponibles en modo 
+offline. 
+ 
+8.3  Seguridad 
+• Toda comunicación con Firebase usa HTTPS/TLS 1.3. 
+• Firebase Security Rules garantizan aislamiento por usuario Y por negocio (teamId). Un usuario solo 
+accede a datos de su equipo. 
+• Los tokens de Firebase Auth se renuevan automáticamente; sesiones expiradas redirigen al login. 
+• Las contraseñas son gestionadas exclusivamente por Firebase Auth; nunca se almacenan en el 
+dispositivo. 
+ 
+8.4  Usabilidad 
+• Android: registrar una venta debe requerir máximo 3 interacciones tactiles desde el dashboard. 
+• Desktop: registrar una venta debe ser posible completamente con teclado (sin mouse) en menos de 
+15 segundos. 
+• La aplicación cumple WCAG 2.1 nivel AA: contraste mínimo 4.5:1, tamanos de fuente accesibles. 
+• Android: elementos táctiles de minimo 48 x 48 dp (Material Design 3). 
+• Desktop: soporte de lectores de pantalla del SO (Narrator en Windows, VoiceOver en macOS).  
+ 
+8.5  Escalabilidad y Mantenibilidad 
+• El modulo :shared contiene el 100% de la lógica de negocio. Ninguna capa de UI contiene lógica de 
+negocio. 
+• Arquitectura Clean Architecture: capas Domain, Data y Presentation completamente desacopladas.  
+• La adición de iOS en v2.0 no requiere modificar el modulo :shared, solo agregar la capa UI Swift.  
+• Cobertura mínima de pruebas unitarias en :shared: 80%. Las pruebas corren idénticas para Android 
+y Desktop. 
+ 
+9.  Arquitectura Técnica KMP 
+9.1  Estructura de Módulos 
+ 
+Modulo Target Contenido 
+:shared/commonMain Android + Desktop + 
+iOS 
+Entidades, casos de uso, repositorios, ViewModels 
+(StateFlow), SyncManager, SQLDelight schemas 
+:shared/androidMain Android Firebase Android SDK, driver SQLDelight Android, 
+FCM, ML Kit Barcode 
+:shared/desktopMain Desktop JVM Firebase vía Ktor REST / Admin SDK, driver 
+SQLDelight JVM (SQLite), notificaciones nativas 
+:shared/iosMain iOS (futuro) Firebase iOS SDK, driver SQLDelight native, reservado 
+para v2.0 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+Modulo Target Contenido 
+:androidApp Android MainActivity, Composables Android, Material 3, 
+navegacion, widget, Print Framework 
+:desktopApp Desktop JVM main() entry point, ventana Compose, menú nativo, 
+atajos de teclado, dialogo Guardar como 
+ 
+9.2  Stack Tecnológico Completo 
+ 
+Categoría Tecnología Aplica a 
+Lenguaje Kotlin (KMP) Android + Desktop + iOS 
+UI Android Jetpack Compose (Material 3) Android 
+UI Desktop Compose Multiplatform Desktop 
+Base de datos remota Firebase Firestore Ambas (vía SDK Android / REST Desktop) 
+Autenticación Firebase Authentication Ambas 
+BD local / Offline SQLDelight (KMP) Ambas (driver Android / JVM) 
+Inyeccion de 
+dependencias Koin (KMP compatible) Ambas 
+Async / Reactivo Coroutines + StateFlow + 
+SharedFlow Ambas (commonMain) 
+Red Ktor Client (KMP) Ambas (Firebase REST en Desktop) 
+Graficas Android Vico Android 
+Graficas Desktop Lets-Plot Kotlin o Compose Charts Desktop 
+Exportación PDF iText (Android) / Apache PDFBox 
+(Desktop) Ambas 
+Exportación Excel Apache POI (Android + Desktop vía 
+JVM) Ambas 
+Escaneo Android ML Kit Barcode Scanning Android (cámara) 
+Escaneo Desktop HID USB/Bluetooth (lector actúa 
+como teclado) Desktop 
+Notificaciones Android Firebase Cloud Messaging (FCM) + 
+local Android 
+Notificaciones Desktop Compose Multiplatform Notification / 
+OS API Desktop 
+Impresión Android Android Print Framework Android 
+Impresión Desktop Java Print API (javax.print) Desktop 
+CI/CD GitHub Actions Ambas: APK + instaladores .exe/.dmg/.deb 
+ 
+10.  Modelo de Datos Firebase Firestore 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+ 
+Ruta de Colección Descripción 
+businesses/{bizId} Datos del negocio: nombre, logo, moneda, zona horaria, plan 
+(free/blaze) 
+businesses/{bizId}/members/{userId} Miembro del equipo: email, nombre, rol 
+(admin/supervisor/vendedor), fechaIngreso 
+businesses/{bizId}/sales/{saleId} Venta: productName, quantity, unitPrice, discount, totalAmount, 
+categoryId, vendorId, platform, timestamp, isDeleted 
+businesses/{bizId}/products/{productId} Producto: nombre, descripción, precio, stock, stockMinimo, 
+codigoBarras, categoriaId 
+businesses/{bizId}/categories/{categoryId} Categoría: nombre, color, icono 
+businesses/{bizId}/stockMovements/{moveId} Movimiento: tipo (venta/ajuste/devolucion), productoId, 
+cantidad, motivo, vendorId, timestamp 
+businesses/{bizId}/syncLog/{logId} Log de sincronización offline: timestamp, estado, registros 
+afectados, plataforma 
+ 
+El modelo usa businesses/{bizId} como raíz en lugar de users/{userId}, lo que permite que múltiples 
+usuarios (el equipo) compartan los mismos datos de ventas, catalogo e inventario, controlado por el 
+documento members que define el rol de cada usuario. 
+ 
+11.  Flujos Principales de Usuario 
+11.1  Registrar una Venta — Android 
+1. El vendedor abre la app; el dashboard muestra el total del día. 
+2. Toca el FAB (+) en la esquina inferior derecha. 
+3. Escribe el nombre del producto; el sistema sugiere del catalogo con precio precargado.  
+4. Ajusta cantidad con controles +/- ; el total se calcula en tiempo real. 
+5. Selecciona categoría (opcional) y agrega nota (opcional). 
+6. Toca Guardar. La venta se escribe en SQLDelight en menos de 500 ms.  
+7. El dashboard actualiza el total; el bottom sheet se cierra. 
+8. En segundo plano, la venta se sincroniza con Firestore. El indicador muestra Sincronizado.  
+ 
+11.2  Registrar una Venta — Desktop 
+9. El usuario abre la aplicación; el sidebar muestra el resumen del día. 
+10. Presiona Ctrl+N. Se abre un modal centrado; el foco va al campo Producto. 
+11. Escribe el nombre; el sistema sugiere del catalogo. Navega con Tab entre campos.  
+12. Ingresa cantidad y precio; el total aparece en tiempo real. 
+13. Presiona Enter para guardar. La venta aparece en la lista sin recargar.  
+14. La barra de estado muestra Sincronizando... y luego Sincronizado. 
+ 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+11.3  Consultar Ventas del Equipo — Ambas Plataformas 
+15. El supervisor accede a la sección Equipo (Android: tab inferior; Desktop: menú sidebar). 
+16. Selecciona el periodo: Hoy / Semana / Mes / Ano o rango personalizado.  
+17. Ve el ranking de vendedores con total vendido y numero de transacciones.  
+18. Toca / hace clic en un vendedor para ver su detalle de ventas. 
+19. Filtra por categoría para analisis segmentado. 
+20. Exporta el reporte del equipo a PDF o Excel para la reunión de resultados. 
+ 
+11.4  Gestionar Alerta de Stock Bajo — Ambas Plataformas 
+21. El administrador crea un producto con stock inicial 50 y umbral mínimo 10. 
+22. Un vendedor registra una venta de 42 unidades; el stock cae a 8. 
+23. El sistema detecta que 8 < 10 (umbral) y dispara la alerta. 
+24. Android: el dispositivo del administrador recibe una notificación FCM con texto Stock bajo: Producto 
+X (8 unidades restantes). 
+25. Desktop: aparece una notificación nativa del SO con el mismo mensaje. 
+26. El administrador abre la notificación; la app navega directamente al producto en cuestión. 
+27. El administrador realiza un ajuste manual de stock (entrada de mercancía +50) con motivo 
+Reabastecimiento. 
+28. El historial de movimientos registra el ajuste con timestamp, usuario y plataforma.  
+ 
+12.  Criterios de Aceptación 
+ 
+ID Funcionalidad Criterio de Aceptación Plataforma 
+CA-001 Registro de venta 
+Venta registrada en máximo 3 interacciones tactiles (Android) o 
+con teclado sin mouse (Desktop) y aparece en el dashboard en 
+menos de 2 s 
+Ambas 
+CA-002 Escaneo de código 
+Android: cámara detecta el codigo y carga el producto en 
+menos de 2 s. Desktop: lector HID carga el producto 
+automáticamente al escanear 
+Ambas 
+CA-003 Importación CSV 
+ventas 
+Un CSV de 100 filas se importa correctamente (sin errores de 
+datos validos) en menos de 10 s Ambas 
+CA-004 Reporte diario El total mostrado coincide exactamente con la suma de todas 
+las ventas del día seleccionado Ambas 
+CA-005 Reporte semanal Los 7 días muestran totales correctos y el porcentaje de 
+variación vs semana anterior es preciso Ambas 
+CA-006 Reporte mensual Las semanas del mes tienen totales correctos y la variación vs 
+mes anterior es precisa Ambas 
+CA-007 Reporte anual Los 12 meses tienen totales correctos; el total anual coincide 
+con la suma de meses Ambas 
+CA-008 Rango 
+personalizado 
+El reporte de cualquier rango de fechas genera totales exactos 
+y se carga en menos de 5 s con 10,000 registros Ambas 
+CA-009 Ventas del equipo El ranking de vendedores muestra totales correctos; el reporte 
+consolidado suma correctamente a todos los miembros Ambas 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+ID Funcionalidad Criterio de Aceptación Plataforma 
+CA-010 Control de stock 
+Al registrar 5 ventas de Producto X (2 unidades c/u), el stock 
+cae exactamente 10 unidades en todos los dispositivos en 
+menos de 5 s 
+Ambas 
+CA-011 Alerta stock bajo Cuando stock cae <= umbral, la notificación llega al dispositivo 
+en menos de 10 s tras el descuento Ambas 
+CA-012 Ajuste manual de 
+stock 
+Un ajuste +50 se refleja inmediatamente en el stock y aparece 
+en el historial de movimientos con motivo y usuario Ambas 
+CA-013 Exportar PDF 
+El PDF incluye: logo del negocio, periodo, lista de 
+transacciones con vendedor, totales y graficas. Se genera en 
+menos de 5 s 
+Ambas 
+CA-014 Exportar Excel El XLSX tiene hoja Resumen y hoja Detalle con todas las 
+columnas. Se abre correctamente en Excel y Google Sheets Ambas 
+CA-015 Modo offline Se registran ventas sin internet. Al reconectarse, los datos se 
+sincronizan en menos de 30 s Ambas 
+CA-016 Sincronización 
+multi-disp. 
+Una venta en Android aparece en el Desktop del mismo 
+usuario en menos de 5 s con Firestore real-time Ambas 
+CA-017 Seguridad por roles 
+Un vendedor no puede ver ventas de otros; un supervisor 
+puede ver el equipo pero no gestionar miembros; solo el admin 
+gestiona el equipo 
+Ambas 
+CA-018 Impresión directa El reporte se envía correctamente a la impresora configurada y 
+se imprime sin pasos intermedios adicionales Ambas 
+CA-019 Importar catalogo 
+CSV 
+Un catalogo de 200 productos importado vía CSV aparece 
+correctamente en el catalogo en menos de 15 s Ambas 
+CA-020 Copia de seguridad La exportación JSON+Excel incluye el 100% de ventas y 
+movimientos históricos del negocio Ambas 
+ 
+13.  Restricciones y Suposiciones 
+13.1  Restricciones Técnicas 
+• Android: API mínima 26 (Android 8.0). El instalador Desktop incluye JRE 17 empaquetado.  
+• iOS queda fuera del alcance de v1.0. La arquitectura KMP lo soportara en v2.0 sin refactorización del 
+modulo :shared. 
+• El almacenamiento de imágenes de productos (Firebase Storage) queda fuera de v1.0. 
+• Firebase Free Tier: 50,000 lecturas/día y 20,000 escrituras/dia. Se migra a plan Blaze según 
+crecimiento. 
+• No existe backend propio; toda la lógica opera client-side + Firebase. 
+13.2  Suposiciones 
+• Todos los miembros del equipo tienen cuenta de correo electrónico para registro e invitación. 
+• Los dispositivos Desktop y Android tienen acceso a internet al menos una vez al día para 
+sincronizacion. 
+• Los precios son en una sola moneda por negocio; no se realizan conversiones de divisas en v1.0.  
+• El administrador del negocio es responsable de configurar los umbrales de stock bajo para cada 
+producto. 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+ 
+14.  Plan de Entrega — Sprints 
+ 
+Sprint Duración Entregable Principal Plataforma 
+Sprint 1 2 semanas Setup KMP, modulo :shared, Clean Architecture, CI/CD (APK + Desktop 
+installer) Ambas 
+Sprint 2 2 semanas Firebase Auth completo (registro, login, Google, recuperación), 
+SQLDelight schema, SyncManager Ambas 
+Sprint 3 2 semanas Registro de ventas CRUD + escaneo (ML Kit Android / HID Desktop) + 
+importación CSV Ambas 
+Sprint 4 2 semanas Dashboard en tiempo real + Reportes diario y semanal con graficas Ambas 
+Sprint 5 2 semanas Reportes mensual, anual y rango personalizado + filtros por categoría + 
+tabla ordenable Ambas 
+Sprint 6 2 semanas Modulo de equipo: roles, ventas por vendedor, ranking y reporte 
+consolidado Ambas 
+Sprint 7 2 semanas Catalogo de productos + descuento de stock + ajuste manual + historial de 
+movimientos Ambas 
+Sprint 8 2 semanas Alertas de stock bajo (FCM Android + notif. nativa Desktop) + umbrales 
+configurables Ambas 
+Sprint 9 2 semanas Exportación PDF, Excel, CSV + impresión directa (ambas plataformas) + 
+copia de seguridad Ambas 
+Sprint 
+10 1 semana Widget Android + atajos de teclado Desktop + modo pantalla completa + 
+recordatorios Ambas 
+Sprint 
+11 2 semanas QA integral: funcional, seguridad, offline, rendimiento, pruebas de 
+aceptación con cliente Ambas 
+Sprint 
+12 1 semana Build release: AAB Play Store + instaladores .exe/.dmg/.deb + 
+documentación final Ambas 
+ 
+Duración total estimada: 19 semanas (~5 meses). Equipo recomendado: 2 desarrolladores KMP 
+senior + 1 QA. 
+ 
+15.  Glosario de Términos 
+ 
+Termino Definición 
+KMP Kotlin Multiplatform — tecnología de JetBrains para compartir código Kotlin entre 
+Android, iOS, Desktop y Web. 
+Compose Multiplatform Framework de UI declarativa de JetBrains basado en Jetpack Compose, 
+compatible con Desktop e iOS además de Android. 
+
+SalesTrack Inventory  ·  DRS v3.0 📱 Android  ·  🖥️ Desktop  ·  Paridad total de funcionalidades 
+Confidencial — Uso interno MARZO 2026  ·  v3.0 
+Termino Definición 
+Firebase Firestore Base de datos NoSQL orientada a documentos de Google; sincronización en 
+tiempo real y soporte offline nativo. 
+SQLDelight Librería KMP que genera código Kotlin type-safe a partir de SQL; soporta Android 
+(SQLite), JVM (SQLite) e iOS. 
+SyncManager Componente :shared que detecta registros pendientes en SQLDelight y los envía a 
+Firestore al recuperar la conexión. 
+Clean Architecture Patron que separa el código en capas: Domain (lógica de negocio), Data 
+(repositorios), Presentation (ViewModels/UI). 
+StateFlow Tipo reactivo de Kotlin que mantiene el ultimo estado; usado en ViewModels para 
+actualizar la UI en tiempo real. 
+HID Human Interface Device — protocolo USB/Bluetooth; los lectores de código de 
+barras HID actúan como teclado. 
+FCM Firebase Cloud Messaging — servicio de notificaciones push de Google para 
+Android. 
+Soft-delete Eliminación logica: el registro se marca isDeleted=true en lugar de borrarse 
+físicamente de Firestore. 
+Paridad total Principio rector de este proyecto: toda funcionalidad de negocio disponible en 
+Android debe estarlo igualmente en Desktop. 
+DRS Documento de Requerimientos de Software — este documento. 
+ 
+16.  Historial de Revisiones 
+ 
+Versión Fecha Descripción del Cambio 
+1.0 Marzo 2026 Versión inicial — plataforma Android únicamente 
+2.0 Marzo 2026 Se agrega Desktop; diferencias de UX por plataforma; modulo de inventario 
+ampliado 
+3.0 Marzo 2026 
+PARIDAD TOTAL: todas las funciones de negocio disponibles en Android Y 
+Desktop. Se agregan: escaneo de código en Desktop via HID, importación CSV 
+en ambas, exportación Excel en ambas, impresión en ambas, alertas de stock 
+en ambas, ventas del equipo en ambas, copia de seguridad en ambas, 
+notificaciones en ambas. Nueva seccion de Matriz de Paridad. Modelo de datos 
+actualizado a businesses/{bizId} para soporte de equipos. 61 requerimientos 
+funcionales con paridad garantizada. 
+ 
+SalesTrack Inventory & Sales Manager  |  DRS v3.0  |  Marzo 2026  |  Confidencial — Uso Interno 
