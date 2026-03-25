@@ -20,6 +20,7 @@ shared/shared.podspec
 !README.md
 !DEVELOPMENT.md
 !PROJECT_ROADMAP.md
+!SESSION_SUMMARY.md
 !plan_ui_mvvm_clean.md
 build-android.ps1
 local.properties
