@@ -16,7 +16,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.sp
 import org.salestrack.app.presentation.feature.dashboard.DashboardRoute
+import org.salestrack.app.presentation.feature.reports.ReportsRoute
 import org.salestrack.app.presentation.feature.sales.SalesRoute
+import org.salestrack.app.presentation.feature.team.TeamRoute
 
 data class NavigationDestination(
     val route: AppDestination,
@@ -103,8 +105,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             AppDestination.Dashboard -> DashboardRoute(container = container, modifier = screenModifier)
             AppDestination.Sales -> SalesRoute(container = container, modifier = screenModifier)
             AppDestination.Inventory -> PlaceholderScreen("Inventario", screenModifier)
-            AppDestination.Reports -> PlaceholderScreen("Reportes", screenModifier)
-            AppDestination.Team -> PlaceholderScreen("Equipo", screenModifier)
+            AppDestination.Reports -> ReportsRoute(container = container, modifier = screenModifier)
+            AppDestination.Team -> TeamRoute(container = container, modifier = screenModifier)
             AppDestination.Settings -> PlaceholderScreen("Configuración", screenModifier)
         }
     }
