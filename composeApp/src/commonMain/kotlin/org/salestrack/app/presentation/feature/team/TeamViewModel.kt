@@ -44,7 +44,10 @@ class TeamViewModel(
                 setState { it.copy(selectedCategory = event.category) }
                 refreshRanking()
             }
-            is TeamUiEvent.SelectMember -> setState { it.copy(selectedMemberId = event.memberId) }
+            is TeamUiEvent.SelectMember -> {
+                setState { it.copy(selectedMemberId = event.memberId) }
+                refreshRanking()
+            }
             is TeamUiEvent.InviteMember -> inviteMember(event.fullName, event.email, event.role)
             is TeamUiEvent.ChangeMemberRole -> changeMemberRole(event.memberId, event.role)
             is TeamUiEvent.RemoveMember -> removeMember(event.memberId)
@@ -90,14 +93,42 @@ class TeamViewModel(
             ranking
         }
 
+        val resolvedSelectedMemberId = current.selectedMemberId
+            ?.takeIf { selectedId -> visibleRanking.any { it.memberId == selectedId } }
+            ?: visibleRanking.firstOrNull()?.memberId
+
+        val selectedMemberSales = buildSelectedMemberSales(
+            memberId = resolvedSelectedMemberId,
+            selectedCategory = current.selectedCategory,
+        )
+
         setState {
             it.copy(
                 isLoading = false,
+                permissions = permissions,
                 members = latestMembers,
                 ranking = visibleRanking,
+                selectedMemberId = resolvedSelectedMemberId,
+                selectedMemberSales = selectedMemberSales,
                 errorMessage = null,
             )
         }
+    }
+
+    private fun buildSelectedMemberSales(
+        memberId: String?,
+        selectedCategory: String?,
+    ): List<Sale> {
+        if (memberId == null) return emptyList()
+        val member = latestMembers.firstOrNull { it.id == memberId } ?: return emptyList()
+
+        return latestSales
+            .asSequence()
+            .filter { !it.isDeleted }
+            .filter { selectedCategory.isNullOrBlank() || it.category == selectedCategory }
+            .filter { it.sellerName == member.fullName }
+            .sortedByDescending { it.createdAtMillis }
+            .toList()
     }
 
     private fun inviteMember(fullName: String, email: String, role: UserRole) {

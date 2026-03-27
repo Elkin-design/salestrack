@@ -19,6 +19,7 @@ import org.salestrack.app.domain.usecase.team.InviteMemberUseCase
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TeamViewModelTest {
@@ -53,6 +54,7 @@ class TeamViewModelTest {
 
         assertEquals(UserRole.Admin, viewModel.state.value.currentRole)
         assertEquals(1, viewModel.state.value.ranking.size)
+        assertTrue(viewModel.state.value.permissions.canManageTeam)
     }
 
     @Test
@@ -79,6 +81,47 @@ class TeamViewModelTest {
         advanceUntilIdle()
 
         assertNotNull(viewModel.state.value.errorMessage)
+        assertTrue(viewModel.state.value.permissions.canViewOnlyOwnSales)
+    }
+
+    @Test
+    fun should_update_selected_member_sales_when_member_changes() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val saleRepository = FakeSaleRepository(
+            dataSource = InMemorySaleDataSource(
+                listOf(
+                    Sale("1", "Cafe", "Bebidas", 1, 10_000.0, 0.0, 1_000L, "Ana"),
+                    Sale("2", "Galletas", "Snacks", 2, 5_000.0, 0.0, 2_000L, "Luis"),
+                ),
+            ),
+            timeProvider = FakeTimeProvider(1_000L),
+        )
+        val teamRepository = FakeTeamRepository(
+            InMemoryTeamDataSource(
+                listOf(
+                    TeamMember("U-1", "Ana", "ana@test.com", UserRole.Admin),
+                    TeamMember("U-2", "Luis", "luis@test.com", UserRole.Seller),
+                ),
+            ),
+        )
+
+        val viewModel = TeamViewModel(
+            dispatcherProvider = FakeDispatcherProvider(dispatcher),
+            saleRepository = saleRepository,
+            teamRepository = teamRepository,
+            getTeamSalesUseCase = GetTeamSalesUseCase(),
+            inviteMemberUseCase = InviteMemberUseCase(teamRepository),
+            getRolePermissionsUseCase = GetRolePermissionsUseCase(),
+        )
+
+        advanceUntilIdle()
+
+        viewModel.onEvent(TeamUiEvent.SelectMember("U-2"))
+        advanceUntilIdle()
+
+        assertEquals("U-2", viewModel.state.value.selectedMemberId)
+        assertEquals(1, viewModel.state.value.selectedMemberSales.size)
+        assertEquals("Luis", viewModel.state.value.selectedMemberSales.first().sellerName)
     }
 }
 

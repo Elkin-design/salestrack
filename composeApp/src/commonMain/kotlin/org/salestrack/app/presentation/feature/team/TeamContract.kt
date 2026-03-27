@@ -3,6 +3,8 @@ package org.salestrack.app.presentation.feature.team
 import org.salestrack.app.core.presentation.UiEffect
 import org.salestrack.app.core.presentation.UiEvent
 import org.salestrack.app.core.presentation.UiState
+import org.salestrack.app.domain.model.RolePermissions
+import org.salestrack.app.domain.model.Sale
 import org.salestrack.app.domain.model.TeamMember
 import org.salestrack.app.domain.model.TeamMemberPerformance
 import org.salestrack.app.domain.model.UserRole
@@ -11,10 +13,16 @@ data class TeamUiState(
     val isLoading: Boolean = true,
     val currentRole: UserRole = UserRole.Admin,
     val selectedCategory: String? = null,
+    val permissions: RolePermissions = RolePermissions(
+        canViewAllSales = true,
+        canManageTeam = true,
+        canViewOnlyOwnSales = false,
+    ),
     val categories: List<String> = emptyList(),
     val members: List<TeamMember> = emptyList(),
     val ranking: List<TeamMemberPerformance> = emptyList(),
     val selectedMemberId: String? = null,
+    val selectedMemberSales: List<Sale> = emptyList(),
     val errorMessage: String? = null,
 ) : UiState
 
