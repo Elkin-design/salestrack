@@ -24,13 +24,19 @@ import androidx.compose.ui.unit.dp
 import org.salestrack.app.domain.model.AppThemeMode
 import org.salestrack.app.domain.model.CurrencyCode
 import org.salestrack.app.presentation.app.AppContainer
+import org.salestrack.app.presentation.feature.backup.BackupRoute
 import org.salestrack.app.presentation.feature.category.CategoryManagementRoute
+import org.salestrack.app.presentation.feature.export.ExportReportRoute
 import org.salestrack.app.presentation.feature.notification.NotificationSettingsRoute
+import org.salestrack.app.presentation.feature.print.PrintRoute
 
 private enum class SettingsSection {
     Main,
     Categories,
     Notifications,
+    Export,
+    Print,
+    Backup,
 }
 
 @Composable
@@ -51,6 +57,30 @@ fun SettingsRoute(
         }
         SettingsSection.Notifications -> {
             NotificationSettingsRoute(
+                container = container,
+                onBack = { activeSection = SettingsSection.Main },
+                modifier = modifier,
+            )
+            return
+        }
+        SettingsSection.Export -> {
+            ExportReportRoute(
+                container = container,
+                onBack = { activeSection = SettingsSection.Main },
+                modifier = modifier,
+            )
+            return
+        }
+        SettingsSection.Print -> {
+            PrintRoute(
+                container = container,
+                onBack = { activeSection = SettingsSection.Main },
+                modifier = modifier,
+            )
+            return
+        }
+        SettingsSection.Backup -> {
+            BackupRoute(
                 container = container,
                 onBack = { activeSection = SettingsSection.Main },
                 modifier = modifier,
@@ -80,6 +110,9 @@ fun SettingsRoute(
         onEvent = viewModel::onEvent,
         onOpenCategoryManagement = { activeSection = SettingsSection.Categories },
         onOpenNotificationSettings = { activeSection = SettingsSection.Notifications },
+        onOpenExport = { activeSection = SettingsSection.Export },
+        onOpenPrint = { activeSection = SettingsSection.Print },
+        onOpenBackup = { activeSection = SettingsSection.Backup },
         modifier = modifier,
     )
 }
@@ -90,6 +123,9 @@ fun SettingsScreen(
     onEvent: (SettingsUiEvent) -> Unit,
     onOpenCategoryManagement: () -> Unit,
     onOpenNotificationSettings: () -> Unit,
+    onOpenExport: () -> Unit,
+    onOpenPrint: () -> Unit,
+    onOpenBackup: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -203,6 +239,27 @@ fun SettingsScreen(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text("Configurar notificaciones")
+        }
+
+        Button(
+            onClick = onOpenExport,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Exportar reportes")
+        }
+
+        Button(
+            onClick = onOpenPrint,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Imprimir reportes")
+        }
+
+        Button(
+            onClick = onOpenBackup,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Generar backup")
         }
 
         if (uiState.errorMessage != null) {

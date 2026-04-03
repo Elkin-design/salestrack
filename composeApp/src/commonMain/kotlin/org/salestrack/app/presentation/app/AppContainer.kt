@@ -12,9 +12,12 @@ import org.salestrack.app.data.mock.MockCategoryFactory
 import org.salestrack.app.data.mock.MockSettingsFactory
 import org.salestrack.app.data.mock.MockNotificationSettingsFactory
 import org.salestrack.app.data.mock.MockTeamFactory
+import org.salestrack.app.data.repository.FakeBackupRepository
 import org.salestrack.app.data.repository.FakeCategoryRepository
+import org.salestrack.app.data.repository.FakeExportRepository
 import org.salestrack.app.data.repository.FakeInventoryRepository
 import org.salestrack.app.data.repository.FakeNotificationRepository
+import org.salestrack.app.data.repository.FakePrintRepository
 import org.salestrack.app.data.repository.FakeSaleRepository
 import org.salestrack.app.data.repository.FakeSettingsRepository
 import org.salestrack.app.data.repository.FakeTeamRepository
@@ -24,23 +27,31 @@ import org.salestrack.app.data.source.InMemoryNotificationSettingsDataSource
 import org.salestrack.app.data.source.InMemorySaleDataSource
 import org.salestrack.app.data.source.InMemorySettingsDataSource
 import org.salestrack.app.data.source.InMemoryTeamDataSource
+import org.salestrack.app.domain.repository.BackupRepository
 import org.salestrack.app.domain.repository.CategoryRepository
+import org.salestrack.app.domain.repository.ExportRepository
 import org.salestrack.app.domain.repository.InventoryRepository
 import org.salestrack.app.domain.repository.NotificationRepository
+import org.salestrack.app.domain.repository.PrintRepository
 import org.salestrack.app.domain.repository.SaleRepository
 import org.salestrack.app.domain.repository.SettingsRepository
 import org.salestrack.app.domain.repository.TeamRepository
+import org.salestrack.app.domain.usecase.backup.CreateBackupUseCase
 import org.salestrack.app.domain.usecase.category.CreateCategoryUseCase
 import org.salestrack.app.domain.usecase.category.DeleteCategoryUseCase
 import org.salestrack.app.domain.usecase.category.ObserveCategoriesUseCase
 import org.salestrack.app.domain.usecase.category.UpdateCategoryUseCase
 import org.salestrack.app.domain.usecase.dashboard.BuildDashboardSummaryUseCase
+import org.salestrack.app.domain.usecase.export.ExportCsvUseCase
+import org.salestrack.app.domain.usecase.export.ExportExcelUseCase
+import org.salestrack.app.domain.usecase.export.ExportPdfUseCase
 import org.salestrack.app.domain.usecase.inventory.AddProductUseCase
 import org.salestrack.app.domain.usecase.inventory.AdjustStockUseCase
 import org.salestrack.app.domain.usecase.inventory.EditProductUseCase
 import org.salestrack.app.domain.usecase.inventory.FilterProductsUseCase
 import org.salestrack.app.domain.usecase.notification.ObserveNotificationSettingsUseCase
 import org.salestrack.app.domain.usecase.notification.UpdateNotificationSettingsUseCase
+import org.salestrack.app.domain.usecase.print.PrintReportUseCase
 import org.salestrack.app.domain.usecase.reports.GetCustomRangeReportUseCase
 import org.salestrack.app.domain.usecase.reports.GetDailyReportUseCase
 import org.salestrack.app.domain.usecase.reports.GetPeriodReportUseCase
@@ -62,6 +73,9 @@ class AppContainer(
     val categoryRepository: CategoryRepository,
     val settingsRepository: SettingsRepository,
     val notificationRepository: NotificationRepository,
+    val exportRepository: ExportRepository,
+    val printRepository: PrintRepository,
+    val backupRepository: BackupRepository,
     val teamRepository: TeamRepository,
     val addSaleUseCase: AddSaleUseCase,
     val updateSaleUseCase: UpdateSaleUseCase,
@@ -86,6 +100,11 @@ class AppContainer(
     val updateSettingsUseCase: UpdateSettingsUseCase,
     val observeNotificationSettingsUseCase: ObserveNotificationSettingsUseCase,
     val updateNotificationSettingsUseCase: UpdateNotificationSettingsUseCase,
+    val exportPdfUseCase: ExportPdfUseCase,
+    val exportExcelUseCase: ExportExcelUseCase,
+    val exportCsvUseCase: ExportCsvUseCase,
+    val printReportUseCase: PrintReportUseCase,
+    val createBackupUseCase: CreateBackupUseCase,
 )
 
 @Composable
@@ -115,6 +134,9 @@ fun rememberAppContainer(): AppContainer {
             MockNotificationSettingsFactory.create(timeProvider),
         )
         val notificationRepository = FakeNotificationRepository(notificationDataSource)
+        val exportRepository = FakeExportRepository()
+        val printRepository = FakePrintRepository()
+        val backupRepository = FakeBackupRepository()
 
         val teamDataSource = InMemoryTeamDataSource(MockTeamFactory.create())
         val teamRepository = FakeTeamRepository(teamDataSource)
@@ -127,6 +149,9 @@ fun rememberAppContainer(): AppContainer {
             categoryRepository = categoryRepository,
             settingsRepository = settingsRepository,
             notificationRepository = notificationRepository,
+            exportRepository = exportRepository,
+            printRepository = printRepository,
+            backupRepository = backupRepository,
             teamRepository = teamRepository,
             addSaleUseCase = AddSaleUseCase(repository, inventoryRepository),
             updateSaleUseCase = UpdateSaleUseCase(repository),
@@ -153,6 +178,18 @@ fun rememberAppContainer(): AppContainer {
             updateNotificationSettingsUseCase = UpdateNotificationSettingsUseCase(
                 notificationRepository,
                 timeProvider,
+            ),
+            exportPdfUseCase = ExportPdfUseCase(repository, exportRepository),
+            exportExcelUseCase = ExportExcelUseCase(repository, exportRepository),
+            exportCsvUseCase = ExportCsvUseCase(repository, exportRepository),
+            printReportUseCase = PrintReportUseCase(repository, printRepository),
+            createBackupUseCase = CreateBackupUseCase(
+                saleRepository = repository,
+                inventoryRepository = inventoryRepository,
+                categoryRepository = categoryRepository,
+                settingsRepository = settingsRepository,
+                notificationRepository = notificationRepository,
+                backupRepository = backupRepository,
             ),
         )
     }

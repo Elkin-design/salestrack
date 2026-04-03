@@ -12,9 +12,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.sp
+import org.salestrack.app.presentation.feature.export.ExportReportRoute
+import org.salestrack.app.presentation.feature.print.PrintRoute
 import org.salestrack.app.presentation.feature.dashboard.DashboardRoute
 import org.salestrack.app.presentation.feature.inventory.InventoryRoute
 import org.salestrack.app.presentation.feature.reports.ReportsRoute
@@ -68,12 +76,34 @@ enum class AppDestination {
     Reports,
     Team,
     Settings,
+    Export,
+    Print,
 }
 
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
     var currentDestination by remember { mutableStateOf(AppDestination.Dashboard) }
     val container = rememberAppContainer()
+    val keyboardModifier = modifier.onPreviewKeyEvent { event ->
+        if (event.type != KeyEventType.KeyDown || !event.isCtrlPressed) {
+            return@onPreviewKeyEvent false
+        }
+        when (event.key) {
+            Key.R -> {
+                currentDestination = AppDestination.Reports
+                true
+            }
+            Key.E -> {
+                currentDestination = AppDestination.Export
+                true
+            }
+            Key.P -> {
+                currentDestination = AppDestination.Print
+                true
+            }
+            else -> false
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -97,7 +127,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 }
             }
         },
-        modifier = modifier,
+        modifier = keyboardModifier,
     ) { paddingValues ->
         val screenModifier = Modifier
             .fillMaxSize()
@@ -110,6 +140,16 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             AppDestination.Reports -> ReportsRoute(container = container, modifier = screenModifier)
             AppDestination.Team -> TeamRoute(container = container, modifier = screenModifier)
             AppDestination.Settings -> SettingsRoute(container = container, modifier = screenModifier)
+            AppDestination.Export -> ExportReportRoute(
+                container = container,
+                onBack = { currentDestination = AppDestination.Reports },
+                modifier = screenModifier,
+            )
+            AppDestination.Print -> PrintRoute(
+                container = container,
+                onBack = { currentDestination = AppDestination.Reports },
+                modifier = screenModifier,
+            )
         }
     }
 }
