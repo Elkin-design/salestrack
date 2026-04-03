@@ -19,6 +19,7 @@ import org.salestrack.app.presentation.feature.dashboard.DashboardRoute
 import org.salestrack.app.presentation.feature.inventory.InventoryRoute
 import org.salestrack.app.presentation.feature.reports.ReportsRoute
 import org.salestrack.app.presentation.feature.sales.SalesRoute
+import org.salestrack.app.presentation.feature.settings.SettingsRoute
 import org.salestrack.app.presentation.feature.team.TeamRoute
 
 data class NavigationDestination(
@@ -108,7 +109,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             AppDestination.Inventory -> InventoryRoute(container = container, modifier = screenModifier)
             AppDestination.Reports -> ReportsRoute(container = container, modifier = screenModifier)
             AppDestination.Team -> TeamRoute(container = container, modifier = screenModifier)
-            AppDestination.Settings -> PlaceholderScreen("Configuración", screenModifier)
+            AppDestination.Settings -> SettingsRoute(container = container, modifier = screenModifier)
         }
     }
 }

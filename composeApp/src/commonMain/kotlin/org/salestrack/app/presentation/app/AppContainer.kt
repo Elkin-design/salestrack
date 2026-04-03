@@ -8,15 +8,19 @@ import org.salestrack.app.core.utils.SystemTimeProvider
 import org.salestrack.app.core.utils.TimeProvider
 import org.salestrack.app.data.mock.MockSalesFactory
 import org.salestrack.app.data.mock.MockInventoryFactory
+import org.salestrack.app.data.mock.MockSettingsFactory
 import org.salestrack.app.data.mock.MockTeamFactory
 import org.salestrack.app.data.repository.FakeInventoryRepository
 import org.salestrack.app.data.repository.FakeSaleRepository
+import org.salestrack.app.data.repository.FakeSettingsRepository
 import org.salestrack.app.data.repository.FakeTeamRepository
 import org.salestrack.app.data.source.InMemoryInventoryDataSource
 import org.salestrack.app.data.source.InMemorySaleDataSource
+import org.salestrack.app.data.source.InMemorySettingsDataSource
 import org.salestrack.app.data.source.InMemoryTeamDataSource
 import org.salestrack.app.domain.repository.InventoryRepository
 import org.salestrack.app.domain.repository.SaleRepository
+import org.salestrack.app.domain.repository.SettingsRepository
 import org.salestrack.app.domain.repository.TeamRepository
 import org.salestrack.app.domain.usecase.dashboard.BuildDashboardSummaryUseCase
 import org.salestrack.app.domain.usecase.inventory.AddProductUseCase
@@ -30,6 +34,8 @@ import org.salestrack.app.domain.usecase.sales.AddSaleUseCase
 import org.salestrack.app.domain.usecase.sales.DeleteSaleUseCase
 import org.salestrack.app.domain.usecase.sales.FilterSalesUseCase
 import org.salestrack.app.domain.usecase.sales.UpdateSaleUseCase
+import org.salestrack.app.domain.usecase.settings.ObserveSettingsUseCase
+import org.salestrack.app.domain.usecase.settings.UpdateSettingsUseCase
 import org.salestrack.app.domain.usecase.team.GetRolePermissionsUseCase
 import org.salestrack.app.domain.usecase.team.GetTeamSalesUseCase
 import org.salestrack.app.domain.usecase.team.InviteMemberUseCase
@@ -39,6 +45,7 @@ class AppContainer(
     val timeProvider: TimeProvider,
     val saleRepository: SaleRepository,
     val inventoryRepository: InventoryRepository,
+    val settingsRepository: SettingsRepository,
     val teamRepository: TeamRepository,
     val addSaleUseCase: AddSaleUseCase,
     val updateSaleUseCase: UpdateSaleUseCase,
@@ -55,6 +62,8 @@ class AppContainer(
     val editProductUseCase: EditProductUseCase,
     val filterProductsUseCase: FilterProductsUseCase,
     val adjustStockUseCase: AdjustStockUseCase,
+    val observeSettingsUseCase: ObserveSettingsUseCase,
+    val updateSettingsUseCase: UpdateSettingsUseCase,
 )
 
 @Composable
@@ -71,6 +80,9 @@ fun rememberAppContainer(): AppContainer {
             timeProvider = timeProvider,
         )
 
+        val settingsDataSource = InMemorySettingsDataSource(MockSettingsFactory.create(timeProvider))
+        val settingsRepository = FakeSettingsRepository(settingsDataSource)
+
         val teamDataSource = InMemoryTeamDataSource(MockTeamFactory.create())
         val teamRepository = FakeTeamRepository(teamDataSource)
 
@@ -79,6 +91,7 @@ fun rememberAppContainer(): AppContainer {
             timeProvider = timeProvider,
             saleRepository = repository,
             inventoryRepository = inventoryRepository,
+            settingsRepository = settingsRepository,
             teamRepository = teamRepository,
             addSaleUseCase = AddSaleUseCase(repository, inventoryRepository),
             updateSaleUseCase = UpdateSaleUseCase(repository),
@@ -95,6 +108,8 @@ fun rememberAppContainer(): AppContainer {
             editProductUseCase = EditProductUseCase(inventoryRepository),
             filterProductsUseCase = FilterProductsUseCase(),
             adjustStockUseCase = AdjustStockUseCase(inventoryRepository),
+            observeSettingsUseCase = ObserveSettingsUseCase(settingsRepository),
+            updateSettingsUseCase = UpdateSettingsUseCase(settingsRepository, timeProvider),
         )
     }
 }
