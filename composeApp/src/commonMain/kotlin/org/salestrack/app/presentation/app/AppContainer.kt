@@ -7,14 +7,22 @@ import org.salestrack.app.core.dispatcher.DispatcherProvider
 import org.salestrack.app.core.utils.SystemTimeProvider
 import org.salestrack.app.core.utils.TimeProvider
 import org.salestrack.app.data.mock.MockSalesFactory
+import org.salestrack.app.data.mock.MockInventoryFactory
 import org.salestrack.app.data.mock.MockTeamFactory
+import org.salestrack.app.data.repository.FakeInventoryRepository
 import org.salestrack.app.data.repository.FakeSaleRepository
 import org.salestrack.app.data.repository.FakeTeamRepository
+import org.salestrack.app.data.source.InMemoryInventoryDataSource
 import org.salestrack.app.data.source.InMemorySaleDataSource
 import org.salestrack.app.data.source.InMemoryTeamDataSource
+import org.salestrack.app.domain.repository.InventoryRepository
 import org.salestrack.app.domain.repository.SaleRepository
 import org.salestrack.app.domain.repository.TeamRepository
 import org.salestrack.app.domain.usecase.dashboard.BuildDashboardSummaryUseCase
+import org.salestrack.app.domain.usecase.inventory.AddProductUseCase
+import org.salestrack.app.domain.usecase.inventory.AdjustStockUseCase
+import org.salestrack.app.domain.usecase.inventory.EditProductUseCase
+import org.salestrack.app.domain.usecase.inventory.FilterProductsUseCase
 import org.salestrack.app.domain.usecase.reports.GetCustomRangeReportUseCase
 import org.salestrack.app.domain.usecase.reports.GetDailyReportUseCase
 import org.salestrack.app.domain.usecase.reports.GetPeriodReportUseCase
@@ -30,6 +38,7 @@ class AppContainer(
     val dispatcherProvider: DispatcherProvider,
     val timeProvider: TimeProvider,
     val saleRepository: SaleRepository,
+    val inventoryRepository: InventoryRepository,
     val teamRepository: TeamRepository,
     val addSaleUseCase: AddSaleUseCase,
     val updateSaleUseCase: UpdateSaleUseCase,
@@ -42,6 +51,10 @@ class AppContainer(
     val getTeamSalesUseCase: GetTeamSalesUseCase,
     val inviteMemberUseCase: InviteMemberUseCase,
     val getRolePermissionsUseCase: GetRolePermissionsUseCase,
+    val addProductUseCase: AddProductUseCase,
+    val editProductUseCase: EditProductUseCase,
+    val filterProductsUseCase: FilterProductsUseCase,
+    val adjustStockUseCase: AdjustStockUseCase,
 )
 
 @Composable
@@ -51,6 +64,13 @@ fun rememberAppContainer(): AppContainer {
         val timeProvider = SystemTimeProvider()
         val dataSource = InMemorySaleDataSource(MockSalesFactory.create(timeProvider))
         val repository = FakeSaleRepository(dataSource = dataSource, timeProvider = timeProvider)
+
+        val inventoryDataSource = InMemoryInventoryDataSource(MockInventoryFactory.create())
+        val inventoryRepository = FakeInventoryRepository(
+            dataSource = inventoryDataSource,
+            timeProvider = timeProvider,
+        )
+
         val teamDataSource = InMemoryTeamDataSource(MockTeamFactory.create())
         val teamRepository = FakeTeamRepository(teamDataSource)
 
@@ -58,8 +78,9 @@ fun rememberAppContainer(): AppContainer {
             dispatcherProvider = dispatchers,
             timeProvider = timeProvider,
             saleRepository = repository,
+            inventoryRepository = inventoryRepository,
             teamRepository = teamRepository,
-            addSaleUseCase = AddSaleUseCase(repository),
+            addSaleUseCase = AddSaleUseCase(repository, inventoryRepository),
             updateSaleUseCase = UpdateSaleUseCase(repository),
             deleteSaleUseCase = DeleteSaleUseCase(repository),
             filterSalesUseCase = FilterSalesUseCase(),
@@ -70,6 +91,10 @@ fun rememberAppContainer(): AppContainer {
             getTeamSalesUseCase = GetTeamSalesUseCase(),
             inviteMemberUseCase = InviteMemberUseCase(teamRepository),
             getRolePermissionsUseCase = GetRolePermissionsUseCase(),
+            addProductUseCase = AddProductUseCase(inventoryRepository),
+            editProductUseCase = EditProductUseCase(inventoryRepository),
+            filterProductsUseCase = FilterProductsUseCase(),
+            adjustStockUseCase = AdjustStockUseCase(inventoryRepository),
         )
     }
 }
