@@ -13,16 +13,16 @@ import org.salestrack.app.domain.model.ExportDestination
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-class ExportPdfUseCaseTest {
+class ExportExcelUseCaseTest {
 
     @Test
-    fun should_export_pdf_successfully() = runTest {
+    fun should_generate_excel_with_summary_and_detail() = runTest {
         val timeProvider = FakeTimeProvider(10_000L)
         val saleRepository = FakeSaleRepository(
             dataSource = InMemorySaleDataSource(MockSalesFactory.create(timeProvider)),
             timeProvider = timeProvider,
         )
-        val useCase = ExportPdfUseCase(
+        val useCase = ExportExcelUseCase(
             saleRepository = saleRepository,
             exportRepository = RealExportRepository(
                 pdfAdapter = BasicPdfExportAdapter(),
@@ -30,10 +30,11 @@ class ExportPdfUseCaseTest {
             ),
         )
 
-        val result = useCase(ExportDestination.SaveLocal)
+        val result = useCase(destination = ExportDestination.SaveLocal)
 
         assertTrue(result is AppResult.Success)
-        assertTrue(result.value.fileName.endsWith(".pdf"))
+        assertTrue(result.value.fileName.endsWith(".xls"))
+        assertTrue(result.value.preview.contains("Resumen+Detalle"))
     }
 
     @Test
@@ -43,7 +44,7 @@ class ExportPdfUseCaseTest {
             dataSource = InMemorySaleDataSource(MockSalesFactory.create(timeProvider)),
             timeProvider = timeProvider,
         )
-        val useCase = ExportPdfUseCase(
+        val useCase = ExportExcelUseCase(
             saleRepository = saleRepository,
             exportRepository = RealExportRepository(
                 pdfAdapter = BasicPdfExportAdapter(),

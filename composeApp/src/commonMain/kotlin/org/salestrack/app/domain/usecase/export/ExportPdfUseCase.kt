@@ -14,7 +14,10 @@ class ExportPdfUseCase(
     private val saleRepository: SaleRepository,
     private val exportRepository: ExportRepository,
 ) {
-    suspend operator fun invoke(destination: ExportDestination): AppResult<ExportArtifact> {
+    suspend operator fun invoke(
+        destination: ExportDestination,
+        includeSellerColumn: Boolean = false,
+    ): AppResult<ExportArtifact> {
         val sales = saleRepository.observeSales().first().filter { !it.isDeleted }
         val rows = sales.map { sale ->
             ExportRow(
@@ -30,7 +33,7 @@ class ExportPdfUseCase(
         val payload = ExportReportPayload(
             title = "Reporte PDF de ventas",
             periodLabel = "Historico",
-            includeSellerColumn = true,
+            includeSellerColumn = includeSellerColumn,
             rows = rows,
             totalAmount = rows.sumOf { it.netTotal },
         )

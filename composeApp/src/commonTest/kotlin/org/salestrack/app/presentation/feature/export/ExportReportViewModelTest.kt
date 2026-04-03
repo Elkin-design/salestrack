@@ -6,9 +6,11 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.salestrack.app.core.FakeDispatcherProvider
 import org.salestrack.app.core.FakeTimeProvider
+import org.salestrack.app.data.export.BasicPdfExportAdapter
+import org.salestrack.app.data.export.SpreadsheetXmlExcelExportAdapter
 import org.salestrack.app.data.mock.MockSalesFactory
-import org.salestrack.app.data.repository.FakeExportRepository
 import org.salestrack.app.data.repository.FakeSaleRepository
+import org.salestrack.app.data.repository.RealExportRepository
 import org.salestrack.app.data.source.InMemorySaleDataSource
 import org.salestrack.app.domain.model.ExportFormat
 import org.salestrack.app.domain.usecase.export.ExportCsvUseCase
@@ -28,7 +30,10 @@ class ExportReportViewModelTest {
             dataSource = InMemorySaleDataSource(MockSalesFactory.create(timeProvider)),
             timeProvider = timeProvider,
         )
-        val exportRepository = FakeExportRepository()
+        val exportRepository = RealExportRepository(
+            pdfAdapter = BasicPdfExportAdapter(),
+            excelAdapter = SpreadsheetXmlExcelExportAdapter(),
+        )
 
         val viewModel = ExportReportViewModel(
             dispatcherProvider = FakeDispatcherProvider(dispatcher),

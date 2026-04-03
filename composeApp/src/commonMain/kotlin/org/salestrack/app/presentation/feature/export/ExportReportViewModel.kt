@@ -23,6 +23,7 @@ class ExportReportViewModel(
         when (event) {
             is ExportReportUiEvent.FormatChanged -> setState { it.copy(selectedFormat = event.value) }
             is ExportReportUiEvent.DestinationChanged -> setState { it.copy(selectedDestination = event.value) }
+            is ExportReportUiEvent.IncludeSellerColumnChanged -> setState { it.copy(includeSellerColumn = event.value) }
             ExportReportUiEvent.ExportClicked -> export()
         }
     }
@@ -33,9 +34,18 @@ class ExportReportViewModel(
             setState { it.copy(isExporting = true, errorMessage = null) }
 
             val result = when (current.selectedFormat) {
-                ExportFormat.Pdf -> exportPdfUseCase(current.selectedDestination)
-                ExportFormat.Excel -> exportExcelUseCase(current.selectedDestination)
-                ExportFormat.Csv -> exportCsvUseCase(current.selectedDestination)
+                ExportFormat.Pdf -> exportPdfUseCase(
+                    destination = current.selectedDestination,
+                    includeSellerColumn = current.includeSellerColumn,
+                )
+                ExportFormat.Excel -> exportExcelUseCase(
+                    destination = current.selectedDestination,
+                    includeSellerColumn = current.includeSellerColumn,
+                )
+                ExportFormat.Csv -> exportCsvUseCase(
+                    destination = current.selectedDestination,
+                    includeSellerColumn = current.includeSellerColumn,
+                )
             }
 
             when (result) {

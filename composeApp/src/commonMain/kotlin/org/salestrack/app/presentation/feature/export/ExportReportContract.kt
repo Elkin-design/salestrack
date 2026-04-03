@@ -10,6 +10,7 @@ data class ExportReportUiState(
     val isExporting: Boolean = false,
     val selectedFormat: ExportFormat = ExportFormat.Pdf,
     val selectedDestination: ExportDestination = ExportDestination.SaveLocal,
+    val includeSellerColumn: Boolean = false,
     val lastResult: String? = null,
     val errorMessage: String? = null,
 ) : UiState
@@ -17,6 +18,7 @@ data class ExportReportUiState(
 sealed interface ExportReportUiEvent : UiEvent {
     data class FormatChanged(val value: ExportFormat) : ExportReportUiEvent
     data class DestinationChanged(val value: ExportDestination) : ExportReportUiEvent
+    data class IncludeSellerColumnChanged(val value: Boolean) : ExportReportUiEvent
     data object ExportClicked : ExportReportUiEvent
 }
 

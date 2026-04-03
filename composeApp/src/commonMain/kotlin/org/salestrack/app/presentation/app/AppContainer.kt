@@ -12,12 +12,14 @@ import org.salestrack.app.data.mock.MockCategoryFactory
 import org.salestrack.app.data.mock.MockSettingsFactory
 import org.salestrack.app.data.mock.MockNotificationSettingsFactory
 import org.salestrack.app.data.mock.MockTeamFactory
+import org.salestrack.app.data.export.BasicPdfExportAdapter
+import org.salestrack.app.data.export.SpreadsheetXmlExcelExportAdapter
 import org.salestrack.app.data.repository.FakeBackupRepository
 import org.salestrack.app.data.repository.FakeCategoryRepository
-import org.salestrack.app.data.repository.FakeExportRepository
 import org.salestrack.app.data.repository.FakeInventoryRepository
 import org.salestrack.app.data.repository.FakeNotificationRepository
 import org.salestrack.app.data.repository.FakePrintRepository
+import org.salestrack.app.data.repository.RealExportRepository
 import org.salestrack.app.data.repository.FakeSaleRepository
 import org.salestrack.app.data.repository.FakeSettingsRepository
 import org.salestrack.app.data.repository.FakeTeamRepository
@@ -134,7 +136,10 @@ fun rememberAppContainer(): AppContainer {
             MockNotificationSettingsFactory.create(timeProvider),
         )
         val notificationRepository = FakeNotificationRepository(notificationDataSource)
-        val exportRepository = FakeExportRepository()
+        val exportRepository = RealExportRepository(
+            pdfAdapter = BasicPdfExportAdapter(),
+            excelAdapter = SpreadsheetXmlExcelExportAdapter(),
+        )
         val printRepository = FakePrintRepository()
         val backupRepository = FakeBackupRepository()
 
