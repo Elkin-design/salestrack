@@ -16,18 +16,50 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.salestrack.app.domain.model.AppThemeMode
 import org.salestrack.app.domain.model.CurrencyCode
 import org.salestrack.app.presentation.app.AppContainer
+import org.salestrack.app.presentation.feature.category.CategoryManagementRoute
+import org.salestrack.app.presentation.feature.notification.NotificationSettingsRoute
+
+private enum class SettingsSection {
+    Main,
+    Categories,
+    Notifications,
+}
 
 @Composable
 fun SettingsRoute(
     container: AppContainer,
     modifier: Modifier = Modifier,
 ) {
+    var activeSection by remember { mutableStateOf(SettingsSection.Main) }
+
+    when (activeSection) {
+        SettingsSection.Categories -> {
+            CategoryManagementRoute(
+                container = container,
+                onBack = { activeSection = SettingsSection.Main },
+                modifier = modifier,
+            )
+            return
+        }
+        SettingsSection.Notifications -> {
+            NotificationSettingsRoute(
+                container = container,
+                onBack = { activeSection = SettingsSection.Main },
+                modifier = modifier,
+            )
+            return
+        }
+        SettingsSection.Main -> Unit
+    }
+
     val viewModel = remember {
         SettingsViewModel(
             dispatcherProvider = container.dispatcherProvider,
@@ -46,6 +78,8 @@ fun SettingsRoute(
     SettingsScreen(
         uiState = uiState,
         onEvent = viewModel::onEvent,
+        onOpenCategoryManagement = { activeSection = SettingsSection.Categories },
+        onOpenNotificationSettings = { activeSection = SettingsSection.Notifications },
         modifier = modifier,
     )
 }
@@ -54,6 +88,8 @@ fun SettingsRoute(
 fun SettingsScreen(
     uiState: SettingsUiState,
     onEvent: (SettingsUiEvent) -> Unit,
+    onOpenCategoryManagement: () -> Unit,
+    onOpenNotificationSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -153,6 +189,20 @@ fun SettingsScreen(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(if (uiState.isSaving) "Guardando..." else "Guardar configuracion")
+        }
+
+        Button(
+            onClick = onOpenCategoryManagement,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Gestionar categorias")
+        }
+
+        Button(
+            onClick = onOpenNotificationSettings,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Configurar notificaciones")
         }
 
         if (uiState.errorMessage != null) {
