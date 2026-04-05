@@ -19,6 +19,7 @@ class DashboardViewModel(
     initialState = DashboardUiState(),
     dispatcherProvider = dispatcherProvider,
 ) {
+    private var lastSales: List<Sale> = emptyList()
 
     init {
         observeSales()
@@ -26,14 +27,29 @@ class DashboardViewModel(
 
     override fun onEvent(event: DashboardUiEvent) {
         when (event) {
-            DashboardUiEvent.Refresh -> setState { it.copy(isLoading = true, errorMessage = null) }
+            DashboardUiEvent.Refresh -> {
+                setState { it.copy(isLoading = true, errorMessage = null) }
+                render(lastSales)
+                emitEffect(DashboardUiEffect.ShowMessage("Dashboard actualizado"))
+            }
         }
     }
 
     private fun observeSales() {
         scope.launch {
-            repository.observeSales().collect { sales ->
-                render(sales)
+            runCatching {
+                repository.observeSales().collect { sales ->
+                    lastSales = sales
+                    render(sales)
+                }
+            }.onFailure { throwable ->
+                setState {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = throwable.message ?: "Error inesperado",
+                    )
+                }
+                emitEffect(DashboardUiEffect.ShowMessage("No se pudo actualizar"))
             }
         }
     }
