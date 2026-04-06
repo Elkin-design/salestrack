@@ -55,5 +55,10 @@ class AppModuleSmokeTest {
             container.saleRepository.observeSales().first()
         }
         assertEquals(4, sales.size)
+
+        val products = runBlocking {
+            container.inventoryRepository.observeProducts().first()
+        }
+        assertEquals(3, products.size)
     }
 }

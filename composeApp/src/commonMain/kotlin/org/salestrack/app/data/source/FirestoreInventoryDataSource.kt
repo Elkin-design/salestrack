@@ -1,10 +1,11 @@
-package org.salestrack.app.data.repository
+package org.salestrack.app.data.source
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import org.salestrack.app.core.result.AppResult
 import org.salestrack.app.core.utils.TimeProvider
-import org.salestrack.app.data.source.InMemoryInventoryDataSource
 import org.salestrack.app.domain.model.CatalogExportFile
 import org.salestrack.app.domain.model.CatalogImportError
 import org.salestrack.app.domain.model.CatalogImportResult
@@ -12,17 +13,23 @@ import org.salestrack.app.domain.model.NewProductInput
 import org.salestrack.app.domain.model.Product
 import org.salestrack.app.domain.model.StockAdjustmentType
 import org.salestrack.app.domain.model.StockMovement
-import org.salestrack.app.domain.repository.InventoryRepository
 
-class FakeInventoryRepository(
-    private val dataSource: InMemoryInventoryDataSource,
+/**
+ * Firebase-ready stub that keeps inventory contracts stable while backend is mocked.
+ */
+class FirestoreInventoryDataSource(
+    initialProducts: List<Product>,
+    initialMovements: List<StockMovement>,
     private val timeProvider: TimeProvider,
-) : InventoryRepository {
+) : InventoryDataSource {
 
-    override fun observeProducts(): Flow<List<Product>> = dataSource.observeProducts()
+    private val productsState = MutableStateFlow(initialProducts)
+    private val movementsState = MutableStateFlow(initialMovements)
+
+    override fun observeProducts(): Flow<List<Product>> = productsState.asStateFlow()
 
     override fun observeStockMovements(productId: String?): Flow<List<StockMovement>> {
-        return dataSource.observeMovements().map { movements ->
+        return movementsState.asStateFlow().map { movements ->
             movements
                 .asSequence()
                 .filter { productId == null || it.productId == productId }
@@ -32,52 +39,49 @@ class FakeInventoryRepository(
     }
 
     override suspend fun addProduct(input: NewProductInput): AppResult<Product> {
-        val currentProducts = dataSource.getCurrentProducts()
-        if (input.barcode != null && currentProducts.any { it.barcode == input.barcode }) {
+        val barcodeExists = input.barcode != null && productsState.value.any { it.barcode == input.barcode }
+        if (barcodeExists) {
             return AppResult.Failure(IllegalStateException("El codigo de barras ya existe"))
         }
 
+        val now = timeProvider.nowMillis()
         val product = Product(
-            id = "P-${timeProvider.nowMillis()}-${currentProducts.size + 1}",
-            name = input.name,
-            description = input.description,
+            id = "FI-$now-${productsState.value.size + 1}",
+            name = input.name.trim(),
+            description = input.description.trim(),
             unitPrice = input.unitPrice,
-            unit = input.unit,
-            barcode = input.barcode,
-            category = input.category,
+            unit = input.unit.trim(),
+            barcode = input.barcode?.trim()?.ifBlank { null },
+            category = input.category.trim(),
             stock = input.initialStock,
             minimumStock = input.minimumStock,
         )
-
-        dataSource.replaceProducts(currentProducts + product)
-        dataSource.appendMovement(
-            StockMovement(
-                id = "M-${timeProvider.nowMillis()}",
-                productId = product.id,
-                type = StockAdjustmentType.Entry,
-                quantityDelta = input.initialStock,
-                reason = "Stock inicial",
-                platform = "Seed",
-                createdAtMillis = timeProvider.nowMillis(),
-            ),
+        productsState.value = productsState.value + product
+        appendMovement(
+            productId = product.id,
+            type = StockAdjustmentType.Entry,
+            quantityDelta = input.initialStock,
+            reason = "Stock inicial",
+            platform = "Stub",
         )
 
         return AppResult.Success(product)
     }
 
     override suspend fun updateProduct(product: Product): AppResult<Product> {
-        val currentProducts = dataSource.getCurrentProducts()
-        val index = currentProducts.indexOfFirst { it.id == product.id }
+        val current = productsState.value
+        val index = current.indexOfFirst { it.id == product.id }
         if (index < 0) {
             return AppResult.Failure(NoSuchElementException("Producto no encontrado"))
         }
 
-        if (product.barcode != null && currentProducts.any { it.id != product.id && it.barcode == product.barcode }) {
+        val duplicatedBarcode = product.barcode != null &&
+            current.any { it.id != product.id && it.barcode == product.barcode }
+        if (duplicatedBarcode) {
             return AppResult.Failure(IllegalStateException("El codigo de barras ya existe"))
         }
 
-        val updated = currentProducts.toMutableList().apply { set(index, product) }
-        dataSource.replaceProducts(updated)
+        productsState.value = current.toMutableList().apply { set(index, product) }
         return AppResult.Success(product)
     }
 
@@ -89,34 +93,28 @@ class FakeInventoryRepository(
         sellerName: String?,
         platform: String?,
     ): AppResult<Product> {
-        val currentProducts = dataSource.getCurrentProducts()
-        val index = currentProducts.indexOfFirst { it.id == productId }
+        val current = productsState.value
+        val index = current.indexOfFirst { it.id == productId }
         if (index < 0) {
             return AppResult.Failure(NoSuchElementException("Producto no encontrado"))
         }
 
-        val currentProduct = currentProducts[index]
-        val newStock = (currentProduct.stock + quantityDelta).coerceAtLeast(0)
-        val appliedDelta = newStock - currentProduct.stock
-        val updatedProduct = currentProduct.copy(stock = newStock)
+        val baseProduct = current[index]
+        val newStock = (baseProduct.stock + quantityDelta).coerceAtLeast(0)
+        val appliedDelta = newStock - baseProduct.stock
+        val updated = baseProduct.copy(stock = newStock)
+        productsState.value = current.toMutableList().apply { set(index, updated) }
 
-        val updatedProducts = currentProducts.toMutableList().apply { set(index, updatedProduct) }
-        dataSource.replaceProducts(updatedProducts)
-
-        dataSource.appendMovement(
-            StockMovement(
-                id = "M-${timeProvider.nowMillis()}-${productId}",
-                productId = productId,
-                type = type,
-                quantityDelta = appliedDelta,
-                reason = reason,
-                sellerName = sellerName,
-                platform = platform,
-                createdAtMillis = timeProvider.nowMillis(),
-            ),
+        appendMovement(
+            productId = productId,
+            type = type,
+            quantityDelta = appliedDelta,
+            reason = reason,
+            sellerName = sellerName,
+            platform = platform,
         )
 
-        return AppResult.Success(updatedProduct)
+        return AppResult.Success(updated)
     }
 
     override suspend fun deductStock(
@@ -126,7 +124,7 @@ class FakeInventoryRepository(
         sellerName: String?,
         platform: String?,
     ): AppResult<Product> {
-        val product = dataSource.getCurrentProducts().firstOrNull { it.id == productId }
+        val product = productsState.value.firstOrNull { it.id == productId }
             ?: return AppResult.Failure(NoSuchElementException("Producto no encontrado"))
 
         if (product.stock < quantity) {
@@ -166,35 +164,38 @@ class FakeInventoryRepository(
                 return@forEachIndexed
             }
 
+            val name = cols[0].trim()
+            val description = cols[1].trim()
             val unitPrice = cols[2].trim().toDoubleOrNull()
+            val unit = cols[3].trim()
+            val barcode = cols[4].trim().ifBlank { null }
+            val category = cols[5].trim()
             val stock = cols[6].trim().toIntOrNull()
-            val minimumStock = cols[7].trim().toIntOrNull()
-            if (unitPrice == null || stock == null || minimumStock == null) {
-                errors += CatalogImportError(line = lineNumber, reason = "Formato numerico invalido")
+            val minimum = cols[7].trim().toIntOrNull()
+
+            if (name.isBlank() || unitPrice == null || unit.isBlank() || category.isBlank() || stock == null || minimum == null) {
+                errors += CatalogImportError(line = lineNumber, reason = "Campos invalidos")
                 return@forEachIndexed
             }
 
             val result = addProduct(
                 NewProductInput(
-                    name = cols[0].trim(),
-                    description = cols[1].trim(),
+                    name = name,
+                    description = description,
                     unitPrice = unitPrice,
-                    unit = cols[3].trim(),
-                    barcode = cols[4].trim().ifBlank { null },
-                    category = cols[5].trim(),
+                    unit = unit,
+                    barcode = barcode,
+                    category = category,
                     initialStock = stock,
-                    minimumStock = minimumStock,
+                    minimumStock = minimum,
                 ),
             )
-
             when (result) {
                 is AppResult.Success -> imported++
-                is AppResult.Failure -> {
-                    errors += CatalogImportError(
-                        line = lineNumber,
-                        reason = result.error.message ?: "Error importando fila",
-                    )
-                }
+                is AppResult.Failure -> errors += CatalogImportError(
+                    line = lineNumber,
+                    reason = result.error.message ?: "Error importando fila",
+                )
             }
         }
 
@@ -210,7 +211,7 @@ class FakeInventoryRepository(
 
     override suspend fun exportCatalogCsv(): AppResult<CatalogExportFile> {
         val header = "name,description,unitPrice,unit,barcode,category,stock,minimumStock"
-        val rows = dataSource.getCurrentProducts().map { product ->
+        val rows = productsState.value.map { product ->
             listOf(
                 escapeCsv(product.name),
                 escapeCsv(product.description),
@@ -235,7 +236,7 @@ class FakeInventoryRepository(
     override suspend fun exportCatalogExcel(): AppResult<CatalogExportFile> {
         val header = "<?xml version=\"1.0\"?><Workbook><Worksheet name=\"Catalogo\"><Table>"
         val columns = "<Row><Cell><Data>Name</Data></Cell><Cell><Data>Description</Data></Cell><Cell><Data>UnitPrice</Data></Cell><Cell><Data>Unit</Data></Cell><Cell><Data>Barcode</Data></Cell><Cell><Data>Category</Data></Cell><Cell><Data>Stock</Data></Cell><Cell><Data>MinimumStock</Data></Cell></Row>"
-        val rows = dataSource.getCurrentProducts().joinToString(separator = "") { product ->
+        val rows = productsState.value.joinToString(separator = "") { product ->
             "<Row>" +
                 "<Cell><Data>${escapeXml(product.name)}</Data></Cell>" +
                 "<Cell><Data>${escapeXml(product.description)}</Data></Cell>" +
@@ -259,11 +260,32 @@ class FakeInventoryRepository(
     }
 
     override suspend fun getLowStockProducts(): AppResult<List<Product>> {
-        val lowStock = dataSource.getCurrentProducts()
+        val lowStock = productsState.value
             .filter { it.isActive }
             .filter { it.stock <= it.minimumStock }
             .sortedBy { it.stock }
         return AppResult.Success(lowStock)
+    }
+
+    private fun appendMovement(
+        productId: String,
+        type: StockAdjustmentType,
+        quantityDelta: Int,
+        reason: String,
+        sellerName: String? = null,
+        platform: String? = null,
+    ) {
+        val now = timeProvider.nowMillis()
+        movementsState.value = movementsState.value + StockMovement(
+            id = "FM-$now-$productId-${movementsState.value.size + 1}",
+            productId = productId,
+            type = type,
+            quantityDelta = quantityDelta,
+            reason = reason,
+            sellerName = sellerName,
+            platform = platform,
+            createdAtMillis = now,
+        )
     }
 
     private fun escapeCsv(value: String): String {
@@ -281,4 +303,3 @@ class FakeInventoryRepository(
             .replace("'", "&apos;")
     }
 }
-

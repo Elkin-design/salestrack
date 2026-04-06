@@ -1,4 +1,4 @@
-package org.salestrack.app.domain.repository
+package org.salestrack.app.data.source
 
 import kotlinx.coroutines.flow.Flow
 import org.salestrack.app.core.result.AppResult
@@ -9,7 +9,7 @@ import org.salestrack.app.domain.model.Product
 import org.salestrack.app.domain.model.StockAdjustmentType
 import org.salestrack.app.domain.model.StockMovement
 
-interface InventoryRepository {
+interface InventoryDataSource {
     fun observeProducts(): Flow<List<Product>>
     fun observeStockMovements(productId: String? = null): Flow<List<StockMovement>>
 
@@ -28,7 +28,7 @@ interface InventoryRepository {
     suspend fun deductStock(
         productId: String,
         quantity: Int,
-        reason: String = "Venta",
+        reason: String,
         sellerName: String? = null,
         platform: String? = null,
     ): AppResult<Product>
@@ -41,4 +41,3 @@ interface InventoryRepository {
 
     suspend fun getLowStockProducts(): AppResult<List<Product>>
 }
-

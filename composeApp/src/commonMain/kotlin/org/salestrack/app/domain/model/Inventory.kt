@@ -43,3 +43,21 @@ data class StockMovement(
     val createdAtMillis: Long,
 )
 
+data class CatalogImportError(
+    val line: Int,
+    val reason: String,
+)
+
+data class CatalogImportResult(
+    val totalRows: Int,
+    val importedRows: Int,
+    val failedRows: Int,
+    val errors: List<CatalogImportError>,
+)
+
+data class CatalogExportFile(
+    val fileName: String,
+    val mimeType: String,
+    val content: String,
+)
+

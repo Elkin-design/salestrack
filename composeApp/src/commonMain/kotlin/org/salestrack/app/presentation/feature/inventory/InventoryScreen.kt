@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -25,6 +26,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.dp
 import org.salestrack.app.core.utils.formatMoney
 import org.salestrack.app.domain.model.Product
@@ -45,6 +52,10 @@ fun InventoryRoute(
             editProductUseCase = container.editProductUseCase,
             filterProductsUseCase = container.filterProductsUseCase,
             adjustStockUseCase = container.adjustStockUseCase,
+            getLowStockProductsUseCase = container.getLowStockProductsUseCase,
+            importCatalogCsvUseCase = container.importCatalogCsvUseCase,
+            exportCatalogCsvUseCase = container.exportCatalogCsvUseCase,
+            exportCatalogExcelUseCase = container.exportCatalogExcelUseCase,
         )
     }
     val uiState by viewModel.state.collectAsState()
@@ -69,12 +80,20 @@ fun InventoryScreen(
     modifier: Modifier = Modifier,
 ) {
     val selectedProduct = uiState.products.firstOrNull { it.id == uiState.selectedProductId }
-    val lowStockCount = uiState.products.count { it.stock <= it.minimumStock }
+    val lowStockCount = uiState.lowStockProducts.size
     val totalUnits = uiState.products.sumOf { it.stock }
 
     Column(
         modifier = modifier
             .fillMaxSize()
+            .onPreviewKeyEvent { event ->
+                if (event.type == KeyEventType.KeyDown && event.isCtrlPressed && event.key == Key.N) {
+                    onEvent(InventoryUiEvent.ToggleAddDialog(true))
+                    true
+                } else {
+                    false
+                }
+            }
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -84,6 +103,11 @@ fun InventoryScreen(
                 Text("Nuevo producto")
             }
         }
+
+        InventorySectionSelector(
+            selectedSection = uiState.selectedSection,
+            onSectionSelected = { onEvent(InventoryUiEvent.SectionChanged(it)) },
+        )
 
         OutlinedTextField(
             value = uiState.query,
@@ -119,20 +143,47 @@ fun InventoryScreen(
             }
         }
 
-        if (uiState.products.isEmpty()) {
-            Text("No hay productos para mostrar con los filtros actuales.")
-        } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(uiState.products, key = { it.id }) { product ->
-                    ProductCard(
-                        product = product,
-                        isSelected = product.id == uiState.selectedProductId,
-                        onSelect = { onEvent(InventoryUiEvent.SelectProduct(product.id)) },
-                        onEdit = { onEvent(InventoryUiEvent.StartEdit(product)) },
-                        onAdjust = { onEvent(InventoryUiEvent.StartAdjust(product)) },
-                    )
-                }
-            }
+        when (uiState.selectedSection) {
+            InventorySection.Catalog -> CatalogWindow(
+                products = uiState.products,
+                selectedProductId = uiState.selectedProductId,
+                onSelect = { onEvent(InventoryUiEvent.SelectProduct(it)) },
+                onEdit = { onEvent(InventoryUiEvent.StartEdit(it)) },
+                onAdjust = { onEvent(InventoryUiEvent.StartAdjust(it)) },
+            )
+            InventorySection.AddProduct -> AddWindow(
+                lowStockProducts = uiState.lowStockProducts,
+                onOpenAddDialog = { onEvent(InventoryUiEvent.ToggleAddDialog(true)) },
+            )
+            InventorySection.EditProduct -> EditWindow(
+                products = uiState.products,
+                onEdit = { onEvent(InventoryUiEvent.StartEdit(it)) },
+            )
+            InventorySection.StockAdjustment -> StockAdjustmentWindow(
+                selectedProduct = selectedProduct,
+                onSelect = { onEvent(InventoryUiEvent.SelectProduct(it)) },
+                products = uiState.products,
+                onAdjust = { onEvent(InventoryUiEvent.StartAdjust(it)) },
+            )
+            InventorySection.MovementHistory -> HistoryWindow(
+                movements = uiState.selectedProductMovements,
+                selectedProduct = selectedProduct,
+            )
+            InventorySection.ImportExport -> ImportExportWindow(
+                csvInput = uiState.csvImportInput,
+                importResultSummary = uiState.importResult?.let {
+                    "Filas: ${it.totalRows}, importadas: ${it.importedRows}, fallidas: ${it.failedRows}"
+                },
+                importErrors = uiState.importResult?.errors?.take(5)?.map { "Linea ${it.line}: ${it.reason}" }.orEmpty(),
+                csvExportPreview = uiState.lastCsvExport?.content?.lineSequence()?.take(3)?.joinToString("\n"),
+                excelExportPreview = uiState.lastExcelExport?.content?.take(80),
+                onCsvInputChanged = { onEvent(InventoryUiEvent.CsvImportInputChanged(it)) },
+                onImport = { onEvent(InventoryUiEvent.ImportCatalogFromCsv) },
+                onExportCsv = { onEvent(InventoryUiEvent.ExportCatalogAsCsv) },
+                onExportExcel = { onEvent(InventoryUiEvent.ExportCatalogAsExcel) },
+                onClearImport = { onEvent(InventoryUiEvent.ClearImportResult) },
+                onClearExport = { onEvent(InventoryUiEvent.ClearExportResult) },
+            )
         }
 
         ProductDetailCard(
@@ -204,6 +255,217 @@ fun InventoryScreen(
                 )
             },
         )
+    }
+}
+
+@Composable
+private fun InventorySectionSelector(
+    selectedSection: InventorySection,
+    onSectionSelected: (InventorySection) -> Unit,
+) {
+    val sections = listOf(
+        InventorySection.Catalog to "Catalogo",
+        InventorySection.AddProduct to "Agregar",
+        InventorySection.EditProduct to "Editar",
+        InventorySection.StockAdjustment to "Ajustes",
+        InventorySection.MovementHistory to "Historial",
+        InventorySection.ImportExport to "Importar/Exportar",
+    )
+
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(sections) { (section, label) ->
+            FilterChip(
+                selected = selectedSection == section,
+                onClick = { onSectionSelected(section) },
+                label = { Text(label) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun CatalogWindow(
+    products: List<Product>,
+    selectedProductId: String?,
+    onSelect: (String) -> Unit,
+    onEdit: (Product) -> Unit,
+    onAdjust: (Product) -> Unit,
+) {
+    if (products.isEmpty()) {
+        Text("No hay productos para mostrar con los filtros actuales.")
+        return
+    }
+
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(products, key = { it.id }) { product ->
+            ProductCard(
+                product = product,
+                isSelected = product.id == selectedProductId,
+                onSelect = { onSelect(product.id) },
+                onEdit = { onEdit(product) },
+                onAdjust = { onAdjust(product) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun AddWindow(
+    lowStockProducts: List<Product>,
+    onOpenAddDialog: () -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text("Ventana de alta de producto", style = MaterialTheme.typography.titleMedium)
+            Text("Completa nombre, descripcion, precio, unidad, codigo, categoria, stock inicial y umbral.")
+            Button(onClick = onOpenAddDialog) {
+                Text("Abrir formulario de alta")
+            }
+            if (lowStockProducts.isNotEmpty()) {
+                Text("Productos en riesgo de quiebre:")
+                lowStockProducts.take(5).forEach { product ->
+                    Text("- ${product.name}: ${product.stock}/${product.minimumStock}")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EditWindow(
+    products: List<Product>,
+    onEdit: (Product) -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text("Ventana de edicion", style = MaterialTheme.typography.titleMedium)
+            Text("Selecciona un producto para editar sus campos.")
+            products.take(8).forEach { product ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text("${product.name} · ${product.category}")
+                    TextButton(onClick = { onEdit(product) }) { Text("Editar") }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StockAdjustmentWindow(
+    selectedProduct: Product?,
+    onSelect: (String) -> Unit,
+    products: List<Product>,
+    onAdjust: (Product) -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text("Ventana de ajuste de stock", style = MaterialTheme.typography.titleMedium)
+            selectedProduct?.let {
+                Text("Producto seleccionado: ${it.name}")
+                Text("Stock actual: ${it.stock}")
+                Button(onClick = { onAdjust(it) }) { Text("Abrir ajuste") }
+            } ?: Text("Selecciona un producto desde catalogo para ajustar stock.")
+
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(products, key = { it.id }) { product ->
+                    FilterChip(
+                        selected = selectedProduct?.id == product.id,
+                        onClick = { onSelect(product.id) },
+                        label = { Text(product.name) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryWindow(
+    movements: List<StockMovement>,
+    selectedProduct: Product?,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text("Historial de movimientos", style = MaterialTheme.typography.titleMedium)
+            Text("Producto: ${selectedProduct?.name ?: "Sin seleccion"}")
+            if (movements.isEmpty()) {
+                Text("Sin movimientos registrados")
+            } else {
+                movements.take(10).forEach { movement ->
+                    Text("${movement.type.asLabel()} (${movement.quantityDelta}) · ${movement.reason}")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ImportExportWindow(
+    csvInput: String,
+    importResultSummary: String?,
+    importErrors: List<String>,
+    csvExportPreview: String?,
+    excelExportPreview: String?,
+    onCsvInputChanged: (String) -> Unit,
+    onImport: () -> Unit,
+    onExportCsv: () -> Unit,
+    onExportExcel: () -> Unit,
+    onClearImport: () -> Unit,
+    onClearExport: () -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text("Importar / Exportar catalogo", style = MaterialTheme.typography.titleMedium)
+            Text("Formato CSV: name,description,unitPrice,unit,barcode,category,stock,minimumStock")
+            OutlinedTextField(
+                value = csvInput,
+                onValueChange = onCsvInputChanged,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Pega aqui el CSV") },
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = onImport) { Text("Importar CSV") }
+                TextButton(onClick = onClearImport) { Text("Limpiar resultado") }
+            }
+
+            if (importResultSummary != null) {
+                Text(importResultSummary)
+                importErrors.forEach { Text(it, color = MaterialTheme.colorScheme.error) }
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = onExportCsv) { Text("Exportar CSV") }
+                Button(onClick = onExportExcel) { Text("Exportar Excel") }
+                TextButton(onClick = onClearExport) { Text("Limpiar export") }
+            }
+
+            if (csvExportPreview != null) {
+                Text("Preview CSV:")
+                Text(csvExportPreview)
+            }
+            if (excelExportPreview != null) {
+                Text("Preview Excel:")
+                Text(excelExportPreview)
+            }
+        }
     }
 }
 
@@ -390,4 +652,3 @@ private fun StockAdjustmentType.asLabel(): String = when (this) {
     StockAdjustmentType.Sale -> "Venta"
     StockAdjustmentType.Return -> "Devolucion"
 }
-

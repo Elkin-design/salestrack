@@ -1,6 +1,9 @@
 package org.salestrack.app.data.mock
 
+import org.salestrack.app.core.utils.TimeProvider
 import org.salestrack.app.domain.model.Product
+import org.salestrack.app.domain.model.StockAdjustmentType
+import org.salestrack.app.domain.model.StockMovement
 
 object MockInventoryFactory {
     fun create(): List<Product> = listOf(
@@ -38,5 +41,23 @@ object MockInventoryFactory {
             minimumStock = 8,
         ),
     )
+
+    fun createInitialMovements(
+        timeProvider: TimeProvider,
+        products: List<Product> = create(),
+    ): List<StockMovement> {
+        val now = timeProvider.nowMillis()
+        return products.mapIndexed { index, product ->
+            StockMovement(
+                id = "M-INIT-${index + 1}",
+                productId = product.id,
+                type = StockAdjustmentType.Entry,
+                quantityDelta = product.stock,
+                reason = "Carga inicial de catalogo",
+                platform = "Seed",
+                createdAtMillis = now - (products.size - index) * 1_000L,
+            )
+        }
+    }
 }
 

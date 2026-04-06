@@ -13,7 +13,11 @@ import org.salestrack.app.domain.model.StockAdjustmentType
 import org.salestrack.app.domain.usecase.inventory.AddProductUseCase
 import org.salestrack.app.domain.usecase.inventory.AdjustStockUseCase
 import org.salestrack.app.domain.usecase.inventory.EditProductUseCase
+import org.salestrack.app.domain.usecase.inventory.ExportCatalogCsvUseCase
+import org.salestrack.app.domain.usecase.inventory.ExportCatalogExcelUseCase
 import org.salestrack.app.domain.usecase.inventory.FilterProductsUseCase
+import org.salestrack.app.domain.usecase.inventory.GetLowStockProductsUseCase
+import org.salestrack.app.domain.usecase.inventory.ImportCatalogCsvUseCase
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -37,6 +41,10 @@ class InventoryViewModelTest {
             editProductUseCase = EditProductUseCase(repository),
             filterProductsUseCase = FilterProductsUseCase(),
             adjustStockUseCase = AdjustStockUseCase(repository),
+            getLowStockProductsUseCase = GetLowStockProductsUseCase(repository),
+            importCatalogCsvUseCase = ImportCatalogCsvUseCase(repository),
+            exportCatalogCsvUseCase = ExportCatalogCsvUseCase(repository),
+            exportCatalogExcelUseCase = ExportCatalogExcelUseCase(repository),
         )
 
         advanceUntilIdle()
@@ -60,6 +68,10 @@ class InventoryViewModelTest {
             editProductUseCase = EditProductUseCase(repository),
             filterProductsUseCase = FilterProductsUseCase(),
             adjustStockUseCase = AdjustStockUseCase(repository),
+            getLowStockProductsUseCase = GetLowStockProductsUseCase(repository),
+            importCatalogCsvUseCase = ImportCatalogCsvUseCase(repository),
+            exportCatalogCsvUseCase = ExportCatalogCsvUseCase(repository),
+            exportCatalogExcelUseCase = ExportCatalogExcelUseCase(repository),
         )
 
         advanceUntilIdle()
@@ -85,6 +97,10 @@ class InventoryViewModelTest {
             editProductUseCase = EditProductUseCase(repository),
             filterProductsUseCase = FilterProductsUseCase(),
             adjustStockUseCase = AdjustStockUseCase(repository),
+            getLowStockProductsUseCase = GetLowStockProductsUseCase(repository),
+            importCatalogCsvUseCase = ImportCatalogCsvUseCase(repository),
+            exportCatalogCsvUseCase = ExportCatalogCsvUseCase(repository),
+            exportCatalogExcelUseCase = ExportCatalogExcelUseCase(repository),
         )
 
         advanceUntilIdle()
@@ -99,6 +115,40 @@ class InventoryViewModelTest {
         advanceUntilIdle()
 
         assertTrue(viewModel.state.value.errorMessage != null)
+    }
+
+    @Test
+    fun should_import_catalog_from_csv() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        val repository = FakeInventoryRepository(
+            dataSource = InMemoryInventoryDataSource(MockInventoryFactory.create()),
+            timeProvider = FakeTimeProvider(1_000L),
+        )
+
+        val viewModel = InventoryViewModel(
+            dispatcherProvider = FakeDispatcherProvider(dispatcher),
+            repository = repository,
+            addProductUseCase = AddProductUseCase(repository),
+            editProductUseCase = EditProductUseCase(repository),
+            filterProductsUseCase = FilterProductsUseCase(),
+            adjustStockUseCase = AdjustStockUseCase(repository),
+            getLowStockProductsUseCase = GetLowStockProductsUseCase(repository),
+            importCatalogCsvUseCase = ImportCatalogCsvUseCase(repository),
+            exportCatalogCsvUseCase = ExportCatalogCsvUseCase(repository),
+            exportCatalogExcelUseCase = ExportCatalogExcelUseCase(repository),
+        )
+
+        advanceUntilIdle()
+        viewModel.onEvent(
+            InventoryUiEvent.CsvImportInputChanged(
+                "name,description,unitPrice,unit,barcode,category,stock,minimumStock\nArroz,Paquete 1kg,4000,Paquete,770999000001,Granos,15,5",
+            ),
+        )
+        viewModel.onEvent(InventoryUiEvent.ImportCatalogFromCsv)
+        advanceUntilIdle()
+
+        assertEquals(1, viewModel.state.value.importResult?.importedRows)
+        assertTrue(viewModel.state.value.products.any { it.name == "Arroz" })
     }
 }
 

@@ -21,9 +21,12 @@ import org.salestrack.app.data.repository.FakePrintRepository
 import org.salestrack.app.data.repository.FakeSaleRepository
 import org.salestrack.app.data.repository.FakeSettingsRepository
 import org.salestrack.app.data.repository.FakeTeamRepository
+import org.salestrack.app.data.repository.RealInventoryRepository
 import org.salestrack.app.data.repository.RealExportRepository
 import org.salestrack.app.data.repository.RealSaleRepository
+import org.salestrack.app.data.source.FirestoreInventoryDataSource
 import org.salestrack.app.data.source.FirestoreSaleDataSource
+import org.salestrack.app.data.source.InventoryDataSource
 import org.salestrack.app.data.source.InMemoryCategoryDataSource
 import org.salestrack.app.data.source.InMemoryInventoryDataSource
 import org.salestrack.app.data.source.InMemoryNotificationSettingsDataSource
@@ -52,7 +55,11 @@ import org.salestrack.app.domain.usecase.export.ExportPdfUseCase
 import org.salestrack.app.domain.usecase.inventory.AddProductUseCase
 import org.salestrack.app.domain.usecase.inventory.AdjustStockUseCase
 import org.salestrack.app.domain.usecase.inventory.EditProductUseCase
+import org.salestrack.app.domain.usecase.inventory.ExportCatalogCsvUseCase
+import org.salestrack.app.domain.usecase.inventory.ExportCatalogExcelUseCase
 import org.salestrack.app.domain.usecase.inventory.FilterProductsUseCase
+import org.salestrack.app.domain.usecase.inventory.GetLowStockProductsUseCase
+import org.salestrack.app.domain.usecase.inventory.ImportCatalogCsvUseCase
 import org.salestrack.app.domain.usecase.notification.ObserveNotificationSettingsUseCase
 import org.salestrack.app.domain.usecase.notification.UpdateNotificationSettingsUseCase
 import org.salestrack.app.domain.usecase.print.PrintReportUseCase
@@ -101,7 +108,25 @@ fun appModule(config: EnvironmentConfig) = module {
         )
     }
 
-    single<InventoryRepository> { FakeInventoryRepository(dataSource = get(), timeProvider = get()) }
+    single<InventoryRepository> {
+        when (get<EnvironmentConfig>().backendProvider) {
+            BackendProvider.MOCK -> FakeInventoryRepository(dataSource = get(), timeProvider = get())
+            BackendProvider.FIRESTORE_STUB,
+            BackendProvider.FIRESTORE -> RealInventoryRepository(dataSource = get())
+        }
+    }
+
+    single<InventoryDataSource> {
+        val products = MockInventoryFactory.create()
+        FirestoreInventoryDataSource(
+            initialProducts = products,
+            initialMovements = MockInventoryFactory.createInitialMovements(
+                timeProvider = get(),
+                products = products,
+            ),
+            timeProvider = get(),
+        )
+    }
     single<CategoryRepository> { FakeCategoryRepository(dataSource = get(), timeProvider = get()) }
     single<SettingsRepository> { FakeSettingsRepository(get()) }
     single<NotificationRepository> { FakeNotificationRepository(get()) }
@@ -130,6 +155,10 @@ fun appModule(config: EnvironmentConfig) = module {
     single { EditProductUseCase(get()) }
     single { FilterProductsUseCase() }
     single { AdjustStockUseCase(get()) }
+    single { GetLowStockProductsUseCase(get()) }
+    single { ImportCatalogCsvUseCase(get()) }
+    single { ExportCatalogCsvUseCase(get()) }
+    single { ExportCatalogExcelUseCase(get()) }
     single { ObserveCategoriesUseCase(get()) }
     single { CreateCategoryUseCase(get()) }
     single { UpdateCategoryUseCase(get()) }
@@ -181,6 +210,10 @@ fun appModule(config: EnvironmentConfig) = module {
             editProductUseCase = get(),
             filterProductsUseCase = get(),
             adjustStockUseCase = get(),
+            getLowStockProductsUseCase = get(),
+            importCatalogCsvUseCase = get(),
+            exportCatalogCsvUseCase = get(),
+            exportCatalogExcelUseCase = get(),
             observeCategoriesUseCase = get(),
             createCategoryUseCase = get(),
             updateCategoryUseCase = get(),

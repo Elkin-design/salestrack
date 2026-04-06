@@ -23,7 +23,11 @@ import org.salestrack.app.domain.usecase.export.ExportPdfUseCase
 import org.salestrack.app.domain.usecase.inventory.AddProductUseCase
 import org.salestrack.app.domain.usecase.inventory.AdjustStockUseCase
 import org.salestrack.app.domain.usecase.inventory.EditProductUseCase
+import org.salestrack.app.domain.usecase.inventory.ExportCatalogCsvUseCase
+import org.salestrack.app.domain.usecase.inventory.ExportCatalogExcelUseCase
 import org.salestrack.app.domain.usecase.inventory.FilterProductsUseCase
+import org.salestrack.app.domain.usecase.inventory.GetLowStockProductsUseCase
+import org.salestrack.app.domain.usecase.inventory.ImportCatalogCsvUseCase
 import org.salestrack.app.domain.usecase.notification.ObserveNotificationSettingsUseCase
 import org.salestrack.app.domain.usecase.notification.UpdateNotificationSettingsUseCase
 import org.salestrack.app.domain.usecase.print.PrintReportUseCase
@@ -67,6 +71,10 @@ class AppContainer(
     val editProductUseCase: EditProductUseCase,
     val filterProductsUseCase: FilterProductsUseCase,
     val adjustStockUseCase: AdjustStockUseCase,
+    val getLowStockProductsUseCase: GetLowStockProductsUseCase,
+    val importCatalogCsvUseCase: ImportCatalogCsvUseCase,
+    val exportCatalogCsvUseCase: ExportCatalogCsvUseCase,
+    val exportCatalogExcelUseCase: ExportCatalogExcelUseCase,
     val observeCategoriesUseCase: ObserveCategoriesUseCase,
     val createCategoryUseCase: CreateCategoryUseCase,
     val updateCategoryUseCase: UpdateCategoryUseCase,

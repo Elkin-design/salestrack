@@ -11,7 +11,11 @@ import org.salestrack.app.domain.repository.InventoryRepository
 import org.salestrack.app.domain.usecase.inventory.AddProductUseCase
 import org.salestrack.app.domain.usecase.inventory.AdjustStockUseCase
 import org.salestrack.app.domain.usecase.inventory.EditProductUseCase
+import org.salestrack.app.domain.usecase.inventory.ExportCatalogCsvUseCase
+import org.salestrack.app.domain.usecase.inventory.ExportCatalogExcelUseCase
 import org.salestrack.app.domain.usecase.inventory.FilterProductsUseCase
+import org.salestrack.app.domain.usecase.inventory.GetLowStockProductsUseCase
+import org.salestrack.app.domain.usecase.inventory.ImportCatalogCsvUseCase
 
 class InventoryViewModel(
     dispatcherProvider: DispatcherProvider,
@@ -20,6 +24,10 @@ class InventoryViewModel(
     private val editProductUseCase: EditProductUseCase,
     private val filterProductsUseCase: FilterProductsUseCase,
     private val adjustStockUseCase: AdjustStockUseCase,
+    private val getLowStockProductsUseCase: GetLowStockProductsUseCase,
+    private val importCatalogCsvUseCase: ImportCatalogCsvUseCase,
+    private val exportCatalogCsvUseCase: ExportCatalogCsvUseCase,
+    private val exportCatalogExcelUseCase: ExportCatalogExcelUseCase,
 ) : BaseViewModel<InventoryUiState, InventoryUiEvent, InventoryUiEffect>(
     initialState = InventoryUiState(),
     dispatcherProvider = dispatcherProvider,
@@ -31,11 +39,13 @@ class InventoryViewModel(
     init {
         observeProducts()
         observeMovements()
+        refreshLowStock()
     }
 
     override fun onEvent(event: InventoryUiEvent) {
         when (event) {
             InventoryUiEvent.Refresh -> applyFilters()
+            is InventoryUiEvent.SectionChanged -> setState { it.copy(selectedSection = event.section) }
             is InventoryUiEvent.QueryChanged -> {
                 setState { it.copy(query = event.value) }
                 applyFilters()
@@ -48,6 +58,12 @@ class InventoryViewModel(
                 setState { it.copy(selectedProductId = event.productId) }
                 applyFilters()
             }
+            is InventoryUiEvent.CsvImportInputChanged -> setState { it.copy(csvImportInput = event.value) }
+            InventoryUiEvent.ImportCatalogFromCsv -> importCatalog()
+            InventoryUiEvent.ExportCatalogAsCsv -> exportCatalogAsCsv()
+            InventoryUiEvent.ExportCatalogAsExcel -> exportCatalogAsExcel()
+            InventoryUiEvent.ClearImportResult -> setState { it.copy(importResult = null) }
+            InventoryUiEvent.ClearExportResult -> setState { it.copy(lastCsvExport = null, lastExcelExport = null) }
             is InventoryUiEvent.ToggleAddDialog -> setState { it.copy(isAddDialogVisible = event.visible) }
             is InventoryUiEvent.StartEdit -> setState { it.copy(editingProduct = event.product) }
             is InventoryUiEvent.StartAdjust -> setState { it.copy(adjustingProduct = event.product) }
@@ -121,6 +137,7 @@ class InventoryViewModel(
             ) {
                 is AppResult.Success -> {
                     setState { it.copy(isAddDialogVisible = false) }
+                    refreshLowStock()
                     emitEffect(InventoryUiEffect.ShowMessage("Producto creado"))
                 }
                 is AppResult.Failure -> {
@@ -154,6 +171,7 @@ class InventoryViewModel(
             ) {
                 is AppResult.Success -> {
                     setState { it.copy(editingProduct = null) }
+                    refreshLowStock()
                     emitEffect(InventoryUiEffect.ShowMessage("Producto actualizado"))
                 }
                 is AppResult.Failure -> {
@@ -176,10 +194,77 @@ class InventoryViewModel(
             ) {
                 is AppResult.Success -> {
                     setState { it.copy(adjustingProduct = null) }
+                    refreshLowStock()
                     emitEffect(InventoryUiEffect.ShowMessage("Stock actualizado"))
                 }
                 is AppResult.Failure -> {
                     setState { it.copy(errorMessage = result.error.message ?: "Error ajustando stock") }
+                }
+            }
+        }
+    }
+
+    private fun refreshLowStock() {
+        scope.launch {
+            when (val result = getLowStockProductsUseCase()) {
+                is AppResult.Success -> {
+                    setState { it.copy(lowStockProducts = result.value) }
+                }
+                is AppResult.Failure -> {
+                    setState { it.copy(errorMessage = result.error.message ?: "Error consultando stock bajo") }
+                }
+            }
+        }
+    }
+
+    private fun importCatalog() {
+        scope.launch {
+            val csvContent = state.value.csvImportInput
+            when (val result = importCatalogCsvUseCase(csvContent)) {
+                is AppResult.Success -> {
+                    setState {
+                        it.copy(
+                            importResult = result.value,
+                            errorMessage = null,
+                        )
+                    }
+                    refreshLowStock()
+                    emitEffect(
+                        InventoryUiEffect.ShowMessage(
+                            "Importacion completada: ${result.value.importedRows}/${result.value.totalRows}",
+                        ),
+                    )
+                }
+                is AppResult.Failure -> {
+                    setState { it.copy(errorMessage = result.error.message ?: "Error importando catalogo") }
+                }
+            }
+        }
+    }
+
+    private fun exportCatalogAsCsv() {
+        scope.launch {
+            when (val result = exportCatalogCsvUseCase()) {
+                is AppResult.Success -> {
+                    setState { it.copy(lastCsvExport = result.value, errorMessage = null) }
+                    emitEffect(InventoryUiEffect.ShowMessage("CSV generado: ${result.value.fileName}"))
+                }
+                is AppResult.Failure -> {
+                    setState { it.copy(errorMessage = result.error.message ?: "Error exportando CSV") }
+                }
+            }
+        }
+    }
+
+    private fun exportCatalogAsExcel() {
+        scope.launch {
+            when (val result = exportCatalogExcelUseCase()) {
+                is AppResult.Success -> {
+                    setState { it.copy(lastExcelExport = result.value, errorMessage = null) }
+                    emitEffect(InventoryUiEffect.ShowMessage("Excel generado: ${result.value.fileName}"))
+                }
+                is AppResult.Failure -> {
+                    setState { it.copy(errorMessage = result.error.message ?: "Error exportando Excel") }
                 }
             }
         }
