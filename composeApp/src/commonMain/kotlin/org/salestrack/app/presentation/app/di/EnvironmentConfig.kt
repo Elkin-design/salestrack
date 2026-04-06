@@ -2,6 +2,7 @@ package org.salestrack.app.presentation.app.di
 
 enum class BackendProvider {
     MOCK,
+    FIRESTORE_STUB,
     FIRESTORE,
 }
 

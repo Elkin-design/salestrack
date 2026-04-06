@@ -30,6 +30,7 @@ import org.salestrack.app.data.source.InMemoryNotificationSettingsDataSource
 import org.salestrack.app.data.source.InMemorySaleDataSource
 import org.salestrack.app.data.source.InMemorySettingsDataSource
 import org.salestrack.app.data.source.InMemoryTeamDataSource
+import org.salestrack.app.data.source.SaleDataSource
 import org.salestrack.app.domain.repository.BackupRepository
 import org.salestrack.app.domain.repository.CategoryRepository
 import org.salestrack.app.domain.repository.ExportRepository
@@ -88,11 +89,16 @@ fun appModule(config: EnvironmentConfig) = module {
     single<SaleRepository> {
         when (get<EnvironmentConfig>().backendProvider) {
             BackendProvider.MOCK -> FakeSaleRepository(dataSource = get(), timeProvider = get())
-            BackendProvider.FIRESTORE -> RealSaleRepository(
-                dataSource = FirestoreSaleDataSource(),
-                timeProvider = get(),
-            )
+            BackendProvider.FIRESTORE_STUB,
+            BackendProvider.FIRESTORE -> RealSaleRepository(dataSource = get())
         }
+    }
+
+    single<SaleDataSource> {
+        FirestoreSaleDataSource(
+            initialSales = MockSalesFactory.create(get()),
+            timeProvider = get(),
+        )
     }
 
     single<InventoryRepository> { FakeInventoryRepository(dataSource = get(), timeProvider = get()) }

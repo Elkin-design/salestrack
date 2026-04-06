@@ -2,15 +2,13 @@ package org.salestrack.app.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import org.salestrack.app.core.result.AppResult
-import org.salestrack.app.core.utils.TimeProvider
-import org.salestrack.app.data.source.FirestoreSaleDataSource
+import org.salestrack.app.data.source.SaleDataSource
 import org.salestrack.app.domain.model.NewSaleInput
 import org.salestrack.app.domain.model.Sale
 import org.salestrack.app.domain.repository.SaleRepository
 
 class RealSaleRepository(
-    private val dataSource: FirestoreSaleDataSource,
-    private val timeProvider: TimeProvider,
+    private val dataSource: SaleDataSource,
 ) : SaleRepository {
 
     override fun observeSales(): Flow<List<Sale>> = dataSource.observeSales()
