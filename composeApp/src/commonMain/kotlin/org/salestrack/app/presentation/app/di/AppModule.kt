@@ -30,7 +30,15 @@ import org.salestrack.app.data.source.InMemoryNotificationSettingsDataSource
 import org.salestrack.app.data.source.InMemorySaleDataSource
 import org.salestrack.app.data.source.InMemorySettingsDataSource
 import org.salestrack.app.data.source.InMemoryTeamDataSource
+import org.salestrack.app.domain.repository.BackupRepository
+import org.salestrack.app.domain.repository.CategoryRepository
+import org.salestrack.app.domain.repository.ExportRepository
+import org.salestrack.app.domain.repository.InventoryRepository
+import org.salestrack.app.domain.repository.NotificationRepository
+import org.salestrack.app.domain.repository.PrintRepository
 import org.salestrack.app.domain.repository.SaleRepository
+import org.salestrack.app.domain.repository.SettingsRepository
+import org.salestrack.app.domain.repository.TeamRepository
 import org.salestrack.app.domain.usecase.backup.CreateBackupUseCase
 import org.salestrack.app.domain.usecase.category.CreateCategoryUseCase
 import org.salestrack.app.domain.usecase.category.DeleteCategoryUseCase
@@ -87,19 +95,19 @@ fun appModule(config: EnvironmentConfig) = module {
         }
     }
 
-    single { FakeInventoryRepository(dataSource = get(), timeProvider = get()) }
-    single { FakeCategoryRepository(dataSource = get(), timeProvider = get()) }
-    single { FakeSettingsRepository(get()) }
-    single { FakeNotificationRepository(get()) }
-    single {
+    single<InventoryRepository> { FakeInventoryRepository(dataSource = get(), timeProvider = get()) }
+    single<CategoryRepository> { FakeCategoryRepository(dataSource = get(), timeProvider = get()) }
+    single<SettingsRepository> { FakeSettingsRepository(get()) }
+    single<NotificationRepository> { FakeNotificationRepository(get()) }
+    single<ExportRepository> {
         RealExportRepository(
             pdfAdapter = BasicPdfExportAdapter(),
             excelAdapter = SpreadsheetXmlExcelExportAdapter(),
         )
     }
-    single { FakePrintRepository() }
-    single { FakeBackupRepository() }
-    single { FakeTeamRepository(get()) }
+    single<PrintRepository> { FakePrintRepository() }
+    single<BackupRepository> { FakeBackupRepository() }
+    single<TeamRepository> { FakeTeamRepository(get()) }
 
     single { AddSaleUseCase(get(), get()) }
     single { UpdateSaleUseCase(get()) }

@@ -37,6 +37,16 @@ object MockSalesFactory {
                 createdAtMillis = now - 26 * 60 * 60 * 1000,
                 sellerName = "Ana",
             ),
+            Sale(
+                id = "S-1004",
+                productName = "Galletas Hacker",
+                category = "Snacks",
+                quantity = 1,
+                unitPrice = 5800.0,
+                discount = 800.0,
+                createdAtMillis = now - 26 * 60 * 60 * 1000,
+                sellerName = "Ana",
+            ),
         )
     }
 }
