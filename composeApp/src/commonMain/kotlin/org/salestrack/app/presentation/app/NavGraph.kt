@@ -134,7 +134,19 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             .padding(paddingValues)
 
         when (currentDestination) {
-            AppDestination.Dashboard -> DashboardRoute(container = container, modifier = screenModifier)
+            AppDestination.Dashboard -> {
+                val viewModel = remember(container) {
+                    org.salestrack.app.presentation.feature.dashboard.DashboardViewModel(
+                        dispatcherProvider = container.dispatcherProvider,
+                        repository = container.saleRepository,
+                        timeProvider = container.timeProvider,
+                        buildSummary = container.buildDashboardSummaryUseCase,
+                        filterSalesUseCase = container.filterSalesUseCase,
+                        getLowStockProducts = container.getLowStockProductsUseCase,
+                    )
+                }
+                DashboardRoute(viewModel = viewModel, modifier = screenModifier)
+            }
             AppDestination.Sales -> SalesRoute(container = container, modifier = screenModifier)
             AppDestination.Inventory -> InventoryRoute(container = container, modifier = screenModifier)
             AppDestination.Reports -> ReportsRoute(container = container, modifier = screenModifier)
