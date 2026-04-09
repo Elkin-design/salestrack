@@ -1,23 +1,54 @@
 package org.salestrack.app.presentation.feature.inventory
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -25,6 +56,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -32,6 +64,8 @@ import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import org.salestrack.app.core.utils.formatMoney
 import org.salestrack.app.domain.model.Product
@@ -73,6 +107,7 @@ fun InventoryRoute(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InventoryScreen(
     uiState: InventoryUiState,
@@ -83,7 +118,7 @@ fun InventoryScreen(
     val lowStockCount = uiState.lowStockProducts.size
     val totalUnits = uiState.products.sumOf { it.stock }
 
-    Column(
+    Scaffold(
         modifier = modifier
             .fillMaxSize()
             .onPreviewKeyEvent { event ->
@@ -93,106 +128,135 @@ fun InventoryScreen(
                 } else {
                     false
                 }
-            }
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Inventario", style = MaterialTheme.typography.headlineSmall)
-            Button(onClick = { onEvent(InventoryUiEvent.ToggleAddDialog(true)) }) {
-                Text("Nuevo producto")
+            },
+        topBar = {
+            TopAppBar(
+                title = { Text("Inventario", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground
+                )
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { onEvent(InventoryUiEvent.ToggleAddDialog(true)) },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Nuevo Producto")
             }
         }
-
-        InventorySectionSelector(
-            selectedSection = uiState.selectedSection,
-            onSectionSelected = { onEvent(InventoryUiEvent.SectionChanged(it)) },
-        )
-
-        OutlinedTextField(
-            value = uiState.query,
-            onValueChange = { onEvent(InventoryUiEvent.QueryChanged(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Buscar por nombre, categoria o codigo") },
-        )
-
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
-                selected = uiState.selectedCategory == null,
-                onClick = { onEvent(InventoryUiEvent.CategoryChanged(null)) },
-                label = { Text("Todas") },
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            OutlinedTextField(
+                value = uiState.query,
+                onValueChange = { onEvent(InventoryUiEvent.QueryChanged(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("Buscar por nombre, categoria o codigo...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                shape = RoundedCornerShape(100),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                )
             )
-            uiState.availableCategories.forEach { category ->
-                FilterChip(
-                    selected = uiState.selectedCategory == category,
-                    onClick = { onEvent(InventoryUiEvent.CategoryChanged(category)) },
-                    label = { Text(category) },
+
+            InventorySectionSelector(
+                selectedSection = uiState.selectedSection,
+                onSectionSelected = { onEvent(InventoryUiEvent.SectionChanged(it)) },
+            )
+
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                item {
+                    FilterChip(
+                        selected = uiState.selectedCategory == null,
+                        onClick = { onEvent(InventoryUiEvent.CategoryChanged(null)) },
+                        label = { Text("Todas") },
+                        shape = RoundedCornerShape(100)
+                    )
+                }
+                items(uiState.availableCategories) { category ->
+                    FilterChip(
+                        selected = uiState.selectedCategory == category,
+                        onClick = { onEvent(InventoryUiEvent.CategoryChanged(category)) },
+                        label = { Text(category) },
+                        shape = RoundedCornerShape(100)
+                    )
+                }
+            }
+
+            InventorySummaryCard(
+                totalProducts = uiState.products.size,
+                totalUnits = totalUnits,
+                lowStockCount = lowStockCount
+            )
+
+            when (uiState.selectedSection) {
+                InventorySection.Catalog -> CatalogWindow(
+                    products = uiState.products,
+                    selectedProductId = uiState.selectedProductId,
+                    onSelect = { onEvent(InventoryUiEvent.SelectProduct(it)) },
+                    onEdit = { onEvent(InventoryUiEvent.StartEdit(it)) },
+                    onAdjust = { onEvent(InventoryUiEvent.StartAdjust(it)) },
+                )
+                InventorySection.AddProduct -> AddWindow(
+                    lowStockProducts = uiState.lowStockProducts,
+                    onOpenAddDialog = { onEvent(InventoryUiEvent.ToggleAddDialog(true)) },
+                )
+                InventorySection.EditProduct -> EditWindow(
+                    products = uiState.products,
+                    onEdit = { onEvent(InventoryUiEvent.StartEdit(it)) },
+                )
+                InventorySection.StockAdjustment -> StockAdjustmentWindow(
+                    selectedProduct = selectedProduct,
+                    onSelect = { onEvent(InventoryUiEvent.SelectProduct(it)) },
+                    products = uiState.products,
+                    onAdjust = { onEvent(InventoryUiEvent.StartAdjust(it)) },
+                )
+                InventorySection.MovementHistory -> HistoryWindow(
+                    movements = uiState.selectedProductMovements,
+                    selectedProduct = selectedProduct,
+                )
+                InventorySection.ImportExport -> ImportExportWindow(
+                    csvInput = uiState.csvImportInput,
+                    importResultSummary = uiState.importResult?.let {
+                        "Filas: ${it.totalRows}, importadas: ${it.importedRows}, fallidas: ${it.failedRows}"
+                    },
+                    importErrors = uiState.importResult?.errors?.take(5)?.map { "Linea ${it.line}: ${it.reason}" }.orEmpty(),
+                    csvExportPreview = uiState.lastCsvExport?.content?.lineSequence()?.take(3)?.joinToString("\n"),
+                    excelExportPreview = uiState.lastExcelExport?.content?.take(80),
+                    onCsvInputChanged = { onEvent(InventoryUiEvent.CsvImportInputChanged(it)) },
+                    onImport = { onEvent(InventoryUiEvent.ImportCatalogFromCsv) },
+                    onExportCsv = { onEvent(InventoryUiEvent.ExportCatalogAsCsv) },
+                    onExportExcel = { onEvent(InventoryUiEvent.ExportCatalogAsExcel) },
+                    onClearImport = { onEvent(InventoryUiEvent.ClearImportResult) },
+                    onClearExport = { onEvent(InventoryUiEvent.ClearExportResult) },
                 )
             }
-        }
 
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier.padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text("Resumen de inventario", style = MaterialTheme.typography.titleMedium)
-                Text("Productos visibles: ${uiState.products.size}")
-                Text("Unidades en stock: $totalUnits")
-                Text("Productos con alerta de stock: $lowStockCount")
+            if (uiState.errorMessage != null) {
+                ElevatedCard(
+                    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(uiState.errorMessage, color = MaterialTheme.colorScheme.onErrorContainer)
+                    }
+                }
             }
-        }
-
-        when (uiState.selectedSection) {
-            InventorySection.Catalog -> CatalogWindow(
-                products = uiState.products,
-                selectedProductId = uiState.selectedProductId,
-                onSelect = { onEvent(InventoryUiEvent.SelectProduct(it)) },
-                onEdit = { onEvent(InventoryUiEvent.StartEdit(it)) },
-                onAdjust = { onEvent(InventoryUiEvent.StartAdjust(it)) },
-            )
-            InventorySection.AddProduct -> AddWindow(
-                lowStockProducts = uiState.lowStockProducts,
-                onOpenAddDialog = { onEvent(InventoryUiEvent.ToggleAddDialog(true)) },
-            )
-            InventorySection.EditProduct -> EditWindow(
-                products = uiState.products,
-                onEdit = { onEvent(InventoryUiEvent.StartEdit(it)) },
-            )
-            InventorySection.StockAdjustment -> StockAdjustmentWindow(
-                selectedProduct = selectedProduct,
-                onSelect = { onEvent(InventoryUiEvent.SelectProduct(it)) },
-                products = uiState.products,
-                onAdjust = { onEvent(InventoryUiEvent.StartAdjust(it)) },
-            )
-            InventorySection.MovementHistory -> HistoryWindow(
-                movements = uiState.selectedProductMovements,
-                selectedProduct = selectedProduct,
-            )
-            InventorySection.ImportExport -> ImportExportWindow(
-                csvInput = uiState.csvImportInput,
-                importResultSummary = uiState.importResult?.let {
-                    "Filas: ${it.totalRows}, importadas: ${it.importedRows}, fallidas: ${it.failedRows}"
-                },
-                importErrors = uiState.importResult?.errors?.take(5)?.map { "Linea ${it.line}: ${it.reason}" }.orEmpty(),
-                csvExportPreview = uiState.lastCsvExport?.content?.lineSequence()?.take(3)?.joinToString("\n"),
-                excelExportPreview = uiState.lastExcelExport?.content?.take(80),
-                onCsvInputChanged = { onEvent(InventoryUiEvent.CsvImportInputChanged(it)) },
-                onImport = { onEvent(InventoryUiEvent.ImportCatalogFromCsv) },
-                onExportCsv = { onEvent(InventoryUiEvent.ExportCatalogAsCsv) },
-                onExportExcel = { onEvent(InventoryUiEvent.ExportCatalogAsExcel) },
-                onClearImport = { onEvent(InventoryUiEvent.ClearImportResult) },
-                onClearExport = { onEvent(InventoryUiEvent.ClearExportResult) },
-            )
-        }
-
-        ProductDetailCard(
-            selectedProduct = selectedProduct,
-            movements = uiState.selectedProductMovements,
-        )
-
-        if (uiState.errorMessage != null) {
-            Text(uiState.errorMessage, color = MaterialTheme.colorScheme.error)
         }
     }
 
@@ -259,25 +323,77 @@ fun InventoryScreen(
 }
 
 @Composable
+private fun InventorySummaryCard(totalProducts: Int, totalUnits: Int, lowStockCount: Int) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            SummaryItem(
+                label = "Catálogo",
+                value = "$totalProducts",
+                icon = Icons.Default.List,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Divider(modifier = Modifier.height(40.dp).width(1.dp), color = MaterialTheme.colorScheme.outlineVariant)
+            SummaryItem(
+                label = "Unidades",
+                value = "$totalUnits",
+                icon = Icons.Default.CheckCircle,
+                color = MaterialTheme.colorScheme.secondary
+            )
+            Divider(modifier = Modifier.height(40.dp).width(1.dp), color = MaterialTheme.colorScheme.outlineVariant)
+            SummaryItem(
+                label = "Alertas",
+                value = "$lowStockCount",
+                icon = Icons.Default.Warning,
+                color = if (lowStockCount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun SummaryItem(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: androidx.compose.ui.graphics.Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Icon(icon, contentDescription = label, tint = color, modifier = Modifier.size(24.dp))
+        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = color)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+
+@Composable
 private fun InventorySectionSelector(
     selectedSection: InventorySection,
     onSectionSelected: (InventorySection) -> Unit,
 ) {
     val sections = listOf(
-        InventorySection.Catalog to "Catalogo",
+        InventorySection.Catalog to "Catálogo",
         InventorySection.AddProduct to "Agregar",
         InventorySection.EditProduct to "Editar",
         InventorySection.StockAdjustment to "Ajustes",
         InventorySection.MovementHistory to "Historial",
-        InventorySection.ImportExport to "Importar/Exportar",
+        InventorySection.ImportExport to "Datos",
     )
 
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
         items(sections) { (section, label) ->
             FilterChip(
                 selected = selectedSection == section,
                 onClick = { onSectionSelected(section) },
                 label = { Text(label) },
+                shape = RoundedCornerShape(100)
             )
         }
     }
@@ -292,11 +408,32 @@ private fun CatalogWindow(
     onAdjust: (Product) -> Unit,
 ) {
     if (products.isEmpty()) {
-        Text("No hay productos para mostrar con los filtros actuales.")
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(vertical = 32.dp)
+            ) {
+                Icon(
+                    Icons.Default.ShoppingCart,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
+                Text(
+                    text = "No hay productos para mostrar.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
         return
     }
 
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(bottom = 80.dp)
+    ) {
         items(products, key = { it.id }) { product ->
             ProductCard(
                 product = product,
@@ -314,20 +451,28 @@ private fun AddWindow(
     lowStockProducts: List<Product>,
     onOpenAddDialog: () -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+    ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Ventana de alta de producto", style = MaterialTheme.typography.titleMedium)
-            Text("Completa nombre, descripcion, precio, unidad, codigo, categoria, stock inicial y umbral.")
-            Button(onClick = onOpenAddDialog) {
+            Text("Gestión de Inventario Inicial", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Integra nuevos ingresos con control de stock y clasificación detallada.", style = MaterialTheme.typography.bodyMedium)
+            Button(onClick = onOpenAddDialog, shape = RoundedCornerShape(100)) {
                 Text("Abrir formulario de alta")
             }
             if (lowStockProducts.isNotEmpty()) {
-                Text("Productos en riesgo de quiebre:")
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Productos en riesgo", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                }
                 lowStockProducts.take(5).forEach { product ->
-                    Text("- ${product.name}: ${product.stock}/${product.minimumStock}")
+                    Text("• ${product.name}: ${product.stock} (Min: ${product.minimumStock})", style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -339,20 +484,27 @@ private fun EditWindow(
     products: List<Product>,
     onEdit: (Product) -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+    ) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("Ventana de edicion", style = MaterialTheme.typography.titleMedium)
-            Text("Selecciona un producto para editar sus campos.")
+            Text("Edición rápida", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Selecciona un producto del catálogo para actualizar sus detalles generales.", style = MaterialTheme.typography.bodyMedium)
+            Divider(modifier = Modifier.padding(vertical = 4.dp))
             products.take(8).forEach { product ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("${product.name} · ${product.category}")
-                    TextButton(onClick = { onEdit(product) }) { Text("Editar") }
+                    Text("${product.name}", style = MaterialTheme.typography.bodyMedium)
+                    IconButton(onClick = { onEdit(product) }) {
+                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary)
+                    }
                 }
             }
         }
@@ -366,24 +518,44 @@ private fun StockAdjustmentWindow(
     products: List<Product>,
     onAdjust: (Product) -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+    ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Ventana de ajuste de stock", style = MaterialTheme.typography.titleMedium)
+            Text("Ajustes de inventario", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            
             selectedProduct?.let {
-                Text("Producto seleccionado: ${it.name}")
-                Text("Stock actual: ${it.stock}")
-                Button(onClick = { onAdjust(it) }) { Text("Abrir ajuste") }
-            } ?: Text("Selecciona un producto desde catalogo para ajustar stock.")
+                Surface(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Producto a ajustar: ${it.name}", fontWeight = FontWeight.Bold)
+                        Text("Stock actual: ${it.stock}", style = MaterialTheme.typography.bodyMedium)
+                        Button(
+                            onClick = { onAdjust(it) },
+                            modifier = Modifier.padding(top = 8.dp),
+                            shape = RoundedCornerShape(100)
+                        ) {
+                            Text("Registrar movimiento")
+                        }
+                    }
+                }
+            } ?: Text("Selecciona un producto en el catálogo o debajo para registrar mermas o reingresos.", style = MaterialTheme.typography.bodyMedium)
 
+            Text("Productos disponibles:", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(products, key = { it.id }) { product ->
                     FilterChip(
                         selected = selectedProduct?.id == product.id,
                         onClick = { onSelect(product.id) },
                         label = { Text(product.name) },
+                        shape = RoundedCornerShape(100)
                     )
                 }
             }
@@ -396,18 +568,39 @@ private fun HistoryWindow(
     movements: List<StockMovement>,
     selectedProduct: Product?,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+    ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Historial de movimientos", style = MaterialTheme.typography.titleMedium)
-            Text("Producto: ${selectedProduct?.name ?: "Sin seleccion"}")
+            Text("Kardex / Historial", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Actividad para: ${selectedProduct?.name ?: "Sin selección"}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+            
+            Divider()
+            
             if (movements.isEmpty()) {
-                Text("Sin movimientos registrados")
+                Text("No hay registros en el historial.", style = MaterialTheme.typography.bodyMedium)
             } else {
                 movements.take(10).forEach { movement ->
-                    Text("${movement.type.asLabel()} (${movement.quantityDelta}) · ${movement.reason}")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(movement.type.asLabel(), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                            Text(movement.reason.ifBlank { "Sin detalle" }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Text(
+                            text = if (movement.quantityDelta > 0) "+${movement.quantityDelta}" else "${movement.quantityDelta}",
+                            fontWeight = FontWeight.ExtraBold,
+                            color = if (movement.quantityDelta > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                        )
+                    }
+                    Divider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(vertical = 4.dp))
                 }
             }
         }
@@ -428,42 +621,45 @@ private fun ImportExportWindow(
     onClearImport: () -> Unit,
     onClearExport: () -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+    ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Importar / Exportar catalogo", style = MaterialTheme.typography.titleMedium)
-            Text("Formato CSV: name,description,unitPrice,unit,barcode,category,stock,minimumStock")
+            Text("Migración de Datos", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            
             OutlinedTextField(
                 value = csvInput,
                 onValueChange = onCsvInputChanged,
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("Pega aqui el CSV") },
+                label = { Text("Pega el CSV aquí") },
+                shape = RoundedCornerShape(12.dp)
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onImport) { Text("Importar CSV") }
-                TextButton(onClick = onClearImport) { Text("Limpiar resultado") }
+                Button(onClick = onImport) { Text("Importar") }
+                TextButton(onClick = onClearImport) { Text("Limpiar") }
             }
 
             if (importResultSummary != null) {
-                Text(importResultSummary)
-                importErrors.forEach { Text(it, color = MaterialTheme.colorScheme.error) }
+                Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(8.dp)) {
+                        Text(importResultSummary, fontWeight = FontWeight.Bold)
+                        importErrors.forEach { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                    }
+                }
             }
 
+            Divider()
+            Text("Descarga", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onExportCsv) { Text("Exportar CSV") }
-                Button(onClick = onExportExcel) { Text("Exportar Excel") }
-                TextButton(onClick = onClearExport) { Text("Limpiar export") }
+                Button(onClick = onExportCsv) { Text("Exp. CSV") }
+                Button(onClick = onExportExcel) { Text("Exp. Excel") }
             }
-
-            if (csvExportPreview != null) {
-                Text("Preview CSV:")
-                Text(csvExportPreview)
-            }
-            if (excelExportPreview != null) {
-                Text("Preview Excel:")
-                Text(excelExportPreview)
+            if (csvExportPreview != null || excelExportPreview != null) {
+                TextButton(onClick = onClearExport) { Text("Limpiar previsualización") }
             }
         }
     }
@@ -479,60 +675,94 @@ private fun ProductCard(
 ) {
     val isLowStock = product.stock <= product.minimumStock
 
-    Card(
+    ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) {
-                MaterialTheme.colorScheme.secondaryContainer
-            } else {
-                MaterialTheme.colorScheme.surface
-            },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = if (isSelected) 6.dp else 2.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface
         ),
         onClick = onSelect,
     ) {
-        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(product.name, style = MaterialTheme.typography.titleSmall)
-            Text("Categoria: ${product.category} · Unidad: ${product.unit}")
-            Text("Precio: $${formatMoney(product.unitPrice)}")
-            Text("Stock: ${product.stock} · Umbral: ${product.minimumStock}")
-            if (isLowStock) {
-                Text("Stock bajo", color = MaterialTheme.colorScheme.error)
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = onEdit) { Text("Editar") }
-                TextButton(onClick = onAdjust) { Text("Ajustar") }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ProductDetailCard(
-    selectedProduct: Product?,
-    movements: List<StockMovement>,
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Detalle del producto", style = MaterialTheme.typography.titleMedium)
-            if (selectedProduct == null) {
-                Text("Selecciona un producto para ver movimientos.")
-                return@Column
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = product.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Surface(
+                            shape = RoundedCornerShape(100),
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Text(
+                                text = product.category,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                        Text(
+                            text = "Unidad: ${product.unit}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Text(
+                    text = "$${formatMoney(product.unitPrice)}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
-
-            Text(selectedProduct.name, style = MaterialTheme.typography.titleSmall)
-            Text(selectedProduct.description)
-            Text("Codigo: ${selectedProduct.barcode ?: "N/A"}")
-            Text("Stock actual: ${selectedProduct.stock}")
-            Text("Movimientos recientes")
-
-            if (movements.isEmpty()) {
-                Text("Sin movimientos registrados")
-            } else {
-                movements.take(5).forEach { movement ->
-                    Text("${movement.type.asLabel()} (${movement.quantityDelta}) · ${movement.reason}")
+            
+            Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isLowStock) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Warning, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onErrorContainer)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Stock Bajo: ${product.stock}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onErrorContainer, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = "Stock: ${product.stock} (Min: ${product.minimumStock})",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.End) {
+                    IconButton(onClick = onAdjust) {
+                        Icon(Icons.Default.Build, contentDescription = "Ajustar", tint = MaterialTheme.colorScheme.secondary)
+                    }
+                    IconButton(onClick = onEdit) {
+                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary)
+                    }
                 }
             }
         }
@@ -557,17 +787,78 @@ private fun ProductFormDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
+        title = { Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre") })
-                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Descripcion") })
-                OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Precio") })
-                OutlinedTextField(value = unit, onValueChange = { unit = it }, label = { Text("Unidad") })
-                OutlinedTextField(value = barcode, onValueChange = { barcode = it }, label = { Text("Codigo de barras (opcional)") })
-                OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Categoria") })
-                OutlinedTextField(value = stock, onValueChange = { stock = it }, label = { Text("Stock") })
-                OutlinedTextField(value = minimum, onValueChange = { minimum = it }, label = { Text("Umbral minimo") })
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Nombre") },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Descripción") },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = price,
+                        onValueChange = { price = it },
+                        label = { Text("Precio") },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    )
+                    OutlinedTextField(
+                        value = unit,
+                        onValueChange = { unit = it },
+                        label = { Text("Unidad") },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                OutlinedTextField(
+                    value = category,
+                    onValueChange = { category = it },
+                    label = { Text("Categoría") },
+                    leadingIcon = { Icon(Icons.Default.List, contentDescription = null) },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = barcode,
+                    onValueChange = { barcode = it },
+                    label = { Text("Código de barras (opcional)") },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = stock,
+                        onValueChange = { stock = it },
+                        label = { Text("Stock Inicial") },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                    OutlinedTextField(
+                        value = minimum,
+                        onValueChange = { minimum = it },
+                        label = { Text("Umbral Mín.") },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                }
             }
         },
         confirmButton = {
@@ -587,6 +878,7 @@ private fun ProductFormDialog(
             ) { Text("Guardar") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        shape = RoundedCornerShape(24.dp)
     )
 }
 
@@ -602,29 +894,37 @@ private fun StockAdjustmentDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Ajustar stock · ${product.name}") },
+        title = {
+            Column {
+                Text("Ajuste de Stock", fontWeight = FontWeight.Bold)
+                Text(product.name, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+            }
+        },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = delta,
                     onValueChange = { delta = it },
-                    label = { Text("Cantidad (+/-)") },
+                    label = { Text("Cantidad a sumar (+ o -)") },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 OutlinedTextField(
                     value = reason,
                     onValueChange = { reason = it },
-                    label = { Text("Motivo") },
+                    label = { Text("Motivo/Justificación") },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(
-                        StockAdjustmentType.Entry,
-                        StockAdjustmentType.PhysicalCount,
-                        StockAdjustmentType.Loss,
-                    ).forEach { option ->
+                Text("Tipo de ajuste:", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(listOf(StockAdjustmentType.Entry, StockAdjustmentType.PhysicalCount, StockAdjustmentType.Loss)) { option ->
                         FilterChip(
                             selected = type == option,
                             onClick = { type = option },
                             label = { Text(option.asLabel()) },
+                            shape = RoundedCornerShape(100)
                         )
                     }
                 }
@@ -632,23 +932,18 @@ private fun StockAdjustmentDialog(
         },
         confirmButton = {
             Button(
-                onClick = {
-                    onApply(
-                        delta.toIntOrNull() ?: 0,
-                        reason,
-                        type,
-                    )
-                },
+                onClick = { onApply(delta.toIntOrNull() ?: 0, reason, type) }
             ) { Text("Aplicar") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        shape = RoundedCornerShape(24.dp)
     )
 }
 
 private fun StockAdjustmentType.asLabel(): String = when (this) {
     StockAdjustmentType.Entry -> "Entrada"
-    StockAdjustmentType.PhysicalCount -> "Inventario fisico"
-    StockAdjustmentType.Loss -> "Perdida"
+    StockAdjustmentType.PhysicalCount -> "Inventario Físico"
+    StockAdjustmentType.Loss -> "Pérdida/Merna"
     StockAdjustmentType.Sale -> "Venta"
-    StockAdjustmentType.Return -> "Devolucion"
+    StockAdjustmentType.Return -> "Devolución"
 }
