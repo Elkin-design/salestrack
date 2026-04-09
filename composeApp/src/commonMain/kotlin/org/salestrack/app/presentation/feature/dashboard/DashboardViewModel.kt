@@ -8,6 +8,9 @@ import org.salestrack.app.domain.repository.SaleRepository
 import org.salestrack.app.domain.usecase.dashboard.BuildDashboardSummaryUseCase
 import org.salestrack.app.domain.usecase.sales.FilterSalesUseCase
 import org.salestrack.app.core.utils.TimeProvider
+import org.salestrack.app.core.result.AppResult
+import org.salestrack.app.domain.model.Product
+import org.salestrack.app.domain.usecase.inventory.GetLowStockProductsUseCase
 
 class DashboardViewModel(
     dispatcherProvider: DispatcherProvider,
@@ -15,21 +18,25 @@ class DashboardViewModel(
     private val timeProvider: TimeProvider,
     private val buildSummary: BuildDashboardSummaryUseCase,
     private val filterSalesUseCase: FilterSalesUseCase,
+    private val getLowStockProducts: GetLowStockProductsUseCase,
 ) : BaseViewModel<DashboardUiState, DashboardUiEvent, DashboardUiEffect>(
     initialState = DashboardUiState(),
     dispatcherProvider = dispatcherProvider,
 ) {
     private var lastSales: List<Sale> = emptyList()
+    private var lastLowStock: List<Product> = emptyList()
     private val oneDayMillis = 86_400_000L
 
     init {
         observeSales()
+        fetchLowStock()
     }
 
     override fun onEvent(event: DashboardUiEvent) {
         when (event) {
             DashboardUiEvent.Refresh -> {
                 setState { it.copy(isLoading = true, errorMessage = null) }
+                fetchLowStock()
                 render(lastSales)
                 emitEffect(DashboardUiEffect.ShowMessage("Dashboard actualizado"))
             }
@@ -51,6 +58,16 @@ class DashboardViewModel(
                     )
                 }
                 emitEffect(DashboardUiEffect.ShowMessage("No se pudo actualizar"))
+            }
+        }
+    }
+
+    private fun fetchLowStock() {
+        scope.launch {
+            val result = getLowStockProducts()
+            if (result is AppResult.Success) {
+                lastLowStock = result.value
+                setState { it.copy(lowStockProducts = lastLowStock) }
             }
         }
     }

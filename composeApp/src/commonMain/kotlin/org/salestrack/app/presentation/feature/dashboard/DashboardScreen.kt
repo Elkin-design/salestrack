@@ -55,6 +55,7 @@ fun DashboardRoute(
             timeProvider = container.timeProvider,
             buildSummary = container.buildDashboardSummaryUseCase,
             filterSalesUseCase = container.filterSalesUseCase,
+            getLowStockProducts = container.getLowStockProductsUseCase,
         )
     }
     val uiState by viewModel.state.collectAsState()
@@ -178,7 +179,11 @@ private fun DashboardContent(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
-                KpiSection(summary = uiState.summary, isWide = isWide)
+                KpiSection(
+                    summary = uiState.summary,
+                    lowStockCount = uiState.lowStockProducts.size,
+                    isWide = isWide,
+                )
             }
 
             if (isWide) {
@@ -202,25 +207,7 @@ private fun DashboardContent(
                 item { CategoryBreakdownCard(breakdown = uiState.categoryBreakdown) }
             }
 
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                    OperationalInfoCard(
-                        title = "Producto lider",
-                        value = uiState.summary.topProductToday,
-                        hint = "Mayor volumen de hoy",
-                        modifier = Modifier.weight(1f),
-                    )
-                    OperationalInfoCard(
-                        title = "Sincronizacion",
-                        value = uiState.summary.syncStatus,
-                        hint = "Estado de actualizacion",
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            }
+            // Removed OperationalInfoCard section to prioritize inventory KPIs
 
             item {
                 Text(
@@ -252,6 +239,38 @@ private fun DashboardContent(
                     )
                 }
             }
+
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Alertas de Stock",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+
+            if (uiState.lowStockProducts.isEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                    ) {
+                        Text(
+                            text = "No hay productos con stock critico. Todo en orden.",
+                            modifier = Modifier.padding(14.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+            } else {
+                items(uiState.lowStockProducts, key = { it.id }) { product ->
+                    RecentSaleCard(
+                        saleTitle = product.name,
+                        saleMeta = "Stock: ${product.stock} ${product.unit} (Min: ${product.minimumStock})",
+                        total = "!!", // Or we can create an Alert card, but reusing RecentSaleCard for now. Actually let's use a specialized layout inline or adapt RecentSaleCard parameters.
+                    )
+                }
+            }
         }
     }
 }
@@ -259,6 +278,7 @@ private fun DashboardContent(
 @Composable
 private fun KpiSection(
     summary: org.salestrack.app.domain.model.DashboardSummary,
+    lowStockCount: Int,
     isWide: Boolean,
 ) {
     if (isWide) {
@@ -288,10 +308,10 @@ private fun KpiSection(
                 modifier = Modifier.weight(1f),
             )
             KpiMetricCard(
-                title = "Sync",
-                value = summary.syncStatus,
-                subtitle = "Salud de datos",
-                gradient = listOf(Color(0xFF9F89FF), Color(0xFF6957D7)),
+                title = "Stock critico",
+                value = lowStockCount.toString(),
+                subtitle = "Por agotarse",
+                gradient = listOf(Color(0xFFFF7A7A), Color(0xFFF03E3E)),
                 modifier = Modifier.weight(1f),
             )
         }
@@ -328,10 +348,10 @@ private fun KpiSection(
                     modifier = Modifier.weight(1f),
                 )
                 KpiMetricCard(
-                    title = "Sync",
-                    value = summary.syncStatus,
-                    subtitle = "Salud de datos",
-                    gradient = listOf(Color(0xFF9F89FF), Color(0xFF6957D7)),
+                    title = "Stock critico",
+                    value = lowStockCount.toString(),
+                    subtitle = "Por agotarse",
+                    gradient = listOf(Color(0xFFFF7A7A), Color(0xFFF03E3E)),
                     modifier = Modifier.weight(1f),
                 )
             }

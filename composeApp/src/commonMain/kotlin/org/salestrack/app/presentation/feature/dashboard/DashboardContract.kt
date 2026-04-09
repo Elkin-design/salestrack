@@ -4,6 +4,7 @@ import org.salestrack.app.core.presentation.UiEffect
 import org.salestrack.app.core.presentation.UiEvent
 import org.salestrack.app.core.presentation.UiState
 import org.salestrack.app.domain.model.DashboardSummary
+import org.salestrack.app.domain.model.Product
 import org.salestrack.app.domain.model.Sale
 
 data class DashboardUiState(
@@ -15,6 +16,7 @@ data class DashboardUiState(
         syncStatus = "Sincronizado",
     ),
     val recentSales: List<Sale> = emptyList(),
+    val lowStockProducts: List<Product> = emptyList(),
     val weeklyTrend: List<DashboardTrendPoint> = emptyList(),
     val categoryBreakdown: List<DashboardCategoryShare> = emptyList(),
     val errorMessage: String? = null,
