@@ -2,6 +2,15 @@ package org.salestrack.app.presentation.app
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.BarChart
+import androidx.compose.material.icons.rounded.Dashboard
+import androidx.compose.material.icons.rounded.Group
+import androidx.compose.material.icons.rounded.Inventory
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.ShoppingCart
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -12,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isCtrlPressed
@@ -32,39 +42,46 @@ import org.salestrack.app.presentation.feature.team.TeamRoute
 
 data class NavigationDestination(
     val route: AppDestination,
-    val emoji: String,
+    val icon: ImageVector,
+    val label: String,
     val contentDescription: String,
 )
 
 private val destinations = listOf(
     NavigationDestination(
         route = AppDestination.Dashboard,
-        emoji = "📊",
+        icon = Icons.Rounded.Dashboard,
+        label = "Inicio",
         contentDescription = "Panel de control",
     ),
     NavigationDestination(
         route = AppDestination.Sales,
-        emoji = "🛒",
+        icon = Icons.Rounded.ShoppingCart,
+        label = "Ventas",
         contentDescription = "Gestión de ventas",
     ),
     NavigationDestination(
         route = AppDestination.Inventory,
-        emoji = "📦",
+        icon = Icons.Rounded.Inventory,
+        label = "Inventario",
         contentDescription = "Gestión de inventario",
     ),
     NavigationDestination(
         route = AppDestination.Reports,
-        emoji = "📈",
+        icon = Icons.Rounded.BarChart,
+        label = "Reportes",
         contentDescription = "Reportes y análisis",
     ),
     NavigationDestination(
         route = AppDestination.Team,
-        emoji = "👥",
+        icon = Icons.Rounded.Group,
+        label = "Equipo",
         contentDescription = "Gestión del equipo",
     ),
     NavigationDestination(
         route = AppDestination.Settings,
-        emoji = "⚙️",
+        icon = Icons.Rounded.Settings,
+        label = "Ajustes",
         contentDescription = "Configuración de la aplicación",
     ),
 )
@@ -107,22 +124,32 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+            ) {
                 destinations.forEach { destination ->
+                    val selected = destination.route == currentDestination
                     NavigationBarItem(
-                        selected = destination.route == currentDestination,
+                        selected = selected,
                         onClick = { currentDestination = destination.route },
                         modifier = Modifier.semantics {
                             contentDescription = destination.contentDescription
                         },
                         icon = {
-                            Text(
-                                text = destination.emoji,
-                                fontSize = 20.sp,
+                            Icon(
+                                imageVector = destination.icon,
+                                contentDescription = destination.contentDescription
                             )
                         },
-                        label = null, // Sin label visible: en mobile solo se muestra el icono.
-                        alwaysShowLabel = false,
+                        label = {
+                            Text(
+                                text = destination.label,
+                                style = MaterialTheme.typography.labelMedium
+                                // if we want to customize font size let's stick to theme defaults, Material3 handles nicely
+                            )
+                        },
+                        alwaysShowLabel = selected,
                     )
                 }
             }
