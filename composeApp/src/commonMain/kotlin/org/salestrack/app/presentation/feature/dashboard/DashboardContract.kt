@@ -15,8 +15,20 @@ data class DashboardUiState(
         syncStatus = "Sincronizado",
     ),
     val recentSales: List<Sale> = emptyList(),
+    val weeklyTrend: List<DashboardTrendPoint> = emptyList(),
+    val categoryBreakdown: List<DashboardCategoryShare> = emptyList(),
     val errorMessage: String? = null,
 ) : UiState
+
+data class DashboardTrendPoint(
+    val label: String,
+    val amount: Double,
+)
+
+data class DashboardCategoryShare(
+    val category: String,
+    val amount: Double,
+)
 
 sealed interface DashboardUiEvent : UiEvent {
     data object Refresh : DashboardUiEvent
