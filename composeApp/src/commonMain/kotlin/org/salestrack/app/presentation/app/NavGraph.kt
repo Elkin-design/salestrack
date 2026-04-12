@@ -55,7 +55,6 @@ import org.salestrack.app.presentation.feature.inventory.InventoryRoute
 import org.salestrack.app.presentation.feature.reports.ReportsRoute
 import org.salestrack.app.presentation.feature.sales.SalesRoute
 import org.salestrack.app.presentation.feature.settings.SettingsRoute
-import org.salestrack.app.presentation.feature.team.TeamRoute
 
 data class NavigationDestination(
     val route: AppDestination,
@@ -90,12 +89,6 @@ private val destinations = listOf(
         contentDescription = "Reportes y análisis",
     ),
     NavigationDestination(
-        route = AppDestination.Team,
-        icon = Icons.Rounded.Group,
-        label = "Equipo",
-        contentDescription = "Gestión del equipo",
-    ),
-    NavigationDestination(
         route = AppDestination.Settings,
         icon = Icons.Rounded.Settings,
         label = "Ajustes",
@@ -108,7 +101,6 @@ enum class AppDestination {
     Sales,
     Inventory,
     Reports,
-    Team,
     Settings,
     Export,
     Print,
@@ -218,7 +210,6 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             AppDestination.Sales -> SalesRoute(container = container, modifier = screenModifier)
             AppDestination.Inventory -> InventoryRoute(container = container, modifier = screenModifier)
             AppDestination.Reports -> ReportsRoute(container = container, modifier = screenModifier)
-            AppDestination.Team -> TeamRoute(container = container, modifier = screenModifier)
             AppDestination.Settings -> SettingsRoute(container = container, modifier = screenModifier)
             AppDestination.Export -> ExportReportRoute(
                 container = container,
