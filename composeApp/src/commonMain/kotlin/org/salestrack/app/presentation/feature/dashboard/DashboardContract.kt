@@ -34,9 +34,12 @@ data class DashboardCategoryShare(
 
 sealed interface DashboardUiEvent : UiEvent {
     data object Refresh : DashboardUiEvent
+    data class NavigateToReports(val period: String? = null) : DashboardUiEvent
+    data object NavigateToExport : DashboardUiEvent
 }
 
 sealed interface DashboardUiEffect : UiEffect {
     data class ShowMessage(val message: String) : DashboardUiEffect
+    data class NavigateToDestination(val destination: org.salestrack.app.presentation.app.AppDestination) : DashboardUiEffect
 }
 

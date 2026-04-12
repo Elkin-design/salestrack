@@ -205,7 +205,11 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         getLowStockProducts = container.getLowStockProductsUseCase,
                     )
                 }
-                DashboardRoute(viewModel = viewModel, modifier = screenModifier)
+                DashboardRoute(
+                    viewModel = viewModel,
+                    onNavigate = { currentDestination = it },
+                    modifier = screenModifier
+                )
             }
             AppDestination.Sales -> SalesRoute(container = container, modifier = screenModifier)
             AppDestination.Inventory -> InventoryRoute(container = container, modifier = screenModifier)

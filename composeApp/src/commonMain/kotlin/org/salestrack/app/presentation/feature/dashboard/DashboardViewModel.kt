@@ -11,6 +11,7 @@ import org.salestrack.app.core.utils.TimeProvider
 import org.salestrack.app.core.result.AppResult
 import org.salestrack.app.domain.model.Product
 import org.salestrack.app.domain.usecase.inventory.GetLowStockProductsUseCase
+import org.salestrack.app.presentation.app.AppDestination
 
 class DashboardViewModel(
     dispatcherProvider: DispatcherProvider,
@@ -39,6 +40,14 @@ class DashboardViewModel(
                 fetchLowStock()
                 render(lastSales)
                 emitEffect(DashboardUiEffect.ShowMessage("Dashboard actualizado"))
+            }
+
+            is DashboardUiEvent.NavigateToReports -> {
+                emitEffect(DashboardUiEffect.NavigateToDestination(AppDestination.Reports))
+            }
+
+            DashboardUiEvent.NavigateToExport -> {
+                emitEffect(DashboardUiEffect.NavigateToDestination(AppDestination.Export))
             }
         }
     }

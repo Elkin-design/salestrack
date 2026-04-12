@@ -34,13 +34,16 @@ import org.salestrack.app.presentation.feature.dashboard.components.EmptyStateCa
 import org.salestrack.app.presentation.feature.dashboard.components.KpiSection
 import org.salestrack.app.presentation.feature.dashboard.components.RecentSaleCardItem
 import org.salestrack.app.presentation.feature.dashboard.components.RecentSalesSection
+import org.salestrack.app.presentation.feature.dashboard.components.ReportsQuickSection
 import org.salestrack.app.presentation.feature.dashboard.components.StockAlertCardItem
 import org.salestrack.app.presentation.feature.dashboard.components.StockAlertsSection
 import org.salestrack.app.presentation.feature.dashboard.components.WeeklyTrendCard
+import org.salestrack.app.presentation.app.AppDestination
 
 @Composable
 fun DashboardRoute(
     viewModel: DashboardViewModel,
+    onNavigate: (AppDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.state.collectAsState()
@@ -50,6 +53,7 @@ fun DashboardRoute(
         viewModel.effects.collect { effect ->
             when (effect) {
                 is DashboardUiEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
+                is DashboardUiEffect.NavigateToDestination -> onNavigate(effect.destination)
             }
         }
     }
@@ -58,6 +62,8 @@ fun DashboardRoute(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onRefresh = { viewModel.onEvent(DashboardUiEvent.Refresh) },
+        onNavigateToReports = { viewModel.onEvent(DashboardUiEvent.NavigateToReports(it)) },
+        onNavigateToExport = { viewModel.onEvent(DashboardUiEvent.NavigateToExport) },
         modifier = modifier,
     )
 }
@@ -67,6 +73,8 @@ fun DashboardScreen(
     uiState: DashboardUiState,
     snackbarHostState: SnackbarHostState,
     onRefresh: () -> Unit,
+    onNavigateToReports: (String?) -> Unit,
+    onNavigateToExport: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -105,7 +113,11 @@ fun DashboardScreen(
                 }
 
                 else -> {
-                    DashboardContent(uiState = uiState)
+                    DashboardContent(
+                        uiState = uiState,
+                        onNavigateToReports = onNavigateToReports,
+                        onNavigateToExport = onNavigateToExport,
+                    )
                 }
             }
         }
@@ -115,6 +127,8 @@ fun DashboardScreen(
 @Composable
 private fun DashboardContent(
     uiState: DashboardUiState,
+    onNavigateToReports: (String?) -> Unit,
+    onNavigateToExport: () -> Unit,
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val isWide = maxWidth >= 980.dp
@@ -128,6 +142,13 @@ private fun DashboardContent(
                     summary = uiState.summary,
                     lowStockCount = uiState.lowStockProducts.size,
                     isWide = isWide,
+                )
+            }
+
+            item {
+                ReportsQuickSection(
+                    onNavigateToReports = onNavigateToReports,
+                    onNavigateToExport = onNavigateToExport,
                 )
             }
 

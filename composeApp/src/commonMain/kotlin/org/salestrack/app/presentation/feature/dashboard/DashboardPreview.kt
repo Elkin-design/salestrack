@@ -13,6 +13,8 @@ private fun DashboardLoadingPreview() {
         uiState = DashboardUiState(isLoading = true),
         snackbarHostState = snackbarHost,
         onRefresh = {},
+        onNavigateToReports = {},
+        onNavigateToExport = {},
     )
 }
 
@@ -27,6 +29,8 @@ private fun DashboardErrorPreview() {
         ),
         snackbarHostState = snackbarHost,
         onRefresh = {},
+        onNavigateToReports = {},
+        onNavigateToExport = {},
     )
 }
 
@@ -47,5 +51,7 @@ private fun DashboardEmptyPreview() {
         ),
         snackbarHostState = snackbarHost,
         onRefresh = {},
+        onNavigateToReports = {},
+        onNavigateToExport = {},
     )
 }
