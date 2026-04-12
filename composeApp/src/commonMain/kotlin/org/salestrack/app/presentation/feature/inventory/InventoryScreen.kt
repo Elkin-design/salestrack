@@ -25,15 +25,15 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -339,17 +339,17 @@ private fun InventorySummaryCard(totalProducts: Int, totalUnits: Int, lowStockCo
             SummaryItem(
                 label = "Catálogo",
                 value = "$totalProducts",
-                icon = Icons.Default.List,
+                icon = Icons.AutoMirrored.Filled.List,
                 color = MaterialTheme.colorScheme.primary
             )
-            Divider(modifier = Modifier.height(40.dp).width(1.dp), color = MaterialTheme.colorScheme.outlineVariant)
+            HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = MaterialTheme.colorScheme.outlineVariant)
             SummaryItem(
                 label = "Unidades",
                 value = "$totalUnits",
                 icon = Icons.Default.CheckCircle,
                 color = MaterialTheme.colorScheme.secondary
             )
-            Divider(modifier = Modifier.height(40.dp).width(1.dp), color = MaterialTheme.colorScheme.outlineVariant)
+            HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = MaterialTheme.colorScheme.outlineVariant)
             SummaryItem(
                 label = "Alertas",
                 value = "$lowStockCount",
@@ -465,7 +465,7 @@ private fun AddWindow(
                 Text("Abrir formulario de alta")
             }
             if (lowStockProducts.isNotEmpty()) {
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
@@ -494,7 +494,7 @@ private fun EditWindow(
         ) {
             Text("Edición rápida", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text("Selecciona un producto del catálogo para actualizar sus detalles generales.", style = MaterialTheme.typography.bodyMedium)
-            Divider(modifier = Modifier.padding(vertical = 4.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             products.take(8).forEach { product ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -579,7 +579,7 @@ private fun HistoryWindow(
             Text("Kardex / Historial", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text("Actividad para: ${selectedProduct?.name ?: "Sin selección"}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
             
-            Divider()
+            HorizontalDivider()
             
             if (movements.isEmpty()) {
                 Text("No hay registros en el historial.", style = MaterialTheme.typography.bodyMedium)
@@ -600,7 +600,7 @@ private fun HistoryWindow(
                             color = if (movement.quantityDelta > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                         )
                     }
-                    Divider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(vertical = 4.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(vertical = 4.dp))
                 }
             }
         }
@@ -652,7 +652,7 @@ private fun ImportExportWindow(
                 }
             }
 
-            Divider()
+            HorizontalDivider()
             Text("Descarga", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = onExportCsv) { Text("Exp. CSV") }
@@ -728,7 +728,7 @@ private fun ProductCard(
                 )
             }
             
-            Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -830,7 +830,7 @@ private fun ProductFormDialog(
                     value = category,
                     onValueChange = { category = it },
                     label = { Text("Categoría") },
-                    leadingIcon = { Icon(Icons.Default.List, contentDescription = null) },
+                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )

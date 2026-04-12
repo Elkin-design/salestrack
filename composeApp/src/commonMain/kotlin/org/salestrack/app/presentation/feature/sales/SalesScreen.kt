@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -31,7 +32,7 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -321,7 +322,7 @@ private fun SaleItem(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -378,7 +379,7 @@ private fun SaleDetailDialog(sale: Sale, onDismiss: () -> Unit) {
                 DetailRow(label = "Cantidad", value = sale.quantity.toString())
                 DetailRow(label = "Precio unitario", value = "$${formatMoney(sale.unitPrice)}")
                 DetailRow(label = "Descuento", value = "$${formatMoney(sale.discount)}")
-                Divider(modifier = Modifier.padding(vertical = 4.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                 DetailRow(
                     label = "Total neto",
                     value = "$${formatMoney(sale.netTotal)}",
@@ -457,7 +458,7 @@ private fun SaleFormDialog(
                     label = { Text("Categoría") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    leadingIcon = { Icon(Icons.Default.List, contentDescription = null) }
+                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) }
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
