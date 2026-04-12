@@ -6,6 +6,7 @@ import org.salestrack.app.core.presentation.UiState
 import org.salestrack.app.domain.model.DashboardSummary
 import org.salestrack.app.domain.model.Product
 import org.salestrack.app.domain.model.Sale
+import org.salestrack.app.domain.model.ReportPeriod
 
 data class DashboardUiState(
     val isLoading: Boolean = true,
@@ -20,6 +21,7 @@ data class DashboardUiState(
     val weeklyTrend: List<DashboardTrendPoint> = emptyList(),
     val categoryBreakdown: List<DashboardCategoryShare> = emptyList(),
     val errorMessage: String? = null,
+    val showExportModal: Boolean = false,
 ) : UiState
 
 data class DashboardTrendPoint(
@@ -34,12 +36,21 @@ data class DashboardCategoryShare(
 
 sealed interface DashboardUiEvent : UiEvent {
     data object Refresh : DashboardUiEvent
-    data class NavigateToReports(val period: String? = null) : DashboardUiEvent
+    data class NavigateToReports(val period: ReportPeriod) : DashboardUiEvent
     data object NavigateToExport : DashboardUiEvent
+    data class ToggleExportModal(val show: Boolean) : DashboardUiEvent
 }
 
 sealed interface DashboardUiEffect : UiEffect {
     data class ShowMessage(val message: String) : DashboardUiEffect
-    data class NavigateToDestination(val destination: org.salestrack.app.presentation.app.AppDestination) : DashboardUiEffect
+    sealed interface NavigateToDestination : DashboardUiEffect {
+        val destination: org.salestrack.app.presentation.app.AppDestination
+        
+        data class Default(override val destination: org.salestrack.app.presentation.app.AppDestination) : NavigateToDestination
+        data class NavigateToReportsWithPeriod(
+            override val destination: org.salestrack.app.presentation.app.AppDestination,
+            val period: ReportPeriod
+        ) : NavigateToDestination
+    }
 }
 

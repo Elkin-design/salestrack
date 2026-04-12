@@ -55,6 +55,7 @@ import org.salestrack.app.presentation.feature.inventory.InventoryRoute
 import org.salestrack.app.presentation.feature.reports.ReportsRoute
 import org.salestrack.app.presentation.feature.sales.SalesRoute
 import org.salestrack.app.presentation.feature.settings.SettingsRoute
+import org.salestrack.app.domain.model.ReportPeriod
 
 data class NavigationDestination(
     val route: AppDestination,
@@ -83,12 +84,6 @@ private val destinations = listOf(
         contentDescription = "Gestión de inventario",
     ),
     NavigationDestination(
-        route = AppDestination.Reports,
-        icon = Icons.Rounded.BarChart,
-        label = "Reportes",
-        contentDescription = "Reportes y análisis",
-    ),
-    NavigationDestination(
         route = AppDestination.Settings,
         icon = Icons.Rounded.Settings,
         label = "Ajustes",
@@ -109,6 +104,7 @@ enum class AppDestination {
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
     var currentDestination by remember { mutableStateOf(AppDestination.Dashboard) }
+    var initialReportPeriod by remember { mutableStateOf(ReportPeriod.Daily) }
     val container = rememberAppContainer()
     val keyboardModifier = modifier.onPreviewKeyEvent { event ->
         if (event.type != KeyEventType.KeyDown || !event.isCtrlPressed) {
@@ -207,13 +203,24 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 }
                 DashboardRoute(
                     viewModel = viewModel,
-                    onNavigate = { currentDestination = it },
+                    onNavigate = { destination ->
+                        currentDestination = destination
+                    },
+                    onNavigateWithPeriod = { destination, period ->
+                        initialReportPeriod = period
+                        currentDestination = destination
+                    },
+                    container = container,
                     modifier = screenModifier
                 )
             }
             AppDestination.Sales -> SalesRoute(container = container, modifier = screenModifier)
             AppDestination.Inventory -> InventoryRoute(container = container, modifier = screenModifier)
-            AppDestination.Reports -> ReportsRoute(container = container, modifier = screenModifier)
+            AppDestination.Reports -> ReportsRoute(
+                container = container, 
+                initialPeriod = initialReportPeriod,
+                modifier = screenModifier
+            )
             AppDestination.Settings -> SettingsRoute(container = container, modifier = screenModifier)
             AppDestination.Export -> ExportReportRoute(
                 container = container,

@@ -39,21 +39,32 @@ import org.salestrack.app.presentation.feature.dashboard.components.StockAlertCa
 import org.salestrack.app.presentation.feature.dashboard.components.StockAlertsSection
 import org.salestrack.app.presentation.feature.dashboard.components.WeeklyTrendCard
 import org.salestrack.app.presentation.app.AppDestination
+import org.salestrack.app.presentation.app.AppContainer
+import org.salestrack.app.presentation.feature.export.ExportModal
+import org.salestrack.app.domain.model.ReportPeriod
 
 @Composable
 fun DashboardRoute(
     viewModel: DashboardViewModel,
     onNavigate: (AppDestination) -> Unit,
+    onNavigateWithPeriod: (AppDestination, ReportPeriod) -> Unit,
+    container: AppContainer,
     modifier: Modifier = Modifier,
 ) {
-    val uiState by viewModel.state.collectAsState()
+val uiState by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
             when (effect) {
                 is DashboardUiEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
-                is DashboardUiEffect.NavigateToDestination -> onNavigate(effect.destination)
+                is DashboardUiEffect.NavigateToDestination -> {
+                    if (effect is DashboardUiEffect.NavigateToDestination.NavigateToReportsWithPeriod) {
+                        onNavigateWithPeriod(effect.destination, effect.period)
+                    } else {
+                        onNavigate(effect.destination)
+                    }
+                }
             }
         }
     }
@@ -64,6 +75,8 @@ fun DashboardRoute(
         onRefresh = { viewModel.onEvent(DashboardUiEvent.Refresh) },
         onNavigateToReports = { viewModel.onEvent(DashboardUiEvent.NavigateToReports(it)) },
         onNavigateToExport = { viewModel.onEvent(DashboardUiEvent.NavigateToExport) },
+        onDismissExportModal = { viewModel.onEvent(DashboardUiEvent.ToggleExportModal(false)) },
+        container = container,
         modifier = modifier,
     )
 }
@@ -73,8 +86,10 @@ fun DashboardScreen(
     uiState: DashboardUiState,
     snackbarHostState: SnackbarHostState,
     onRefresh: () -> Unit,
-    onNavigateToReports: (String?) -> Unit,
+    onNavigateToReports: (ReportPeriod) -> Unit,
     onNavigateToExport: () -> Unit,
+    onDismissExportModal: () -> Unit,
+    container: AppContainer,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -82,6 +97,12 @@ fun DashboardScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
+        if (uiState.showExportModal) {
+            ExportModal(
+                container = container,
+                onDismiss = onDismissExportModal
+            )
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -127,7 +148,7 @@ fun DashboardScreen(
 @Composable
 private fun DashboardContent(
     uiState: DashboardUiState,
-    onNavigateToReports: (String?) -> Unit,
+    onNavigateToReports: (ReportPeriod) -> Unit,
     onNavigateToExport: () -> Unit,
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -147,7 +168,14 @@ private fun DashboardContent(
 
             item {
                 ReportsQuickSection(
-                    onNavigateToReports = onNavigateToReports,
+                    onNavigateToReports = { periodStr ->
+                        val period = when(periodStr) {
+                            "MONTH" -> ReportPeriod.Monthly
+                            "WEEK" -> ReportPeriod.Weekly
+                            else -> ReportPeriod.Daily
+                        }
+                        onNavigateToReports(period)
+                    },
                     onNavigateToExport = onNavigateToExport,
                 )
             }

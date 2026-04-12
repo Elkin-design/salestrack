@@ -15,8 +15,9 @@ class ReportsViewModel(
     private val timeProvider: TimeProvider,
     private val repository: SaleRepository,
     private val getPeriodReportUseCase: GetPeriodReportUseCase,
+    initialPeriod: ReportPeriod,
 ) : BaseViewModel<ReportsUiState, ReportsUiEvent, ReportsUiEffect>(
-    initialState = ReportsUiState(),
+    initialState = ReportsUiState(selectedPeriod = initialPeriod),
     dispatcherProvider = dispatcherProvider,
 ) {
 

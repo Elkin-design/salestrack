@@ -43,11 +43,18 @@ class DashboardViewModel(
             }
 
             is DashboardUiEvent.NavigateToReports -> {
-                emitEffect(DashboardUiEffect.NavigateToDestination(AppDestination.Reports))
+                emitEffect(DashboardUiEffect.NavigateToDestination.NavigateToReportsWithPeriod(
+                    destination = AppDestination.Reports,
+                    period = event.period
+                ))
             }
 
             DashboardUiEvent.NavigateToExport -> {
-                emitEffect(DashboardUiEffect.NavigateToDestination(AppDestination.Export))
+                setState { it.copy(showExportModal = true) }
+            }
+
+            is DashboardUiEvent.ToggleExportModal -> {
+                setState { it.copy(showExportModal = event.show) }
             }
         }
     }
