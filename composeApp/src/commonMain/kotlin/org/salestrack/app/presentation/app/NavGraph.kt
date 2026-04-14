@@ -219,6 +219,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             AppDestination.Reports -> ReportsRoute(
                 container = container, 
                 initialPeriod = initialReportPeriod,
+                onBack = { currentDestination = AppDestination.Dashboard },
                 modifier = screenModifier
             )
             AppDestination.Settings -> SettingsRoute(container = container, modifier = screenModifier)

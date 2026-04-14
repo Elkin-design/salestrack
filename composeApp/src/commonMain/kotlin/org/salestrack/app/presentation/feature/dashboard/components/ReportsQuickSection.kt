@@ -46,9 +46,9 @@ fun ReportsQuickSection(
         ) {
             item {
                 ReportActionCard(
-                    title = "Reporte\nMensual",
-                    subtitle = "Análisis de 30 días",
-                    icon = Icons.Rounded.Assessment,
+                    title = "Análisis de\nVentas",
+                    subtitle = "Tendencias y KPIs",
+                    icon = Icons.Rounded.Analytics,
                     gradientColors = listOf(
                         MaterialTheme.colorScheme.primary,
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
@@ -58,24 +58,12 @@ fun ReportsQuickSection(
             }
             item {
                 ReportActionCard(
-                    title = "Tendencias\nde Venta",
-                    subtitle = "Patrones de consumo",
-                    icon = Icons.Rounded.QueryStats,
-                    gradientColors = listOf(
-                        MaterialTheme.colorScheme.secondary,
-                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f)
-                    ),
-                    onClick = { onNavigateToReports("WEEK") }
-                )
-            }
-            item {
-                ReportActionCard(
                     title = "Exportar\nDatos",
                     subtitle = "PDF, Excel, CSV",
                     icon = Icons.Rounded.FileDownload,
                     gradientColors = listOf(
-                        MaterialTheme.colorScheme.tertiary,
-                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.7f)
+                        MaterialTheme.colorScheme.secondary,
+                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f)
                     ),
                     onClick = onNavigateToExport
                 )

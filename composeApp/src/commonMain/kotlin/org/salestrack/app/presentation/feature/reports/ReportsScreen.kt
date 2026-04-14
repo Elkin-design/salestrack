@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
 import androidx.compose.material.icons.automirrored.rounded.ShowChart
 import androidx.compose.material.icons.rounded.*
@@ -33,6 +34,7 @@ import androidx.compose.foundation.shape.CircleShape
 fun ReportsRoute(
     container: AppContainer,
     initialPeriod: ReportPeriod,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel = remember {
@@ -49,6 +51,7 @@ fun ReportsRoute(
     ReportsScreen(
         uiState = uiState,
         onEvent = viewModel::onEvent,
+        onBack = onBack,
         modifier = modifier,
     )
 }
@@ -57,6 +60,7 @@ fun ReportsRoute(
 fun ReportsScreen(
     uiState: ReportsUiState,
     onEvent: (ReportsUiEvent) -> Unit,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -76,13 +80,17 @@ fun ReportsScreen(
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Volver")
+                    }
                     Text(
                         "Análisis de Negocio",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
                     )
                     IconButton(onClick = { onEvent(ReportsUiEvent.Refresh) }) {
                         Icon(Icons.Rounded.Refresh, contentDescription = "Sincronizar")
@@ -90,19 +98,19 @@ fun ReportsScreen(
                 }
 
                 SecondaryScrollableTabRow(
-                    selectedTabIndex = ReportPeriod.entries.indexOf(uiState.selectedPeriod),
+                    selectedTabIndex = ReportPeriod.entries.toList().indexOf(uiState.selectedPeriod),
                     containerColor = Color.Transparent,
                     divider = {},
                     edgePadding = 0.dp,
                     indicator = {
                         TabRowDefaults.SecondaryIndicator(
-                            modifier = Modifier.tabIndicatorOffset(ReportPeriod.entries.indexOf(uiState.selectedPeriod)),
+                            modifier = Modifier.tabIndicatorOffset(ReportPeriod.entries.toList().indexOf(uiState.selectedPeriod)),
                             height = 3.dp,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
                 ) {
-                    ReportPeriod.entries.filter { it != ReportPeriod.Custom }.forEach { period ->
+                    ReportPeriod.entries.forEach { period ->
                         val selected = uiState.selectedPeriod == period
                         Tab(
                             selected = selected,
@@ -114,7 +122,7 @@ fun ReportsScreen(
                                         ReportPeriod.Weekly -> "Semana"
                                         ReportPeriod.Monthly -> "Mes"
                                         ReportPeriod.Annual -> "Año"
-                                        else -> period.name
+                                        ReportPeriod.Custom -> "Personal"
                                     },
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal

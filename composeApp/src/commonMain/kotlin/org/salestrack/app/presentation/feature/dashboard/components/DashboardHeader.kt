@@ -55,6 +55,7 @@ fun DashboardHeader(
             ElevatedButton(
                 onClick = onRefresh,
                 shape = MaterialTheme.shapes.medium,
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(8.dp),
                 colors = ButtonDefaults.elevatedButtonColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -63,11 +64,6 @@ fun DashboardHeader(
                 Icon(
                     imageVector = Icons.Rounded.Refresh,
                     contentDescription = "Actualizar",
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Actualizar",
-                    fontWeight = FontWeight.SemiBold,
                 )
             }
         }
