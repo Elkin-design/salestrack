@@ -29,6 +29,9 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -64,7 +67,9 @@ import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import org.salestrack.app.core.utils.formatMoney
@@ -153,18 +158,20 @@ fun InventoryScreen(
                 .padding(paddingValues)
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             OutlinedTextField(
                 value = uiState.query,
                 onValueChange = { onEvent(InventoryUiEvent.QueryChanged(it)) },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Buscar por nombre, categoria o codigo...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                shape = RoundedCornerShape(100),
+                placeholder = { Text("Buscar productos...") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                shape = RoundedCornerShape(16.dp),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                 )
             )
@@ -174,16 +181,26 @@ fun InventoryScreen(
                 onSectionSelected = { onEvent(InventoryUiEvent.SectionChanged(it)) },
             )
 
+            InventorySummaryCard(
+                totalProducts = uiState.products.size,
+                totalUnits = totalUnits,
+                lowStockCount = lowStockCount
+            )
+
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(bottom = 4.dp)
             ) {
                 item {
                     FilterChip(
                         selected = uiState.selectedCategory == null,
                         onClick = { onEvent(InventoryUiEvent.CategoryChanged(null)) },
                         label = { Text("Todas") },
-                        shape = RoundedCornerShape(100)
+                        leadingIcon = if (uiState.selectedCategory == null) {
+                            { Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                        } else null,
+                        shape = RoundedCornerShape(8.dp)
                     )
                 }
                 items(uiState.availableCategories) { category ->
@@ -191,16 +208,10 @@ fun InventoryScreen(
                         selected = uiState.selectedCategory == category,
                         onClick = { onEvent(InventoryUiEvent.CategoryChanged(category)) },
                         label = { Text(category) },
-                        shape = RoundedCornerShape(100)
+                        shape = RoundedCornerShape(8.dp)
                     )
                 }
             }
-
-            InventorySummaryCard(
-                totalProducts = uiState.products.size,
-                totalUnits = totalUnits,
-                lowStockCount = lowStockCount
-            )
 
             when (uiState.selectedSection) {
                 InventorySection.Catalog -> CatalogWindow(
@@ -362,10 +373,24 @@ private fun InventorySummaryCard(totalProducts: Int, totalUnits: Int, lowStockCo
 
 @Composable
 private fun SummaryItem(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: androidx.compose.ui.graphics.Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Icon(icon, contentDescription = label, tint = color, modifier = Modifier.size(24.dp))
-        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = color)
-        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.padding(vertical = 4.dp)
+    ) {
+        Surface(
+            color = color.copy(alpha = 0.1f),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.size(40.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
+            }
+        }
+        Column {
+            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
 
@@ -376,25 +401,42 @@ private fun InventorySectionSelector(
     onSectionSelected: (InventorySection) -> Unit,
 ) {
     val sections = listOf(
-        InventorySection.Catalog to "Catálogo",
-        InventorySection.AddProduct to "Agregar",
-        InventorySection.EditProduct to "Editar",
-        InventorySection.StockAdjustment to "Ajustes",
-        InventorySection.MovementHistory to "Historial",
-        InventorySection.ImportExport to "Datos",
+        InventorySection.Catalog to ("Catálogo" to Icons.AutoMirrored.Filled.List),
+        InventorySection.AddProduct to ("Agregar" to Icons.Default.Add),
+        InventorySection.EditProduct to ("Editar" to Icons.Default.Edit),
+        InventorySection.StockAdjustment to ("Ajustes" to Icons.Default.Settings),
+        InventorySection.MovementHistory to ("Historial" to Icons.Default.History),
+        InventorySection.ImportExport to ("Datos" to Icons.Default.Storage),
     )
 
     LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth()
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(vertical = 8.dp)
     ) {
-        items(sections) { (section, label) ->
-            FilterChip(
-                selected = selectedSection == section,
+        items(sections) { (section, data) ->
+            val (label, icon) = data
+            val isSelected = selectedSection == section
+            
+            Surface(
                 onClick = { onSectionSelected(section) },
-                label = { Text(label) },
-                shape = RoundedCornerShape(100)
-            )
+                shape = RoundedCornerShape(12.dp),
+                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                tonalElevation = if (isSelected) 0.dp else 1.dp,
+                shadowElevation = if (isSelected) 2.dp else 0.dp,
+                modifier = Modifier.height(44.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                }
+            }
         }
     }
 }
@@ -675,93 +717,89 @@ private fun ProductCard(
 ) {
     val isLowStock = product.stock <= product.minimumStock
 
-    ElevatedCard(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = if (isSelected) 6.dp else 2.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surface
         ),
+        border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
         onClick = onSelect,
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+            Surface(
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.size(56.dp)
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Box(contentAlignment = Alignment.Center) {
                     Text(
-                        text = product.name,
-                        style = MaterialTheme.typography.titleMedium,
+                        product.name.take(1).uppercase(),
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.secondary
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = product.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = product.category,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (isLowStock) {
                         Surface(
-                            shape = RoundedCornerShape(100),
-                            color = MaterialTheme.colorScheme.primaryContainer
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            shape = RoundedCornerShape(4.dp)
                         ) {
                             Text(
-                                text = product.category,
+                                "Stock Bajo: ${product.stock}",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                fontWeight = FontWeight.Bold
                             )
                         }
+                    } else {
                         Text(
-                            text = "Unidad: ${product.unit}",
+                            text = "${product.stock} ${product.unit}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
+            }
+
+            Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "$${formatMoney(product.unitPrice)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.primary
                 )
-            }
-            
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (isLowStock) {
-                        Surface(
-                            color = MaterialTheme.colorScheme.errorContainer,
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Warning, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onErrorContainer)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Stock Bajo: ${product.stock}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onErrorContainer, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    } else {
-                        Text(
-                            text = "Stock: ${product.stock} (Min: ${product.minimumStock})",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                Row {
+                    IconButton(onClick = onAdjust, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Build, contentDescription = "Ajustar", tint = MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                     }
-                }
-                Row(horizontalArrangement = Arrangement.End) {
-                    IconButton(onClick = onAdjust) {
-                        Icon(Icons.Default.Build, contentDescription = "Ajustar", tint = MaterialTheme.colorScheme.secondary)
-                    }
-                    IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary)
+                    IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                     }
                 }
             }
