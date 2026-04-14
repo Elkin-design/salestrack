@@ -1,27 +1,20 @@
 package org.salestrack.app.presentation.feature.notification
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.salestrack.app.presentation.app.AppContainer
 
 @Composable
@@ -54,6 +47,7 @@ fun NotificationSettingsRoute(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationSettingsScreen(
     uiState: NotificationSettingsUiState,
@@ -61,64 +55,122 @@ fun NotificationSettingsScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Notificaciones", style = MaterialTheme.typography.headlineSmall)
-            TextButton(onClick = onBack) {
-                Text("Volver")
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = { Text("Notificaciones", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                    }
+                }
+            )
+        },
+        bottomBar = {
+            if (!uiState.isLoading) {
+                Surface(tonalElevation = 8.dp, shadowElevation = 8.dp) {
+                    Button(
+                        onClick = { onEvent(NotificationSettingsUiEvent.SaveClicked) },
+                        enabled = !uiState.isSaving,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .height(56.dp),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        if (uiState.isSaving) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                        } else {
+                            Text("Guardar Configuración", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
             }
         }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+        ) {
+            if (uiState.isLoading) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+                return@Column
+            }
 
-        if (uiState.isLoading) {
-            Text("Cargando configuracion de notificaciones...")
-            return@Column
-        }
-
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier.padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+            // Sección: Avisos Diarios
+            NotificationSection(
+                title = "Recordatorios",
+                description = "Configura avisos para no olvidar tus tareas diarias."
             ) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("Recordatorio diario")
-                    Switch(
-                        checked = uiState.isDailyReminderEnabled,
-                        onCheckedChange = { onEvent(NotificationSettingsUiEvent.DailyReminderEnabledChanged(it)) },
-                    )
-                }
-
-                OutlinedTextField(
-                    value = uiState.reminderHour24.toString(),
-                    onValueChange = { onEvent(NotificationSettingsUiEvent.ReminderHourChanged(it)) },
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Hora (0-23)") },
-                )
-
-                OutlinedTextField(
-                    value = uiState.reminderMinute.toString(),
-                    onValueChange = { onEvent(NotificationSettingsUiEvent.ReminderMinuteChanged(it)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Minuto (0-59)") },
-                )
-
-                Button(
-                    onClick = { onEvent(NotificationSettingsUiEvent.SaveClicked) },
-                    enabled = !uiState.isSaving,
-                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = CardDefaults.outlinedCardBorder()
                 ) {
-                    Text(if (uiState.isSaving) "Guardando..." else "Guardar notificaciones")
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.NotificationsActive, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Spacer(Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Recordatorio Diario", fontWeight = FontWeight.Bold)
+                                Text("Recibe una alerta a una hora específica", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Switch(
+                                checked = uiState.isDailyReminderEnabled,
+                                onCheckedChange = { onEvent(NotificationSettingsUiEvent.DailyReminderEnabledChanged(it)) },
+                            )
+                        }
+
+                        if (uiState.isDailyReminderEnabled) {
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                OutlinedTextField(
+                                    value = uiState.reminderHour24.toString(),
+                                    onValueChange = { onEvent(NotificationSettingsUiEvent.ReminderHourChanged(it)) },
+                                    modifier = Modifier.weight(1f),
+                                    label = { Text("Hora (0-23)") },
+                                    shape = RoundedCornerShape(12.dp),
+                                    leadingIcon = { Icon(Icons.Default.Schedule, null, modifier = Modifier.size(18.dp)) }
+                                )
+                                OutlinedTextField(
+                                    value = uiState.reminderMinute.toString(),
+                                    onValueChange = { onEvent(NotificationSettingsUiEvent.ReminderMinuteChanged(it)) },
+                                    modifier = Modifier.weight(1f),
+                                    label = { Text("Minuto (0-59)") },
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
-        }
 
-        if (uiState.errorMessage != null) {
-            Text(uiState.errorMessage, color = MaterialTheme.colorScheme.error)
+            if (uiState.errorMessage != null) {
+                Text(uiState.errorMessage, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
+            }
         }
+    }
+}
+
+@Composable
+private fun NotificationSection(
+    title: String,
+    description: String,
+    content: @Composable () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(title.uppercase(), style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, letterSpacing = 1.sp))
+        Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(4.dp))
+        content()
     }
 }
