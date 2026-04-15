@@ -1,5 +1,8 @@
 package org.salestrack.app.domain.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 enum class StockAdjustmentType {
     Entry,
     PhysicalCount,
@@ -8,6 +11,7 @@ enum class StockAdjustmentType {
     Return,
 }
 
+@Serializable
 data class Product(
     val id: String,
     val name: String,
@@ -32,6 +36,7 @@ data class NewProductInput(
     val minimumStock: Int,
 )
 
+@Serializable
 data class StockMovement(
     val id: String,
     val productId: String,

@@ -15,6 +15,7 @@ import org.salestrack.app.data.mock.MockSettingsFactory
 import org.salestrack.app.data.mock.MockTeamFactory
 import org.salestrack.app.data.repository.FakeBackupRepository
 import org.salestrack.app.data.repository.FakeCategoryRepository
+import org.salestrack.app.data.repository.FirestoreCategoryRepository
 import org.salestrack.app.data.repository.FakeInventoryRepository
 import org.salestrack.app.data.repository.FakeNotificationRepository
 import org.salestrack.app.data.repository.FakePrintRepository
@@ -103,7 +104,6 @@ fun appModule(config: EnvironmentConfig) = module {
 
     single<SaleDataSource> {
         FirestoreSaleDataSource(
-            initialSales = MockSalesFactory.create(get()),
             timeProvider = get(),
         )
     }
@@ -117,17 +117,17 @@ fun appModule(config: EnvironmentConfig) = module {
     }
 
     single<InventoryDataSource> {
-        val products = MockInventoryFactory.create()
         FirestoreInventoryDataSource(
-            initialProducts = products,
-            initialMovements = MockInventoryFactory.createInitialMovements(
-                timeProvider = get(),
-                products = products,
-            ),
             timeProvider = get(),
         )
     }
-    single<CategoryRepository> { FakeCategoryRepository(dataSource = get(), timeProvider = get()) }
+    single<CategoryRepository> {
+        when (get<EnvironmentConfig>().backendProvider) {
+            BackendProvider.MOCK -> FakeCategoryRepository(dataSource = get(), timeProvider = get())
+            BackendProvider.FIRESTORE_STUB,
+            BackendProvider.FIRESTORE -> FirestoreCategoryRepository(timeProvider = get())
+        }
+    }
     single<SettingsRepository> { FakeSettingsRepository(get()) }
     single<NotificationRepository> { FakeNotificationRepository(get()) }
     single<ExportRepository> {

@@ -7,5 +7,5 @@ enum class BackendProvider {
 }
 
 data class EnvironmentConfig(
-    val backendProvider: BackendProvider = BackendProvider.MOCK,
+    val backendProvider: BackendProvider = BackendProvider.FIRESTORE,
 )

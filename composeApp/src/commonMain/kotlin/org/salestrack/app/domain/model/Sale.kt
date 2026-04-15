@@ -1,5 +1,8 @@
 package org.salestrack.app.domain.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Sale(
     val id: String,
     val productName: String,
