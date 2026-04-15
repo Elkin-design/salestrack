@@ -20,6 +20,8 @@ material3 = "1.10.0-alpha05"
 materialIconsExtended = "1.7.3"
 googleServices = "4.4.2"
 firebaseKotlin = "2.4.0"
+firebaseBom = "33.9.0"
+
 
 [libraries]
 "kotlinx-coroutines-core" = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
@@ -49,6 +51,8 @@ koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
 firebaseCommon = { module = "dev.gitlive:firebase-common", version.ref = "firebaseKotlin" }
 firebaseAuth = { module = "dev.gitlive:firebase-auth", version.ref = "firebaseKotlin" }
 firebaseFirestore = { module = "dev.gitlive:firebase-firestore", version.ref = "firebaseKotlin" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

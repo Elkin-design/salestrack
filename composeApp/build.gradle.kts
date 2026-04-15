@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+    kotlin("native.cocoapods")
 }
 
 kotlin {
@@ -21,19 +22,27 @@ kotlin {
         }
     }
     
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
+    cocoapods {
+        summary = "SalesTrack Compose Multiplatform App"
+        homepage = "https://github.com/JetBrains/compose-multiplatform"
+        ios.deploymentTarget = "15.0"
+        framework {
             baseName = "ComposeApp"
             isStatic = true
         }
+        pod("FirebaseCore")
+        pod("FirebaseAuth")
+        pod("FirebaseFirestore")
     }
     
     jvm()
     
     sourceSets {
+        val androidMain by getting {
+            dependencies {
+                implementation(project.dependencies.platform(libs.firebase.bom.get()))
+            }
+        }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
