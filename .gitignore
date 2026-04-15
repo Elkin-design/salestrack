@@ -25,3 +25,6 @@ shared/shared.podspec
 !plan_ui_mvvm_clean.md
 build-android.ps1
 local.properties
+google-services.json
+composeApp/google-services.json
+androidApp/google-services.json
