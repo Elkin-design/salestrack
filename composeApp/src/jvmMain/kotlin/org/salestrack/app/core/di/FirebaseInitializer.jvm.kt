@@ -1,40 +1,44 @@
 package org.salestrack.app.core.di
 
 import dev.gitlive.firebase.Firebase
-import dev.gitlive.firebase.FirebaseApp
 import dev.gitlive.firebase.FirebaseOptions
+import com.google.firebase.FirebasePlatform
 import dev.gitlive.firebase.initialize
-import dev.gitlive.firebase.FirebasePlatform
 import java.io.File
+
+class MyFirebasePlatform : FirebasePlatform() {
+    val storage = mutableMapOf<String, String>()
+    override fun store(key: String, value: String) { storage[key] = value }
+    override fun retrieve(key: String): String? = storage[key]
+    override fun clear(key: String) { storage.remove(key) }
+    override fun log(msg: String) = println("Firebase: $msg")
+    override fun getDatabasePath(name: String): File =
+        File("${System.getProperty("java.io.tmpdir")}${File.separatorChar}$name")
+}
 
 class JvmFirebaseInitializer : FirebaseInitializer {
     override fun initialize() {
         try {
-            // Initialize platform services (logging, storage path)
-            FirebasePlatform.initializeFirebasePlatform(object : FirebasePlatform() {
-                val storage = mutableMapOf<String, String>()
-                override fun store(key: String, value: String) { storage[key] = value }
-                override fun retrieve(key: String): String? = storage[key]
-                override fun clear(key: String) { storage.remove(key) }
-                override fun log(msg: String) = println("Firebase: $msg")
-                override fun getDatabasePath(name: String): File = 
-                    File("${System.getProperty("java.io.tmpdir")}${File.separatorChar}$name")
-            })
+            // Step 1: Register the JVM FirebasePlatform for storage/logging.
+            FirebasePlatform.initializeFirebasePlatform(MyFirebasePlatform())
 
-            // Using credentials from google-services.json
-            val options = FirebaseOptions(
-                apiKey = "AIzaSyAsBQmiPA5g62bje_BBRQSqFJRKjR6XK8g",
-                applicationId = "1:402319710438:android:2d1c49ba433d86055e8327",
-                projectId = "salestrack-d1a1a",
-                storageBucket = "salestrack-d1a1a.firebasestorage.app",
-                gcmSenderId = "402319710438"
+            // Step 2: Initialize Firebase using the gitlive firebase-java-sdk overload that takes
+            // NO context. The firebase-java-sdk (dev.gitlive:firebase-java-sdk) is a pure JVM
+            // port — unlike the Android SDK, it does not need an android.content.Context.
+            Firebase.initialize(
+                options = FirebaseOptions(
+                    apiKey = "AIzaSyAsBQmiPA5g62bje_BBRQSqFJRKjR6XK8g",
+                    applicationId = "1:402319710438:android:2d1c49ba433d86055e8327",
+                    projectId = "salestrack-d1a1a",
+                    storageBucket = "salestrack-d1a1a.firebasestorage.app",
+                    gcmSenderId = "402319710438"
+                )
             )
 
-            Firebase.initialize(options = options)
             println("✅ Firebase initialized successfully on JVM")
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             println("❌ Error initializing Firebase on JVM: ${e.message}")
-            // Don't rethrow, let the app try to continue or show its own error UI
+            e.printStackTrace()
         }
     }
 }

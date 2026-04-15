@@ -1,6 +1,5 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -14,6 +13,7 @@ plugins {
 
 kotlin {
     jvmToolchain(17)
+
     androidLibrary {
         namespace = "org.salestrack.app"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -23,7 +23,7 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_17)
         }
     }
-    
+
     cocoapods {
         summary = "SalesTrack Compose Multiplatform App"
         homepage = "https://github.com/JetBrains/compose-multiplatform"
@@ -36,41 +36,53 @@ kotlin {
         pod("FirebaseAuth")
         pod("FirebaseFirestore")
     }
-    
+
     jvm()
-    
+
     sourceSets {
+
         val androidMain by getting {
             dependencies {
-                implementation(project.dependencies.platform(libs.firebase.bom.get()))
+                //implementation(platform(libs.firebase.bom))
             }
         }
-        commonMain.dependencies {
-            implementation(libs.compose.runtime)
-            implementation(libs.compose.foundation)
-            implementation(libs.compose.material3)
-            implementation(libs.compose.material.icons.extended)
-            implementation(libs.compose.ui)
-            implementation(libs.compose.components.resources)
-            implementation(libs.compose.uiToolingPreview)
-            implementation(libs.androidx.lifecycle.viewmodelCompose)
-            implementation(libs.androidx.lifecycle.runtimeCompose)
-            implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.kotlinx.datetime)
-            implementation(libs.kotlinx.serialization.json)
-            implementation(libs.koin.core)
-            implementation(libs.koin.compose)
-            implementation(libs.firebaseCommon)
-            implementation(libs.firebaseAuth)
-            implementation(libs.firebaseFirestore)
+
+        val commonMain by getting {
+            dependencies {
+
+                // Compose Multiplatform correcto (1.7+)
+                implementation("org.jetbrains.compose.runtime:runtime")
+                implementation("org.jetbrains.compose.foundation:foundation")
+                implementation("org.jetbrains.compose.material3:material3")
+                implementation("org.jetbrains.compose.ui:ui")
+                implementation("org.jetbrains.compose.components:components-resources")
+                implementation("org.jetbrains.compose.material:material-icons-extended")
+
+                implementation(libs.androidx.lifecycle.viewmodelCompose)
+                implementation(libs.androidx.lifecycle.runtimeCompose)
+                implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.datetime)
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.koin.core)
+                implementation(libs.koin.compose)
+                implementation(libs.firebaseCommon)
+                implementation(libs.firebaseAuth)
+                implementation(libs.firebaseFirestore)
+            }
         }
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
-            implementation(libs.kotlinx.coroutines.test)
+
+        val commonTest by getting {
+            dependencies {
+                implementation(libs.kotlin.test)
+                implementation(libs.kotlinx.coroutines.test)
+            }
         }
-        jvmMain.dependencies {
-            implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutinesSwing)
+
+        val jvmMain by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+                implementation(libs.kotlinx.coroutinesSwing)
+            }
         }
     }
 }
@@ -84,11 +96,5 @@ compose.desktop {
             packageName = "org.salestrack.app"
             packageVersion = "1.0.0"
         }
-    }
-}
-
-configurations.named("jvmMainCompileClasspath") {
-    attributes {
-        attribute(KotlinPlatformType.attribute, KotlinPlatformType.jvm)
     }
 }
