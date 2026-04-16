@@ -56,6 +56,7 @@ fun ReportsRoute(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportsScreen(
     uiState: ReportsUiState,

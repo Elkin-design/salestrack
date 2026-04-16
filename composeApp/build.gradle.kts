@@ -3,10 +3,9 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidKotlinMultiplatformLibrary)
+    alias(libs.plugins.androidLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinSerialization)
     kotlin("native.cocoapods")
 }
@@ -14,15 +13,15 @@ plugins {
 kotlin {
     jvmToolchain(17)
 
-    androidLibrary {
-        namespace = "org.salestrack.app"
-        compileSdk = libs.versions.android.compileSdk.get().toInt()
-        minSdk = libs.versions.android.minSdk.get().toInt()
-
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
+androidTarget {
+    compilations.all {
+        compileTaskProvider.configure {
+            compilerOptions {
+                jvmTarget.set(JvmTarget.JVM_17)
+            }
         }
     }
+}
 
     cocoapods {
         summary = "SalesTrack Compose Multiplatform App"
@@ -51,12 +50,13 @@ kotlin {
             dependencies {
 
                 // Compose Multiplatform correcto (1.7+)
-                implementation("org.jetbrains.compose.runtime:runtime")
-                implementation("org.jetbrains.compose.foundation:foundation")
-                implementation("org.jetbrains.compose.material3:material3")
-                implementation("org.jetbrains.compose.ui:ui")
-                implementation("org.jetbrains.compose.components:components-resources")
-                implementation("org.jetbrains.compose.material:material-icons-extended")
+               implementation(compose.material3)
+implementation(compose.foundation)
+implementation(compose.ui)
+implementation(compose.runtime)
+implementation(compose.components.resources)
+implementation(compose.components.uiToolingPreview)
+implementation(compose.materialIconsExtended)
 
                 implementation(libs.androidx.lifecycle.viewmodelCompose)
                 implementation(libs.androidx.lifecycle.runtimeCompose)
@@ -82,11 +82,22 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutinesSwing)
+                // Provides the pure-JVM Firebase implementation (no Android Context needed).
+                // Without this, the Android-backed firebase-common is resolved on JVM,
+                // causing "null cannot be cast to android.content.Context" at startup.
+                implementation(libs.firebaseJavaSdk)
             }
         }
     }
 }
+android {
+    namespace = "org.salestrack.app"
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
+    defaultConfig {
+        minSdk = libs.versions.android.minSdk.get().toInt()
+    }
+}
 compose.desktop {
     application {
         mainClass = "org.salestrack.app.MainKt"

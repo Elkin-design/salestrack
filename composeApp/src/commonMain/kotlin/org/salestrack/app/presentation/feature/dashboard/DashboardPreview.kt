@@ -3,7 +3,7 @@ package org.salestrack.app.presentation.feature.dashboard
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.tooling.preview.Preview
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.flow.flowOf
 import org.salestrack.app.core.dispatcher.DefaultDispatcherProvider
 import org.salestrack.app.core.result.AppResult
