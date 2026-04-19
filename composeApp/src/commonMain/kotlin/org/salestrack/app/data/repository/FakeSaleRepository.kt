@@ -25,6 +25,7 @@ class FakeSaleRepository(
             discount = input.discount,
             createdAtMillis = timeProvider.nowMillis(),
             sellerName = input.sellerName,
+            productId = input.productId,
         )
         dataSource.replaceAll(dataSource.getCurrent() + sale)
         return AppResult.Success(sale)

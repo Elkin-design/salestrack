@@ -6,6 +6,7 @@ import org.salestrack.app.core.presentation.BaseViewModel
 import org.salestrack.app.core.result.AppResult
 import org.salestrack.app.domain.model.NewSaleInput
 import org.salestrack.app.domain.model.Sale
+import org.salestrack.app.domain.repository.InventoryRepository
 import org.salestrack.app.domain.repository.SaleRepository
 import org.salestrack.app.domain.usecase.sales.AddSaleUseCase
 import org.salestrack.app.domain.usecase.sales.DeleteSaleUseCase
@@ -15,6 +16,7 @@ import org.salestrack.app.domain.usecase.sales.UpdateSaleUseCase
 class SalesViewModel(
     dispatcherProvider: DispatcherProvider,
     private val repository: SaleRepository,
+    private val inventoryRepository: InventoryRepository,
     private val addSaleUseCase: AddSaleUseCase,
     private val updateSaleUseCase: UpdateSaleUseCase,
     private val deleteSaleUseCase: DeleteSaleUseCase,
@@ -28,6 +30,7 @@ class SalesViewModel(
 
     init {
         observeSales()
+        observeInventory()
     }
 
     override fun onEvent(event: SalesUiEvent) {
@@ -61,6 +64,14 @@ class SalesViewModel(
         }
     }
 
+    private fun observeInventory() {
+        scope.launch {
+            inventoryRepository.observeProducts().collect { products ->
+                setState { it.copy(inventoryProducts = products) }
+            }
+        }
+    }
+
     private fun applyFilters() {
         val current = state.value
         val filtered = filterSalesUseCase(
@@ -81,6 +92,7 @@ class SalesViewModel(
                     unitPrice = event.unitPrice,
                     discount = event.discount,
                     sellerName = event.seller,
+                    productId = event.productId,
                 ),
             )
             when (result) {
@@ -106,6 +118,7 @@ class SalesViewModel(
                     unitPrice = event.unitPrice,
                     discount = event.discount,
                     sellerName = event.seller,
+                    productId = event.productId,
                     createdAtMillis = latestSales.firstOrNull { it.id == event.id }?.createdAtMillis ?: 0L,
                 ),
             )

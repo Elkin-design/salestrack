@@ -43,6 +43,7 @@ class FirestoreSaleDataSource(
                 discount = input.discount,
                 createdAtMillis = now,
                 sellerName = input.sellerName.trim().ifBlank { "Sin vendedor" },
+                productId = input.productId,
             )
             
             salesCollection().document(id).set(sale)

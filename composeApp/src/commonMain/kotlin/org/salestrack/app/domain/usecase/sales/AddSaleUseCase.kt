@@ -48,12 +48,18 @@ class AddSaleUseCase(
 
     private suspend fun findMatchingProduct(input: NewSaleInput): Product? {
         val inventoryRepo = inventoryRepository ?: return null
-        return inventoryRepo
-            .observeProducts()
-            .first()
-            .firstOrNull { product ->
-                product.isActive && product.name.equals(input.productName, ignoreCase = true)
-            }
+        val products = inventoryRepo.observeProducts().first()
+        
+        // Prioritize ID if available
+        if (input.productId != null) {
+            val byId = products.find { it.id == input.productId }
+            if (byId != null) return byId
+        }
+        
+        // Fallback to name matching
+        return products.firstOrNull { product ->
+            product.isActive && product.name.equals(input.productName, ignoreCase = true)
+        }
     }
 }
 

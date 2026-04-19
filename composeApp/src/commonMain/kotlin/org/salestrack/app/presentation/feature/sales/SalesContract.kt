@@ -3,6 +3,7 @@ package org.salestrack.app.presentation.feature.sales
 import org.salestrack.app.core.presentation.UiEffect
 import org.salestrack.app.core.presentation.UiEvent
 import org.salestrack.app.core.presentation.UiState
+import org.salestrack.app.domain.model.Product
 import org.salestrack.app.domain.model.Sale
 
 data class SalesUiState(
@@ -11,6 +12,7 @@ data class SalesUiState(
     val selectedCategory: String? = null,
     val availableCategories: List<String> = emptyList(),
     val sales: List<Sale> = emptyList(),
+    val inventoryProducts: List<Product> = emptyList(),
     val isAddDialogVisible: Boolean = false,
     val editingSale: Sale? = null,
     val detailSale: Sale? = null,
@@ -31,6 +33,7 @@ sealed interface SalesUiEvent : UiEvent {
         val unitPrice: Double,
         val discount: Double,
         val seller: String,
+        val productId: String? = null,
     ) : SalesUiEvent
     data class SaveEditedSale(
         val id: String,
@@ -40,6 +43,7 @@ sealed interface SalesUiEvent : UiEvent {
         val unitPrice: Double,
         val discount: Double,
         val seller: String,
+        val productId: String? = null,
     ) : SalesUiEvent
     data class DeleteSale(val saleId: String) : SalesUiEvent
 }

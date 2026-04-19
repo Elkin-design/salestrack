@@ -75,6 +75,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import org.salestrack.app.core.utils.formatMoney
+import org.salestrack.app.domain.model.Product
 import org.salestrack.app.domain.model.Sale
 import org.salestrack.app.presentation.app.AppContainer
 
@@ -87,6 +88,7 @@ fun SalesRoute(
         SalesViewModel(
             dispatcherProvider = container.dispatcherProvider,
             repository = container.saleRepository,
+            inventoryRepository = container.inventoryRepository,
             addSaleUseCase = container.addSaleUseCase,
             updateSaleUseCase = container.updateSaleUseCase,
             deleteSaleUseCase = container.deleteSaleUseCase,
@@ -243,8 +245,9 @@ fun SalesScreen(
     if (uiState.isAddDialogVisible) {
         SaleFormDialog(
             title = "Nueva venta",
+            inventoryProducts = uiState.inventoryProducts,
             onDismiss = { onEvent(SalesUiEvent.ToggleAddDialog(false)) },
-            onSave = { product, category, quantity, unitPrice, discount, seller ->
+            onSave = { product, category, quantity, unitPrice, discount, seller, productId ->
                 onEvent(
                     SalesUiEvent.SaveNewSale(
                         productName = product,
@@ -253,6 +256,7 @@ fun SalesScreen(
                         unitPrice = unitPrice,
                         discount = discount,
                         seller = seller,
+                        productId = productId,
                     ),
                 )
             },
@@ -270,8 +274,9 @@ fun SalesScreen(
         SaleFormDialog(
             title = "Editar venta",
             initialSale = sale,
+            inventoryProducts = uiState.inventoryProducts,
             onDismiss = { onEvent(SalesUiEvent.StartEdit(null)) },
-            onSave = { product, category, quantity, unitPrice, discount, seller ->
+            onSave = { product, category, quantity, unitPrice, discount, seller, productId ->
                 onEvent(
                     SalesUiEvent.SaveEditedSale(
                         id = sale.id,
@@ -281,6 +286,7 @@ fun SalesScreen(
                         unitPrice = unitPrice,
                         discount = discount,
                         seller = seller,
+                        productId = productId,
                     ),
                 )
             },
@@ -502,16 +508,24 @@ private fun DetailRow(
 @Composable
 private fun SaleFormDialog(
     title: String,
+    inventoryProducts: List<Product>,
     onDismiss: () -> Unit,
-    onSave: (String, String, Int, Double, Double, String) -> Unit,
+    onSave: (product: String, category: String, quantity: Int, unitPrice: Double, discount: Double, seller: String, productId: String?) -> Unit,
     initialSale: Sale? = null,
 ) {
-    var product by remember(initialSale) { mutableStateOf(initialSale?.productName ?: "") }
+    var productQuery by remember(initialSale) { mutableStateOf(initialSale?.productName ?: "") }
+    var selectedProductId by remember(initialSale) { mutableStateOf(initialSale?.productId) }
     var category by remember(initialSale) { mutableStateOf(initialSale?.category ?: "General") }
     var quantity by remember(initialSale) { mutableStateOf((initialSale?.quantity ?: 1).toString()) }
     var price by remember(initialSale) { mutableStateOf((initialSale?.unitPrice ?: 0.0).toString()) }
     var discount by remember(initialSale) { mutableStateOf((initialSale?.discount ?: 0.0).toString()) }
     var seller by remember(initialSale) { mutableStateOf(initialSale?.sellerName ?: "Vendedor") }
+
+    var expanded by remember { mutableStateOf(false) }
+    val filteredProducts = remember(productQuery, inventoryProducts) {
+        if (productQuery.isBlank()) inventoryProducts 
+        else inventoryProducts.filter { it.name.contains(productQuery, ignoreCase = true) }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -529,14 +543,55 @@ private fun SaleFormDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                OutlinedTextField(
-                    value = product,
-                    onValueChange = { product = it },
-                    label = { Text("Producto") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    leadingIcon = { Icon(Icons.Default.ShoppingCart, contentDescription = null) }
-                )
+                Box {
+                    OutlinedTextField(
+                        value = productQuery,
+                        onValueChange = { 
+                            productQuery = it
+                            expanded = true
+                            // Reset selection if typing manually
+                            if (selectedProductId != null) {
+                                selectedProductId = null
+                            }
+                        },
+                        label = { Text("Producto") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        leadingIcon = { Icon(Icons.Default.ShoppingCart, contentDescription = null) },
+                        trailingIcon = {
+                            IconButton(onClick = { expanded = !expanded }) {
+                                Icon(Icons.AutoMirrored.Filled.List, contentDescription = null)
+                            }
+                        }
+                    )
+                    
+                    if (expanded && filteredProducts.isNotEmpty()) {
+                        androidx.compose.material3.DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.fillMaxWidth(0.9f)
+                        ) {
+                            filteredProducts.take(5).forEach { prod ->
+                                androidx.compose.material3.DropdownMenuItem(
+                                    text = { 
+                                        Column {
+                                            Text(prod.name, fontWeight = FontWeight.Bold)
+                                            Text("${prod.category} · Stock: ${prod.stock}", style = MaterialTheme.typography.labelSmall)
+                                        }
+                                    },
+                                    onClick = {
+                                        productQuery = prod.name
+                                        selectedProductId = prod.id
+                                        category = prod.category
+                                        price = prod.unitPrice.toString()
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
                 OutlinedTextField(
                     value = category,
                     onValueChange = { category = it },
@@ -585,12 +640,13 @@ private fun SaleFormDialog(
             Button(
                 onClick = {
                     onSave(
-                        product,
+                        productQuery,
                         category,
                         quantity.toIntOrNull() ?: 0,
                         price.toDoubleOrNull() ?: 0.0,
                         discount.toDoubleOrNull() ?: 0.0,
                         seller,
+                        selectedProductId
                     )
                 },
             ) { Text("Guardar") }

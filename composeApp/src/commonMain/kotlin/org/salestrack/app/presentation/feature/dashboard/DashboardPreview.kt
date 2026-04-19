@@ -90,7 +90,7 @@ private fun createPreviewContainer(): AppContainer {
     // Mock Repositories
     val saleRepo = object : SaleRepository {
         override fun observeSales() = flowOf(emptyList<Sale>())
-        override suspend fun addSale(input: NewSaleInput) = AppResult.Success(Sale("", "", "", 0, 0.0, 0.0, 0L, "", false))
+        override suspend fun addSale(input: NewSaleInput) = AppResult.Success(Sale("", "", "", 0, 0.0, 0.0, 0L, "", null, false))
         override suspend fun updateSale(sale: Sale) = AppResult.Success(sale)
         override suspend fun softDeleteSale(saleId: String) = AppResult.Success(Unit)
     }

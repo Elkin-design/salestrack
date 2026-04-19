@@ -12,6 +12,7 @@ data class Sale(
     val discount: Double,
     val createdAtMillis: Long,
     val sellerName: String,
+    val productId: String? = null,
     val isDeleted: Boolean = false,
 ) {
     val grossTotal: Double = quantity * unitPrice
@@ -25,6 +26,7 @@ data class NewSaleInput(
     val unitPrice: Double,
     val discount: Double,
     val sellerName: String,
+    val productId: String? = null,
 )
 
 data class DashboardSummary(
