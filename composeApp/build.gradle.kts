@@ -34,23 +34,26 @@ kotlin {
 
         val androidMain by getting {
             dependencies {
-                //implementation(platform(libs.firebase.bom))
+                // Firebase se inicializa via Firebase.initialize(context)
+                // Los SDKs de GitLive están en commonMain; aquí solo van deps Android-específicas.
             }
         }
 
         val commonMain by getting {
             dependencies {
+                // Firebase GitLive SDK — misma API para Android, iOS y JVM
                 implementation(libs.firebaseApp)
                 implementation(libs.firebaseAuth)
-                implementation(libs.firebaseFirestore)  
-                // Compose Multiplatform correcto (1.7+)
-               implementation(compose.material3)
-implementation(compose.foundation)
-implementation(compose.ui)
-implementation(compose.runtime)
-implementation(compose.components.resources)
-implementation(compose.components.uiToolingPreview)
-implementation(compose.materialIconsExtended)
+                implementation(libs.firebaseFirestore)
+
+                // Compose Multiplatform
+                implementation(compose.material3)
+                implementation(compose.foundation)
+                implementation(compose.ui)
+                implementation(compose.runtime)
+                implementation(compose.components.resources)
+                implementation(compose.components.uiToolingPreview)
+                implementation(compose.materialIconsExtended)
 
                 implementation(libs.androidx.lifecycle.viewmodelCompose)
                 implementation(libs.androidx.lifecycle.runtimeCompose)
@@ -59,9 +62,6 @@ implementation(compose.materialIconsExtended)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.koin.core)
                 implementation(libs.koin.compose)
-                implementation(libs.firebaseApp)
-                implementation(libs.firebaseAuth)
-                implementation(libs.firebaseFirestore)
             }
         }
 
@@ -78,7 +78,8 @@ implementation(compose.materialIconsExtended)
                 implementation(libs.kotlinx.coroutinesSwing)
                 implementation(libs.skiko.awt.runtime.windows)
                 implementation(libs.skiko.windows)
-                implementation(libs.firebase.admin)
+                // firebase-admin no es necesario: usamos GitLive SDK (firebase-kotlin-sdk)
+                // que internamente usa firebase-java-sdk como cliente — no Admin SDK.
             }
         }
     }
