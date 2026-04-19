@@ -14,6 +14,7 @@ import androidx.compose.material.icons.rounded.Group
 import androidx.compose.material.icons.rounded.Inventory
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.ShoppingCart
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -132,8 +133,11 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     Scaffold(
         bottomBar = {
             NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 3.dp
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                tonalElevation = 0.dp,
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .height(56.dp)
             ) {
                 destinations.forEach { destination ->
                     val selected = destination.route == currentDestination
@@ -146,16 +150,23 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         icon = {
                             Icon(
                                 imageVector = destination.icon,
-                                contentDescription = destination.contentDescription
+                                contentDescription = destination.contentDescription,
+                                modifier = Modifier.size(20.dp)
                             )
                         },
                         label = {
                             Text(
                                 text = destination.label,
-                                style = MaterialTheme.typography.labelSmall
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 9.sp
+                                )
                             )
                         },
-                        alwaysShowLabel = false
+                        alwaysShowLabel = false,
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                        )
                     )
                 }
             }
