@@ -2,6 +2,7 @@ package org.salestrack.app.presentation.app
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -19,6 +20,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -131,9 +133,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         bottomBar = {
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-                tonalElevation = 6.dp,
-                modifier = Modifier.height(64.dp)
+                tonalElevation = 3.dp
             ) {
                 destinations.forEach { destination ->
                     val selected = destination.route == currentDestination
@@ -144,41 +144,18 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                             contentDescription = destination.contentDescription
                         },
                         icon = {
-                            val animatedScale by animateFloatAsState(
-                                targetValue = if (selected) 1.25f else 1f,
-                                animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                                    stiffness = Spring.StiffnessLow
-                                )
-                            )
-                            val iconColor by animateColorAsState(
-                                targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                            )
-                            
                             Icon(
                                 imageVector = destination.icon,
-                                contentDescription = destination.contentDescription,
-                                tint = iconColor,
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .scale(animatedScale)
-                                    .then(
-                                        if (selected) {
-                                            Modifier.shadow(
-                                                elevation = 12.dp,
-                                                shape = CircleShape,
-                                                ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                                                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                                            )
-                                        } else Modifier
-                                    )
+                                contentDescription = destination.contentDescription
                             )
                         },
-                        label = null,
-                        alwaysShowLabel = false,
-                        colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = Color.Transparent
-                        )
+                        label = {
+                            Text(
+                                text = destination.label,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        },
+                        alwaysShowLabel = false
                     )
                 }
             }

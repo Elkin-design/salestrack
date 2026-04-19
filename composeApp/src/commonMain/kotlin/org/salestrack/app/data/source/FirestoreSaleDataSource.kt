@@ -64,7 +64,7 @@ class FirestoreSaleDataSource(
 
     override suspend fun softDeleteSale(saleId: String): AppResult<Unit> {
         return try {
-            salesCollection().document(saleId).update("isDeleted" to true)
+            salesCollection().document(saleId).update(mapOf("isDeleted" to true))
             AppResult.Success(Unit)
         } catch (e: Exception) {
             AppResult.Failure(e)
