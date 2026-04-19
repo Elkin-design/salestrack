@@ -131,7 +131,11 @@ fun SettingsScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp)) {
+            Column(
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 24.dp)
+            ) {
                 Text(
                     text = "Configuración",
                     style = MaterialTheme.typography.headlineLarge.copy(

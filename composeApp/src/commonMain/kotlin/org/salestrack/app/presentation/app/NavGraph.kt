@@ -160,6 +160,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 }
             }
         },
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
         modifier = keyboardModifier,
     ) { paddingValues ->
         val screenModifier = Modifier
