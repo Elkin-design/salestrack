@@ -12,11 +12,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,9 +29,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import org.salestrack.app.core.utils.formatMoney
 import org.salestrack.app.presentation.feature.dashboard.components.CategoryBreakdownCard
 import org.salestrack.app.presentation.feature.dashboard.components.DashboardHeader
@@ -53,11 +61,23 @@ fun DashboardRoute(
 ) {
 val uiState by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                is DashboardUiEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
+                is DashboardUiEffect.ShowMessage -> {
+                    // Show message and manually close after 1.8 seconds for a "fast" feel
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = effect.message,
+                            actionLabel = if (effect.isSuccess) "SUCCESS" else "ERROR",
+                            duration = SnackbarDuration.Indefinite
+                        )
+                    }
+                    delay(1800)
+                    snackbarHostState.currentSnackbarData?.dismiss()
+                }
                 is DashboardUiEffect.NavigateToDestination -> {
                     if (effect is DashboardUiEffect.NavigateToDestination.NavigateToReportsWithPeriod) {
                         onNavigateWithPeriod(effect.destination, effect.period)
@@ -103,16 +123,17 @@ fun DashboardScreen(
                 onDismiss = onDismissExportModal
             )
         }
+
+        // Main Content
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            SnackbarHost(hostState = snackbarHostState)
-
             DashboardHeader(
                 transactionCountToday = uiState.summary.transactionCountToday,
+                isLoading = uiState.isLoading,
                 onRefresh = onRefresh,
             )
 
@@ -139,6 +160,60 @@ fun DashboardScreen(
                         onNavigateToReports = onNavigateToReports,
                         onNavigateToExport = onNavigateToExport,
                     )
+                }
+            }
+        }
+
+        // Floating Message Overlay
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 12.dp)
+                .fillMaxWidth(0.9f),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            SnackbarHost(
+                hostState = snackbarHostState,
+            ) { data ->
+                val isSuccess = data.visuals.actionLabel == "SUCCESS"
+                val containerColor = if (isSuccess) {
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.98f)
+                } else {
+                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.98f)
+                }
+                val contentColor = if (isSuccess) {
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onErrorContainer
+                }
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                        containerColor = containerColor,
+                        contentColor = contentColor
+                    ),
+                    elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .padding(horizontal = 20.dp, vertical = 14.dp)
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)
+                    ) {
+                        Icon(
+                            imageVector = if (isSuccess) Icons.Rounded.CheckCircle else Icons.Rounded.Error,
+                            contentDescription = null,
+                            tint = contentColor
+                        )
+                        Text(
+                            text = data.visuals.message,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold
+                        )
+                    }
                 }
             }
         }

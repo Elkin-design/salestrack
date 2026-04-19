@@ -1,32 +1,53 @@
 package org.salestrack.app.presentation.feature.dashboard.components
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Refresh
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun DashboardHeader(
     transactionCountToday: Int,
+    isLoading: Boolean,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val infiniteTransition = rememberInfiniteTransition()
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing)
+        )
+    )
+
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
@@ -52,18 +73,22 @@ fun DashboardHeader(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            ElevatedButton(
+            IconButton(
                 onClick = onRefresh,
-                shape = MaterialTheme.shapes.medium,
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(8.dp),
-                colors = ButtonDefaults.elevatedButtonColors(
+                enabled = !isLoading,
+                modifier = Modifier
+                    .height(48.dp)
+                    .aspectRatio(1f),
+                colors = IconButtonDefaults.iconButtonColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    disabledContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                 )
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Refresh,
                     contentDescription = "Actualizar",
+                    modifier = if (isLoading) Modifier.rotate(rotation) else Modifier
                 )
             }
         }

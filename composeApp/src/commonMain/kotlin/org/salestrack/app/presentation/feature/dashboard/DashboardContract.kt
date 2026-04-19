@@ -42,7 +42,7 @@ sealed interface DashboardUiEvent : UiEvent {
 }
 
 sealed interface DashboardUiEffect : UiEffect {
-    data class ShowMessage(val message: String) : DashboardUiEffect
+    data class ShowMessage(val message: String, val isSuccess: Boolean = true) : DashboardUiEffect
     sealed interface NavigateToDestination : DashboardUiEffect {
         val destination: org.salestrack.app.presentation.app.AppDestination
         

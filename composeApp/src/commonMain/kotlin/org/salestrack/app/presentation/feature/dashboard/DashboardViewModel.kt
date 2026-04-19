@@ -36,10 +36,13 @@ class DashboardViewModel(
     override fun onEvent(event: DashboardUiEvent) {
         when (event) {
             DashboardUiEvent.Refresh -> {
-                setState { it.copy(isLoading = true, errorMessage = null) }
-                fetchLowStock()
-                render(lastSales)
-                emitEffect(DashboardUiEffect.ShowMessage("Dashboard actualizado"))
+                scope.launch {
+                    setState { it.copy(isLoading = true, errorMessage = null) }
+                    kotlinx.coroutines.delay(800) // Feedback delay
+                    fetchLowStock()
+                    render(lastSales)
+                    emitEffect(DashboardUiEffect.ShowMessage("Dashboard actualizado"))
+                }
             }
 
             is DashboardUiEvent.NavigateToReports -> {
@@ -73,7 +76,7 @@ class DashboardViewModel(
                         errorMessage = throwable.message ?: "Error inesperado",
                     )
                 }
-                emitEffect(DashboardUiEffect.ShowMessage("No se pudo actualizar"))
+                emitEffect(DashboardUiEffect.ShowMessage("No se pudo actualizar", isSuccess = false))
             }
         }
     }
