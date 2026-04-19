@@ -25,6 +25,10 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -170,8 +174,9 @@ fun DashboardScreen(
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = 12.dp)
-                .fillMaxWidth(0.9f),
+                .statusBarsPadding()
+                .padding(top = 10.dp)
+                .fillMaxWidth(0.92f),
             contentAlignment = Alignment.TopCenter
         ) {
             SnackbarHost(
@@ -179,9 +184,9 @@ fun DashboardScreen(
             ) { data ->
                 val isSuccess = data.visuals.actionLabel == "SUCCESS"
                 val containerColor = if (isSuccess) {
-                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.98f)
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.97f)
                 } else {
-                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.98f)
+                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.97f)
                 }
                 val contentColor = if (isSuccess) {
                     MaterialTheme.colorScheme.onPrimaryContainer
@@ -192,28 +197,33 @@ fun DashboardScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                    colors = CardDefaults.cardColors(
                         containerColor = containerColor,
                         contentColor = contentColor
                     ),
-                    elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                    border = BorderStroke(
+                        width = 0.5.dp,
+                        color = contentColor.copy(alpha = 0.15f)
+                    )
                 ) {
                     Row(
                         modifier = Modifier
-                            .padding(horizontal = 20.dp, vertical = 14.dp)
+                            .padding(horizontal = 18.dp, vertical = 12.dp)
                             .fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally)
                     ) {
                         Icon(
                             imageVector = if (isSuccess) Icons.Rounded.CheckCircle else Icons.Rounded.Error,
                             contentDescription = null,
-                            tint = contentColor
+                            tint = contentColor,
+                            modifier = Modifier.size(20.dp)
                         )
                         Text(
                             text = data.visuals.message,
                             style = MaterialTheme.typography.titleSmall,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
