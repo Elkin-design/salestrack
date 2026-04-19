@@ -21,7 +21,7 @@ materialIconsExtended = "1.7.3"
 googleServices = "4.4.2"
 firebaseKotlin = "2.4.0"
 firebaseBom = "33.9.0"
-
+firebase-admin = "9.2.0"
 
 [libraries]
 "kotlinx-coroutines-core" = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
@@ -52,9 +52,11 @@ koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
 firebaseApp = { module = "dev.gitlive:firebase-app", version.ref = "firebaseKotlin" }
 firebaseAuth = { module = "dev.gitlive:firebase-auth", version.ref = "firebaseKotlin" }
 firebaseFirestore = { module = "dev.gitlive:firebase-firestore", version.ref = "firebaseKotlin" }
-firebaseJavaSdk = { module = "dev.gitlive:firebase-java-sdk", version = "0.6.2" }
+#firebaseJavaSdk = { module = "dev.gitlive:firebase-java-sdk", version = "0.6.2" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
-
+skiko-awt-runtime-windows = { module = "org.jetbrains.skiko:skiko-awt-runtime-windows-x64", version = "0.8.18" }
+skiko-windows = { module = "org.jetbrains.skiko:skiko-awt-runtime-windows-x64", version = "0.8.18" }
+firebase-admin = { group = "com.google.firebase", name = "firebase-admin", version.ref = "firebase-admin" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

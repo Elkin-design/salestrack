@@ -12,16 +12,8 @@ plugins {
 
 kotlin {
     jvmToolchain(17)
-
-androidTarget {
-    compilations.all {
-        compileTaskProvider.configure {
-            compilerOptions {
-                jvmTarget.set(JvmTarget.JVM_17)
-            }
-        }
-    }
-}
+    @Suppress("DEPRECATION")
+    androidTarget()
 
     cocoapods {
         summary = "SalesTrack Compose Multiplatform App"
@@ -48,7 +40,9 @@ androidTarget {
 
         val commonMain by getting {
             dependencies {
-
+                implementation(libs.firebaseApp)
+                implementation(libs.firebaseAuth)
+                implementation(libs.firebaseFirestore)  
                 // Compose Multiplatform correcto (1.7+)
                implementation(compose.material3)
 implementation(compose.foundation)
@@ -65,7 +59,7 @@ implementation(compose.materialIconsExtended)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.koin.core)
                 implementation(libs.koin.compose)
-                implementation(libs.firebaseCommon)
+                implementation(libs.firebaseApp)
                 implementation(libs.firebaseAuth)
                 implementation(libs.firebaseFirestore)
             }
@@ -82,10 +76,9 @@ implementation(compose.materialIconsExtended)
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutinesSwing)
-                // Provides the pure-JVM Firebase implementation (no Android Context needed).
-                // Without this, the Android-backed firebase-common is resolved on JVM,
-                // causing "null cannot be cast to android.content.Context" at startup.
-                implementation(libs.firebaseJavaSdk)
+                implementation(libs.skiko.awt.runtime.windows)
+                implementation(libs.skiko.windows)
+                implementation(libs.firebase.admin)
             }
         }
     }
