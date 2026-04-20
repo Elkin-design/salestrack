@@ -121,7 +121,6 @@ fun InventoryScreen(
     onEvent: (InventoryUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val selectedProduct = uiState.products.firstOrNull { it.id == uiState.selectedProductId }
     val lowStockCount = uiState.lowStockProducts.size
     val totalUnits = uiState.products.sumOf { it.stock }
 
@@ -161,7 +160,7 @@ fun InventoryScreen(
                 .padding(paddingValues)
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             OutlinedTextField(
                 value = uiState.query,
@@ -179,10 +178,6 @@ fun InventoryScreen(
                 )
             )
 
-            InventorySectionSelector(
-                selectedSection = uiState.selectedSection,
-                onSectionSelected = { onEvent(InventoryUiEvent.SectionChanged(it)) },
-            )
 
             InventorySummaryCard(
                 totalProducts = uiState.products.size,
@@ -216,50 +211,14 @@ fun InventoryScreen(
                 }
             }
 
-            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                when (uiState.selectedSection) {
-                    InventorySection.Catalog -> CatalogWindow(
-                        products = uiState.products,
-                        selectedProductId = uiState.selectedProductId,
-                        onSelect = { onEvent(InventoryUiEvent.SelectProduct(it)) },
-                        onEdit = { onEvent(InventoryUiEvent.StartEdit(it)) },
-                        onAdjust = { onEvent(InventoryUiEvent.StartAdjust(it)) },
-                    )
-                    InventorySection.AddProduct -> AddWindow(
-                        lowStockProducts = uiState.lowStockProducts,
-                        onOpenAddDialog = { onEvent(InventoryUiEvent.ToggleAddDialog(true)) },
-                    )
-                    InventorySection.EditProduct -> EditWindow(
-                        products = uiState.products,
-                        onEdit = { onEvent(InventoryUiEvent.StartEdit(it)) },
-                    )
-                    InventorySection.StockAdjustment -> StockAdjustmentWindow(
-                        selectedProduct = selectedProduct,
-                        onSelect = { onEvent(InventoryUiEvent.SelectProduct(it)) },
-                        products = uiState.products,
-                        onAdjust = { onEvent(InventoryUiEvent.StartAdjust(it)) },
-                    )
-                    InventorySection.MovementHistory -> HistoryWindow(
-                        movements = uiState.selectedProductMovements,
-                        selectedProduct = selectedProduct,
-                    )
-                    InventorySection.ImportExport -> ImportExportWindow(
-                        csvInput = uiState.csvImportInput,
-                        importResultSummary = uiState.importResult?.let {
-                            "Filas: ${it.totalRows}, importadas: ${it.importedRows}, fallidas: ${it.failedRows}"
-                        },
-                        importErrors = uiState.importResult?.errors?.take(5)?.map { "Linea ${it.line}: ${it.reason}" }.orEmpty(),
-                        csvExportPreview = uiState.lastCsvExport?.content?.lineSequence()?.take(3)?.joinToString("\n"),
-                        excelExportPreview = uiState.lastExcelExport?.content?.take(80),
-                        onCsvInputChanged = { onEvent(InventoryUiEvent.CsvImportInputChanged(it)) },
-                        onImport = { onEvent(InventoryUiEvent.ImportCatalogFromCsv) },
-                        onExportCsv = { onEvent(InventoryUiEvent.ExportCatalogAsCsv) },
-                        onExportExcel = { onEvent(InventoryUiEvent.ExportCatalogAsExcel) },
-                        onClearImport = { onEvent(InventoryUiEvent.ClearImportResult) },
-                        onClearExport = { onEvent(InventoryUiEvent.ClearExportResult) },
-                    )
-                }
-            }
+            CatalogWindow(
+                products = uiState.products,
+                selectedProductId = uiState.selectedProductId,
+                onSelect = { onEvent(InventoryUiEvent.SelectProduct(it)) },
+                onEdit = { onEvent(InventoryUiEvent.StartEdit(it)) },
+                onAdjust = { onEvent(InventoryUiEvent.StartAdjust(it)) },
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+            )
 
             if (uiState.errorMessage != null) {
                 ElevatedCard(
@@ -347,7 +306,7 @@ private fun InventorySummaryCard(totalProducts: Int, totalUnits: Int, lowStockCo
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(10.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
@@ -380,71 +339,26 @@ private fun InventorySummaryCard(totalProducts: Int, totalUnits: Int, lowStockCo
 private fun SummaryItem(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: androidx.compose.ui.graphics.Color) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.padding(vertical = 4.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(vertical = 2.dp)
     ) {
         Surface(
             color = color.copy(alpha = 0.1f),
             shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.size(40.dp)
+            modifier = Modifier.size(32.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
             }
         }
         Column {
-            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 
-@Composable
-private fun InventorySectionSelector(
-    selectedSection: InventorySection,
-    onSectionSelected: (InventorySection) -> Unit,
-) {
-    val sections = listOf(
-        InventorySection.Catalog to ("Catálogo" to Icons.AutoMirrored.Filled.List),
-        InventorySection.AddProduct to ("Agregar" to Icons.Default.Add),
-        InventorySection.EditProduct to ("Editar" to Icons.Default.Edit),
-        InventorySection.StockAdjustment to ("Ajustes" to Icons.Default.Settings),
-        InventorySection.MovementHistory to ("Historial" to Icons.Default.History),
-        InventorySection.ImportExport to ("Datos" to Icons.Default.Storage),
-    )
-
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(vertical = 8.dp)
-    ) {
-        items(sections) { (section, data) ->
-            val (label, icon) = data
-            val isSelected = selectedSection == section
-            
-            Surface(
-                onClick = { onSectionSelected(section) },
-                shape = RoundedCornerShape(12.dp),
-                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                tonalElevation = if (isSelected) 0.dp else 1.dp,
-                shadowElevation = if (isSelected) 2.dp else 0.dp,
-                modifier = Modifier.height(44.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
-                }
-            }
-        }
-    }
-}
 
 @Composable
 private fun CatalogWindow(
@@ -453,6 +367,7 @@ private fun CatalogWindow(
     onSelect: (String) -> Unit,
     onEdit: (Product) -> Unit,
     onAdjust: (Product) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     if (products.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -478,7 +393,7 @@ private fun CatalogWindow(
     }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(bottom = 16.dp)
     ) {
@@ -494,224 +409,6 @@ private fun CatalogWindow(
     }
 }
 
-@Composable
-private fun AddWindow(
-    lowStockProducts: List<Product>,
-    onOpenAddDialog: () -> Unit,
-) {
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text("Gestión de Inventario Inicial", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("Integra nuevos ingresos con control de stock y clasificación detallada.", style = MaterialTheme.typography.bodyMedium)
-            Button(onClick = onOpenAddDialog, shape = RoundedCornerShape(100)) {
-                Text("Abrir formulario de alta")
-            }
-            if (lowStockProducts.isNotEmpty()) {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Productos en riesgo", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
-                }
-                lowStockProducts.take(5).forEach { product ->
-                    Text("• ${product.name}: ${product.stock} (Min: ${product.minimumStock})", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun EditWindow(
-    products: List<Product>,
-    onEdit: (Product) -> Unit,
-) {
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text("Edición rápida", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("Selecciona un producto del catálogo para actualizar sus detalles generales.", style = MaterialTheme.typography.bodyMedium)
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-            products.take(8).forEach { product ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("${product.name}", style = MaterialTheme.typography.bodyMedium)
-                    IconButton(onClick = { onEdit(product) }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun StockAdjustmentWindow(
-    selectedProduct: Product?,
-    onSelect: (String) -> Unit,
-    products: List<Product>,
-    onAdjust: (Product) -> Unit,
-) {
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text("Ajustes de inventario", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            
-            selectedProduct?.let {
-                Surface(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Producto a ajustar: ${it.name}", fontWeight = FontWeight.Bold)
-                        Text("Stock actual: ${it.stock}", style = MaterialTheme.typography.bodyMedium)
-                        Button(
-                            onClick = { onAdjust(it) },
-                            modifier = Modifier.padding(top = 8.dp),
-                            shape = RoundedCornerShape(100)
-                        ) {
-                            Text("Registrar movimiento")
-                        }
-                    }
-                }
-            } ?: Text("Selecciona un producto en el catálogo o debajo para registrar mermas o reingresos.", style = MaterialTheme.typography.bodyMedium)
-
-            Text("Productos disponibles:", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(products, key = { it.id }) { product ->
-                    FilterChip(
-                        selected = selectedProduct?.id == product.id,
-                        onClick = { onSelect(product.id) },
-                        label = { Text(product.name) },
-                        shape = RoundedCornerShape(100)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HistoryWindow(
-    movements: List<StockMovement>,
-    selectedProduct: Product?,
-) {
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text("Kardex / Historial", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("Actividad para: ${selectedProduct?.name ?: "Sin selección"}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
-            
-            HorizontalDivider()
-            
-            if (movements.isEmpty()) {
-                Text("No hay registros en el historial.", style = MaterialTheme.typography.bodyMedium)
-            } else {
-                movements.take(10).forEach { movement ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(movement.type.asLabel(), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                            Text(movement.reason.ifBlank { "Sin detalle" }, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Text(
-                            text = if (movement.quantityDelta > 0) "+${movement.quantityDelta}" else "${movement.quantityDelta}",
-                            fontWeight = FontWeight.ExtraBold,
-                            color = if (movement.quantityDelta > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-                        )
-                    }
-                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.padding(vertical = 4.dp))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ImportExportWindow(
-    csvInput: String,
-    importResultSummary: String?,
-    importErrors: List<String>,
-    csvExportPreview: String?,
-    excelExportPreview: String?,
-    onCsvInputChanged: (String) -> Unit,
-    onImport: () -> Unit,
-    onExportCsv: () -> Unit,
-    onExportExcel: () -> Unit,
-    onClearImport: () -> Unit,
-    onClearExport: () -> Unit,
-) {
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text("Migración de Datos", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            
-            OutlinedTextField(
-                value = csvInput,
-                onValueChange = onCsvInputChanged,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Pega el CSV aquí") },
-                shape = RoundedCornerShape(12.dp)
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onImport) { Text("Importar") }
-                TextButton(onClick = onClearImport) { Text("Limpiar") }
-            }
-
-            if (importResultSummary != null) {
-                Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(8.dp), modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(8.dp)) {
-                        Text(importResultSummary, fontWeight = FontWeight.Bold)
-                        importErrors.forEach { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-                    }
-                }
-            }
-
-            HorizontalDivider()
-            Text("Descarga", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onExportCsv) { Text("Exp. CSV") }
-                Button(onClick = onExportExcel) { Text("Exp. Excel") }
-            }
-            if (csvExportPreview != null || excelExportPreview != null) {
-                TextButton(onClick = onClearExport) { Text("Limpiar previsualización") }
-            }
-        }
-    }
-}
 
 @Composable
 private fun ProductCard(
