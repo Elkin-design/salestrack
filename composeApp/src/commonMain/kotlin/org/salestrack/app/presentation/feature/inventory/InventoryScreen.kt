@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -158,7 +159,7 @@ fun InventoryScreen(
                 .padding(paddingValues)
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             OutlinedTextField(
                 value = uiState.query,
@@ -213,47 +214,49 @@ fun InventoryScreen(
                 }
             }
 
-            when (uiState.selectedSection) {
-                InventorySection.Catalog -> CatalogWindow(
-                    products = uiState.products,
-                    selectedProductId = uiState.selectedProductId,
-                    onSelect = { onEvent(InventoryUiEvent.SelectProduct(it)) },
-                    onEdit = { onEvent(InventoryUiEvent.StartEdit(it)) },
-                    onAdjust = { onEvent(InventoryUiEvent.StartAdjust(it)) },
-                )
-                InventorySection.AddProduct -> AddWindow(
-                    lowStockProducts = uiState.lowStockProducts,
-                    onOpenAddDialog = { onEvent(InventoryUiEvent.ToggleAddDialog(true)) },
-                )
-                InventorySection.EditProduct -> EditWindow(
-                    products = uiState.products,
-                    onEdit = { onEvent(InventoryUiEvent.StartEdit(it)) },
-                )
-                InventorySection.StockAdjustment -> StockAdjustmentWindow(
-                    selectedProduct = selectedProduct,
-                    onSelect = { onEvent(InventoryUiEvent.SelectProduct(it)) },
-                    products = uiState.products,
-                    onAdjust = { onEvent(InventoryUiEvent.StartAdjust(it)) },
-                )
-                InventorySection.MovementHistory -> HistoryWindow(
-                    movements = uiState.selectedProductMovements,
-                    selectedProduct = selectedProduct,
-                )
-                InventorySection.ImportExport -> ImportExportWindow(
-                    csvInput = uiState.csvImportInput,
-                    importResultSummary = uiState.importResult?.let {
-                        "Filas: ${it.totalRows}, importadas: ${it.importedRows}, fallidas: ${it.failedRows}"
-                    },
-                    importErrors = uiState.importResult?.errors?.take(5)?.map { "Linea ${it.line}: ${it.reason}" }.orEmpty(),
-                    csvExportPreview = uiState.lastCsvExport?.content?.lineSequence()?.take(3)?.joinToString("\n"),
-                    excelExportPreview = uiState.lastExcelExport?.content?.take(80),
-                    onCsvInputChanged = { onEvent(InventoryUiEvent.CsvImportInputChanged(it)) },
-                    onImport = { onEvent(InventoryUiEvent.ImportCatalogFromCsv) },
-                    onExportCsv = { onEvent(InventoryUiEvent.ExportCatalogAsCsv) },
-                    onExportExcel = { onEvent(InventoryUiEvent.ExportCatalogAsExcel) },
-                    onClearImport = { onEvent(InventoryUiEvent.ClearImportResult) },
-                    onClearExport = { onEvent(InventoryUiEvent.ClearExportResult) },
-                )
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                when (uiState.selectedSection) {
+                    InventorySection.Catalog -> CatalogWindow(
+                        products = uiState.products,
+                        selectedProductId = uiState.selectedProductId,
+                        onSelect = { onEvent(InventoryUiEvent.SelectProduct(it)) },
+                        onEdit = { onEvent(InventoryUiEvent.StartEdit(it)) },
+                        onAdjust = { onEvent(InventoryUiEvent.StartAdjust(it)) },
+                    )
+                    InventorySection.AddProduct -> AddWindow(
+                        lowStockProducts = uiState.lowStockProducts,
+                        onOpenAddDialog = { onEvent(InventoryUiEvent.ToggleAddDialog(true)) },
+                    )
+                    InventorySection.EditProduct -> EditWindow(
+                        products = uiState.products,
+                        onEdit = { onEvent(InventoryUiEvent.StartEdit(it)) },
+                    )
+                    InventorySection.StockAdjustment -> StockAdjustmentWindow(
+                        selectedProduct = selectedProduct,
+                        onSelect = { onEvent(InventoryUiEvent.SelectProduct(it)) },
+                        products = uiState.products,
+                        onAdjust = { onEvent(InventoryUiEvent.StartAdjust(it)) },
+                    )
+                    InventorySection.MovementHistory -> HistoryWindow(
+                        movements = uiState.selectedProductMovements,
+                        selectedProduct = selectedProduct,
+                    )
+                    InventorySection.ImportExport -> ImportExportWindow(
+                        csvInput = uiState.csvImportInput,
+                        importResultSummary = uiState.importResult?.let {
+                            "Filas: ${it.totalRows}, importadas: ${it.importedRows}, fallidas: ${it.failedRows}"
+                        },
+                        importErrors = uiState.importResult?.errors?.take(5)?.map { "Linea ${it.line}: ${it.reason}" }.orEmpty(),
+                        csvExportPreview = uiState.lastCsvExport?.content?.lineSequence()?.take(3)?.joinToString("\n"),
+                        excelExportPreview = uiState.lastExcelExport?.content?.take(80),
+                        onCsvInputChanged = { onEvent(InventoryUiEvent.CsvImportInputChanged(it)) },
+                        onImport = { onEvent(InventoryUiEvent.ImportCatalogFromCsv) },
+                        onExportCsv = { onEvent(InventoryUiEvent.ExportCatalogAsCsv) },
+                        onExportExcel = { onEvent(InventoryUiEvent.ExportCatalogAsExcel) },
+                        onClearImport = { onEvent(InventoryUiEvent.ClearImportResult) },
+                        onClearExport = { onEvent(InventoryUiEvent.ClearExportResult) },
+                    )
+                }
             }
 
             if (uiState.errorMessage != null) {
@@ -473,8 +476,9 @@ private fun CatalogWindow(
     }
 
     LazyColumn(
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(bottom = 80.dp)
+        contentPadding = PaddingValues(bottom = 16.dp)
     ) {
         items(products, key = { it.id }) { product ->
             ProductCard(

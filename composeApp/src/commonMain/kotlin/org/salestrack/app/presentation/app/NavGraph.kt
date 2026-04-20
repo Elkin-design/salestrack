@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -130,98 +131,106 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         }
     }
 
-    Scaffold(
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-                tonalElevation = 0.dp,
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .height(56.dp)
-            ) {
-                destinations.forEach { destination ->
-                    val selected = destination.route == currentDestination
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = { currentDestination = destination.route },
-                        modifier = Modifier.semantics {
-                            contentDescription = destination.contentDescription
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = destination.icon,
-                                contentDescription = destination.contentDescription,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = destination.label,
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontSize = 9.sp
-                                )
-                            )
-                        },
-                        alwaysShowLabel = false,
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                        )
-                    )
-                }
-            }
-        },
-        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
-        modifier = keyboardModifier,
-    ) { paddingValues ->
-        val screenModifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
+    Column(modifier = keyboardModifier.fillMaxSize()) {
+        Box(modifier = Modifier.weight(1f)) {
+            val screenModifier = Modifier.fillMaxSize()
 
-        when (currentDestination) {
-            AppDestination.Dashboard -> {
-                val viewModel = remember(container) {
-                    org.salestrack.app.presentation.feature.dashboard.DashboardViewModel(
-                        dispatcherProvider = container.dispatcherProvider,
-                        repository = container.saleRepository,
-                        timeProvider = container.timeProvider,
-                        buildSummary = container.buildDashboardSummaryUseCase,
-                        filterSalesUseCase = container.filterSalesUseCase,
-                        getLowStockProducts = container.getLowStockProductsUseCase,
+            when (currentDestination) {
+                AppDestination.Dashboard -> {
+                    val viewModel = remember(container) {
+                        org.salestrack.app.presentation.feature.dashboard.DashboardViewModel(
+                            dispatcherProvider = container.dispatcherProvider,
+                            repository = container.saleRepository,
+                            timeProvider = container.timeProvider,
+                            buildSummary = container.buildDashboardSummaryUseCase,
+                            filterSalesUseCase = container.filterSalesUseCase,
+                            getLowStockProducts = container.getLowStockProductsUseCase,
+                        )
+                    }
+                    DashboardRoute(
+                        viewModel = viewModel,
+                        onNavigate = { destination ->
+                            currentDestination = destination
+                        },
+                        onNavigateWithPeriod = { destination, period ->
+                            initialReportPeriod = period
+                            currentDestination = destination
+                        },
+                        container = container,
+                        modifier = screenModifier
                     )
                 }
-                DashboardRoute(
-                    viewModel = viewModel,
-                    onNavigate = { destination ->
-                        currentDestination = destination
-                    },
-                    onNavigateWithPeriod = { destination, period ->
-                        initialReportPeriod = period
-                        currentDestination = destination
-                    },
-                    container = container,
+                AppDestination.Sales -> SalesRoute(container = container, modifier = screenModifier)
+                AppDestination.Inventory -> InventoryRoute(container = container, modifier = screenModifier)
+                AppDestination.Reports -> ReportsRoute(
+                    container = container, 
+                    initialPeriod = initialReportPeriod,
+                    onBack = { currentDestination = AppDestination.Dashboard },
                     modifier = screenModifier
                 )
+                AppDestination.Settings -> SettingsRoute(container = container, modifier = screenModifier)
+                AppDestination.Export -> ExportReportRoute(
+                    container = container,
+                    onBack = { currentDestination = AppDestination.Reports },
+                    modifier = screenModifier,
+                )
+                AppDestination.Print -> PrintRoute(
+                    container = container,
+                    onBack = { currentDestination = AppDestination.Reports },
+                    modifier = screenModifier,
+                )
             }
-            AppDestination.Sales -> SalesRoute(container = container, modifier = screenModifier)
-            AppDestination.Inventory -> InventoryRoute(container = container, modifier = screenModifier)
-            AppDestination.Reports -> ReportsRoute(
-                container = container, 
-                initialPeriod = initialReportPeriod,
-                onBack = { currentDestination = AppDestination.Dashboard },
-                modifier = screenModifier
-            )
-            AppDestination.Settings -> SettingsRoute(container = container, modifier = screenModifier)
-            AppDestination.Export -> ExportReportRoute(
-                container = container,
-                onBack = { currentDestination = AppDestination.Reports },
-                modifier = screenModifier,
-            )
-            AppDestination.Print -> PrintRoute(
-                container = container,
-                onBack = { currentDestination = AppDestination.Reports },
-                modifier = screenModifier,
-            )
+        }
+
+        NavigationBar(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+            tonalElevation = 0.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .height(56.dp)
+        ) {
+            destinations.forEach { destination ->
+                val selected = destination.route == currentDestination
+                
+                val scale by animateFloatAsState(
+                    targetValue = if (selected) 1.1f else 1.0f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                )
+
+                NavigationBarItem(
+                    selected = selected,
+                    onClick = { currentDestination = destination.route },
+                    modifier = Modifier.semantics {
+                        contentDescription = destination.contentDescription
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = destination.icon,
+                            contentDescription = destination.contentDescription,
+                            modifier = Modifier
+                                .size(22.dp)
+                                .scale(scale)
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = destination.label,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.sp
+                            )
+                        )
+                    },
+                    alwaysShowLabel = false,
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                    )
+                )
+            }
         }
     }
 }

@@ -67,7 +67,6 @@ fun ReportsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .statusBarsPadding()
             .background(MaterialTheme.colorScheme.background)
     ) {
         // Header with Period Selector
