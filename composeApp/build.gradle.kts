@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.androidLibrary) // <--- Al ser "Library", no permite shrinkResources
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
@@ -12,41 +12,39 @@ plugins {
 
 kotlin {
     jvmToolchain(17)
+
     @Suppress("DEPRECATION")
     androidTarget()
 
+    jvm()
+
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+
     cocoapods {
+        version = "1.0"
         summary = "SalesTrack Compose Multiplatform App"
         homepage = "https://github.com/JetBrains/compose-multiplatform"
         ios.deploymentTarget = "15.0"
+
         framework {
             baseName = "ComposeApp"
             isStatic = true
         }
+
         pod("FirebaseCore")
         pod("FirebaseAuth")
         pod("FirebaseFirestore")
     }
 
-    jvm()
-
     sourceSets {
-
-        val androidMain by getting {
-            dependencies {
-                // Firebase se inicializa via Firebase.initialize(context)
-                // Los SDKs de GitLive están en commonMain; aquí solo van deps Android-específicas.
-            }
-        }
-
         val commonMain by getting {
             dependencies {
-                // Firebase GitLive SDK — misma API para Android, iOS y JVM
                 implementation(libs.firebaseApp)
                 implementation(libs.firebaseAuth)
                 implementation(libs.firebaseFirestore)
 
-                // Compose Multiplatform
                 implementation(compose.material3)
                 implementation(compose.foundation)
                 implementation(compose.ui)
@@ -72,18 +70,33 @@ kotlin {
             }
         }
 
+        val androidMain by getting {
+            dependencies {
+            }
+        }
+
         val jvmMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutinesSwing)
                 implementation(libs.skiko.awt.runtime.windows)
                 implementation(libs.skiko.windows)
-                // firebase-admin no es necesario: usamos GitLive SDK (firebase-kotlin-sdk)
-                // que internamente usa firebase-java-sdk como cliente — no Admin SDK.
             }
+        }
+
+        val iosX64Main by getting
+        val iosArm64Main by getting
+        val iosSimulatorArm64Main by getting
+
+        val iosMain by creating {
+            dependsOn(commonMain)
+            iosX64Main.dependsOn(this)
+            iosArm64Main.dependsOn(this)
+            iosSimulatorArm64Main.dependsOn(this)
         }
     }
 }
+
 android {
     namespace = "org.salestrack.app"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -91,7 +104,23 @@ android {
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
     }
+
+    buildTypes {
+        getByName("release") {
+            // La ofuscación de CÓDIGO (R8/ProGuard) SÍ está permitida en librerías
+            isMinifyEnabled = true
+
+            // ✨ CORRECCIÓN: Se cambia a 'false' porque es un módulo de librería
+            isShrinkResources = false
+
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
 }
+
 compose.desktop {
     application {
         mainClass = "org.salestrack.app.MainKt"
