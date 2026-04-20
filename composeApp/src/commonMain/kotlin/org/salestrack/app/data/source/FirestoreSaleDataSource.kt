@@ -8,6 +8,7 @@ import org.salestrack.app.core.utils.TimeProvider
 import org.salestrack.app.domain.model.NewSaleInput
 import org.salestrack.app.domain.model.Sale
 import dev.gitlive.firebase.firestore.Direction
+import kotlin.random.Random
 
 /**
  * Real Firestore implementation for SaleDataSource.
@@ -32,8 +33,8 @@ class FirestoreSaleDataSource(
             if (input.productName.isBlank()) {
                 return AppResult.Failure(IllegalArgumentException("El producto es obligatorio"))
             }
-            val now = timeProvider.nowMillis()
-            val id = "FS-$now"
+            val now = input.createdAtMillis ?: timeProvider.nowMillis()
+            val id = "FS-$now-${Random.nextInt(1000, 9999)}"
             val sale = Sale(
                 id = id,
                 productName = input.productName.trim(),

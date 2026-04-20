@@ -11,7 +11,7 @@ import org.salestrack.app.domain.model.StockMovement
 
 interface InventoryDataSource {
     fun observeProducts(): Flow<List<Product>>
-    fun observeStockMovements(productId: String? = null): Flow<List<StockMovement>>
+    fun observeStockMovements(productId: String?): Flow<List<StockMovement>>
 
     suspend fun addProduct(input: NewProductInput): AppResult<Product>
     suspend fun updateProduct(product: Product): AppResult<Product>
@@ -21,16 +21,16 @@ interface InventoryDataSource {
         quantityDelta: Int,
         reason: String,
         type: StockAdjustmentType,
-        sellerName: String? = null,
-        platform: String? = null,
+        sellerName: String?,
+        platform: String?,
     ): AppResult<Product>
 
     suspend fun deductStock(
         productId: String,
         quantity: Int,
         reason: String,
-        sellerName: String? = null,
-        platform: String? = null,
+        sellerName: String?,
+        platform: String?,
     ): AppResult<Product>
 
     suspend fun importCatalogCsv(csvContent: String): AppResult<CatalogImportResult>

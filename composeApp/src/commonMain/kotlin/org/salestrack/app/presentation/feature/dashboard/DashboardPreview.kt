@@ -21,6 +21,8 @@ import org.salestrack.app.domain.usecase.reports.*
 import org.salestrack.app.domain.usecase.sales.*
 import org.salestrack.app.domain.usecase.settings.*
 import org.salestrack.app.domain.usecase.team.*
+import org.salestrack.app.data.source.InventoryDataSource
+import org.salestrack.app.data.source.SaleDataSource
 import org.salestrack.app.presentation.app.AppContainer
 
 @Preview
@@ -87,15 +89,15 @@ private fun createPreviewContainer(): AppContainer {
     val dispatcherProvider = DefaultDispatcherProvider()
     val timeProvider = SystemTimeProvider()
 
-    // Mock Repositories
-    val saleRepo = object : SaleRepository {
+    // Mock Repositories/DataSources
+    val saleRepo = object : SaleRepository, SaleDataSource {
         override fun observeSales() = flowOf(emptyList<Sale>())
         override suspend fun addSale(input: NewSaleInput) = AppResult.Success(Sale("", "", "", 0, 0.0, 0.0, 0L, "", null, false))
         override suspend fun updateSale(sale: Sale) = AppResult.Success(sale)
         override suspend fun softDeleteSale(saleId: String) = AppResult.Success(Unit)
     }
 
-    val inventoryRepo = object : InventoryRepository {
+    val inventoryRepo = object : InventoryRepository, InventoryDataSource {
         override fun observeProducts() = flowOf(emptyList<Product>())
         override fun observeStockMovements(productId: String?) = flowOf(emptyList<StockMovement>())
         override suspend fun addProduct(input: NewProductInput) = AppResult.Success(Product("", "", "", 0.0, "", null, "", 0, 0, true))
@@ -191,6 +193,7 @@ private fun createPreviewContainer(): AppContainer {
         deleteCategoryUseCase = DeleteCategoryUseCase(categoryRepo),
         observeSettingsUseCase = ObserveSettingsUseCase(settingsRepo),
         updateSettingsUseCase = UpdateSettingsUseCase(settingsRepo, timeProvider),
+        populateSampleDataUseCase = PopulateSampleDataUseCase(inventoryRepo, saleRepo, timeProvider),
         observeNotificationSettingsUseCase = ObserveNotificationSettingsUseCase(notificationRepo),
         updateNotificationSettingsUseCase = UpdateNotificationSettingsUseCase(notificationRepo, timeProvider),
         exportPdfUseCase = exportPdf,

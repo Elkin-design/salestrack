@@ -73,6 +73,7 @@ import org.salestrack.app.domain.usecase.sales.DeleteSaleUseCase
 import org.salestrack.app.domain.usecase.sales.FilterSalesUseCase
 import org.salestrack.app.domain.usecase.sales.UpdateSaleUseCase
 import org.salestrack.app.domain.usecase.settings.ObserveSettingsUseCase
+import org.salestrack.app.domain.usecase.settings.PopulateSampleDataUseCase
 import org.salestrack.app.domain.usecase.settings.UpdateSettingsUseCase
 import org.salestrack.app.domain.usecase.team.GetRolePermissionsUseCase
 import org.salestrack.app.domain.usecase.team.GetTeamSalesUseCase
@@ -168,6 +169,7 @@ fun appModule(config: EnvironmentConfig) = module {
     single { DeleteCategoryUseCase(get()) }
     single { ObserveSettingsUseCase(get()) }
     single { UpdateSettingsUseCase(get(), get()) }
+    single { PopulateSampleDataUseCase(get(), get(), get()) }
     single { ObserveNotificationSettingsUseCase(get()) }
     single { UpdateNotificationSettingsUseCase(get(), get()) }
     single { ExportPdfUseCase(get(), get()) }
@@ -224,6 +226,7 @@ fun appModule(config: EnvironmentConfig) = module {
             deleteCategoryUseCase = get(),
             observeSettingsUseCase = get(),
             updateSettingsUseCase = get(),
+            populateSampleDataUseCase = get(),
             observeNotificationSettingsUseCase = get(),
             updateNotificationSettingsUseCase = get(),
             exportPdfUseCase = get(),

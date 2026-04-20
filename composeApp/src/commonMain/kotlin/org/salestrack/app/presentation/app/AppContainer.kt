@@ -40,6 +40,7 @@ import org.salestrack.app.domain.usecase.sales.DeleteSaleUseCase
 import org.salestrack.app.domain.usecase.sales.FilterSalesUseCase
 import org.salestrack.app.domain.usecase.sales.UpdateSaleUseCase
 import org.salestrack.app.domain.usecase.settings.ObserveSettingsUseCase
+import org.salestrack.app.domain.usecase.settings.PopulateSampleDataUseCase
 import org.salestrack.app.domain.usecase.settings.UpdateSettingsUseCase
 import org.salestrack.app.domain.usecase.team.GetRolePermissionsUseCase
 import org.salestrack.app.domain.usecase.team.GetTeamSalesUseCase
@@ -83,6 +84,7 @@ class AppContainer(
     val deleteCategoryUseCase: DeleteCategoryUseCase,
     val observeSettingsUseCase: ObserveSettingsUseCase,
     val updateSettingsUseCase: UpdateSettingsUseCase,
+    val populateSampleDataUseCase: PopulateSampleDataUseCase,
     val observeNotificationSettingsUseCase: ObserveNotificationSettingsUseCase,
     val updateNotificationSettingsUseCase: UpdateNotificationSettingsUseCase,
     val exportPdfUseCase: ExportPdfUseCase,

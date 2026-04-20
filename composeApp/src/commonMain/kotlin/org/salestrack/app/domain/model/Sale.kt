@@ -27,6 +27,7 @@ data class NewSaleInput(
     val discount: Double,
     val sellerName: String,
     val productId: String? = null,
+    val createdAtMillis: Long? = null,
 )
 
 data class DashboardSummary(
