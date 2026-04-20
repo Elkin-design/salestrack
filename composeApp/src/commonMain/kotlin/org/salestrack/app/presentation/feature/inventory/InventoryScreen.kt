@@ -15,8 +15,15 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -63,6 +70,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isCtrlPressed
@@ -123,6 +131,30 @@ fun InventoryScreen(
 ) {
     val lowStockCount = uiState.lowStockProducts.size
     val totalUnits = uiState.products.sumOf { it.stock }
+    
+    val lazyListState = rememberLazyListState()
+    var isFabVisible by remember { mutableStateOf(true) }
+    var lastIndex by remember { mutableStateOf(0) }
+    var lastOffset by remember { mutableStateOf(0) }
+
+    LaunchedEffect(lazyListState.firstVisibleItemIndex, lazyListState.firstVisibleItemScrollOffset) {
+        val currentIndex = lazyListState.firstVisibleItemIndex
+        val currentOffset = lazyListState.firstVisibleItemScrollOffset
+        
+        if (currentIndex > lastIndex) {
+            isFabVisible = false
+        } else if (currentIndex < lastIndex) {
+            isFabVisible = true
+        } else {
+            if (currentOffset > lastOffset + 10) {
+                isFabVisible = false
+            } else if (currentOffset < lastOffset - 10) {
+                isFabVisible = true
+            }
+        }
+        lastIndex = currentIndex
+        lastOffset = currentOffset
+    }
 
     Scaffold(
         modifier = modifier
@@ -145,12 +177,18 @@ fun InventoryScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { onEvent(InventoryUiEvent.ToggleAddDialog(true)) },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+            AnimatedVisibility(
+                visible = isFabVisible,
+                enter = scaleIn() + fadeIn(),
+                exit = scaleOut() + fadeOut(),
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Nuevo Producto")
+                FloatingActionButton(
+                    onClick = { onEvent(InventoryUiEvent.ToggleAddDialog(true)) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Nuevo Producto")
+                }
             }
         },
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
@@ -220,6 +258,7 @@ fun InventoryScreen(
                 onEdit = { onEvent(InventoryUiEvent.StartEdit(it)) },
                 onAdjust = { onEvent(InventoryUiEvent.StartAdjust(it)) },
                 modifier = Modifier.weight(1f).fillMaxWidth(),
+                lazyListState = lazyListState
             )
 
             if (uiState.errorMessage != null) {
@@ -369,6 +408,7 @@ private fun CatalogWindow(
     onEdit: (Product) -> Unit,
     onAdjust: (Product) -> Unit,
     modifier: Modifier = Modifier,
+    lazyListState: LazyListState,
 ) {
     if (products.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -395,8 +435,9 @@ private fun CatalogWindow(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
+        state = lazyListState,
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(bottom = 16.dp)
+        contentPadding = PaddingValues(bottom = 80.dp)
     ) {
         items(products, key = { it.id }) { product ->
             ProductCard(

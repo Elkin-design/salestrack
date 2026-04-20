@@ -17,6 +17,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -119,6 +125,30 @@ fun SalesScreen(
     onEvent: (SalesUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val lazyListState = rememberLazyListState()
+    var isFabVisible by remember { mutableStateOf(true) }
+    var lastIndex by remember { mutableStateOf(0) }
+    var lastOffset by remember { mutableStateOf(0) }
+
+    LaunchedEffect(lazyListState.firstVisibleItemIndex, lazyListState.firstVisibleItemScrollOffset) {
+        val currentIndex = lazyListState.firstVisibleItemIndex
+        val currentOffset = lazyListState.firstVisibleItemScrollOffset
+        
+        if (currentIndex > lastIndex) {
+            isFabVisible = false
+        } else if (currentIndex < lastIndex) {
+            isFabVisible = true
+        } else {
+            if (currentOffset > lastOffset + 10) {
+                isFabVisible = false
+            } else if (currentOffset < lastOffset - 10) {
+                isFabVisible = true
+            }
+        }
+        lastIndex = currentIndex
+        lastOffset = currentOffset
+    }
+
     Scaffold(
         modifier = modifier
             .fillMaxSize()
@@ -140,12 +170,18 @@ fun SalesScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { onEvent(SalesUiEvent.ToggleAddDialog(true)) },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+            AnimatedVisibility(
+                visible = isFabVisible,
+                enter = scaleIn() + fadeIn(),
+                exit = scaleOut() + fadeOut(),
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Nueva Venta")
+                FloatingActionButton(
+                    onClick = { onEvent(SalesUiEvent.ToggleAddDialog(true)) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Nueva Venta")
+                }
             }
         },
         contentWindowInsets = WindowInsets(0, 0, 0, 0)
@@ -232,8 +268,9 @@ fun SalesScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
+                    state = lazyListState,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                    contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
                     items(uiState.sales, key = { it.id }) { sale ->
                         SaleItem(
