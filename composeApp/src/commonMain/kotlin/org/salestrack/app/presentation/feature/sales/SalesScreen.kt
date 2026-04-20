@@ -155,15 +155,17 @@ fun SalesScreen(
                 .padding(paddingValues)
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedTextField(
                 value = uiState.query,
                 onValueChange = { onEvent(SalesUiEvent.QueryChanged(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Buscar ventas...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                placeholder = { Text("Buscar ventas...", style = MaterialTheme.typography.bodyMedium) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp)) },
+                shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -401,7 +403,7 @@ private fun SalesSummaryCard(totalAmount: Double, totalSales: Int, totalUnits: I
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(horizontal = 12.dp, vertical = 10.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
@@ -412,16 +414,16 @@ private fun SalesSummaryCard(totalAmount: Double, totalSales: Int, totalUnits: I
                 icon = Icons.AutoMirrored.Filled.TrendingUp,
                 color = MaterialTheme.colorScheme.primary
             )
-            HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = MaterialTheme.colorScheme.outlineVariant)
+            HorizontalDivider(modifier = Modifier.height(32.dp).width(1.dp), color = MaterialTheme.colorScheme.outlineVariant)
             SummaryItem(
                 label = "Artículos",
                 value = "$totalUnits",
                 icon = Icons.Default.ShoppingCart,
                 color = MaterialTheme.colorScheme.secondary
             )
-            HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = MaterialTheme.colorScheme.outlineVariant)
+            HorizontalDivider(modifier = Modifier.height(32.dp).width(1.dp), color = MaterialTheme.colorScheme.outlineVariant)
             SummaryItem(
-                label = "Total Neto",
+                label = "Total",
                 value = "$${formatMoney(totalAmount)}",
                 icon = Icons.Default.AttachMoney,
                 color = Color(0xFF10B981) // Verde esmeralda
@@ -434,20 +436,19 @@ private fun SalesSummaryCard(totalAmount: Double, totalSales: Int, totalUnits: I
 private fun SummaryItem(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: androidx.compose.ui.graphics.Color) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.padding(vertical = 4.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Surface(
             color = color.copy(alpha = 0.1f),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.size(40.dp)
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.size(32.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
             }
         }
         Column {
-            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
             Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }

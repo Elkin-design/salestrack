@@ -165,10 +165,12 @@ fun InventoryScreen(
             OutlinedTextField(
                 value = uiState.query,
                 onValueChange = { onEvent(InventoryUiEvent.QueryChanged(it)) },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Buscar productos...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                placeholder = { Text("Buscar productos...", style = MaterialTheme.typography.bodyMedium) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp)) },
+                shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -306,7 +308,7 @@ private fun InventorySummaryCard(totalProducts: Int, totalUnits: Int, lowStockCo
     ) {
         Row(
             modifier = Modifier
-                .padding(10.dp)
+                .padding(horizontal = 12.dp, vertical = 10.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
@@ -317,14 +319,14 @@ private fun InventorySummaryCard(totalProducts: Int, totalUnits: Int, lowStockCo
                 icon = Icons.AutoMirrored.Filled.List,
                 color = MaterialTheme.colorScheme.primary
             )
-            HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = MaterialTheme.colorScheme.outlineVariant)
+            HorizontalDivider(modifier = Modifier.height(32.dp).width(1.dp), color = MaterialTheme.colorScheme.outlineVariant)
             SummaryItem(
                 label = "Unidades",
                 value = "$totalUnits",
                 icon = Icons.Default.CheckCircle,
                 color = MaterialTheme.colorScheme.secondary
             )
-            HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = MaterialTheme.colorScheme.outlineVariant)
+            HorizontalDivider(modifier = Modifier.height(32.dp).width(1.dp), color = MaterialTheme.colorScheme.outlineVariant)
             SummaryItem(
                 label = "Alertas",
                 value = "$lowStockCount",
@@ -340,19 +342,18 @@ private fun SummaryItem(label: String, value: String, icon: androidx.compose.ui.
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.padding(vertical = 2.dp)
     ) {
         Surface(
             color = color.copy(alpha = 0.1f),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(8.dp),
             modifier = Modifier.size(32.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
             }
         }
         Column {
-            Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
             Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
