@@ -304,7 +304,7 @@ fun SettingsScreen(
                     ) {
                         Button(
                             onClick = { onEvent(SettingsUiEvent.GenerateSampleDataClicked) },
-                            enabled = !uiState.isGeneratingData,
+                            enabled = false, // Desactivado por solicitud del usuario
                             modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
