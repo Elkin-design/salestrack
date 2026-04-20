@@ -14,6 +14,7 @@ class ExportReportViewModel(
     private val exportPdfUseCase: ExportPdfUseCase,
     private val exportExcelUseCase: ExportExcelUseCase,
     private val exportCsvUseCase: ExportCsvUseCase,
+    private val fileSaver: org.salestrack.app.core.utils.FileSaver,
 ) : BaseViewModel<ExportReportUiState, ExportReportUiEvent, ExportReportUiEffect>(
     initialState = ExportReportUiState(),
     dispatcherProvider = dispatcherProvider,
@@ -25,6 +26,15 @@ class ExportReportViewModel(
             is ExportReportUiEvent.DestinationChanged -> setState { it.copy(selectedDestination = event.value) }
             is ExportReportUiEvent.IncludeSellerColumnChanged -> setState { it.copy(includeSellerColumn = event.value) }
             ExportReportUiEvent.ExportClicked -> export()
+            ExportReportUiEvent.OpenSavedFile -> openFile()
+        }
+    }
+
+    private fun openFile() {
+        val artifact = state.value.savedArtifact ?: return
+        val path = artifact.savedPath ?: return
+        scope.launch {
+            fileSaver.openFile(path, artifact.mimeType)
         }
     }
 
@@ -53,11 +63,12 @@ class ExportReportViewModel(
                     setState {
                         it.copy(
                             isExporting = false,
-                            lastResult = "${result.value.fileName} | ${result.value.destination}",
+                            lastResult = "Guardado en: ${result.value.savedPath}",
+                            savedArtifact = result.value,
                             errorMessage = null,
                         )
                     }
-                    emitEffect(ExportReportUiEffect.ShowMessage("Exportacion completada"))
+                    emitEffect(ExportReportUiEffect.ShowMessage("Exportación completada. Guardado en: ${result.value.savedPath}"))
                 }
                 is AppResult.Failure -> {
                     setState {

@@ -31,6 +31,7 @@ fun ExportModal(
             exportPdfUseCase = container.exportPdfUseCase,
             exportExcelUseCase = container.exportExcelUseCase,
             exportCsvUseCase = container.exportCsvUseCase,
+            fileSaver = org.salestrack.app.core.utils.platformFileSaver,
         )
     }
     val uiState by viewModel.state.collectAsState()
@@ -64,7 +65,7 @@ fun ExportModal(
                 }
 
                 Text(
-                    "Selecciona el formato y destino para generar tu reporte profesional.",
+                    "Selecciona el formato para generar tu reporte profesional.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -87,23 +88,6 @@ fun ExportModal(
                     }
                 }
 
-                // Destination Selection
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Destino de Almacenamiento", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        ExportDestination.entries.forEach { destination ->
-                            FilterChip(
-                                selected = uiState.selectedDestination == destination,
-                                onClick = { viewModel.onEvent(ExportReportUiEvent.DestinationChanged(destination)) },
-                                label = { Text(destination.name) },
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                        }
-                    }
-                }
 
                 // Options
                 Row(
@@ -120,6 +104,19 @@ fun ExportModal(
 
                 if (uiState.errorMessage != null) {
                     Text(uiState.errorMessage!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
+                }
+
+                if (uiState.savedArtifact != null) {
+                    OutlinedButton(
+                        onClick = { viewModel.onEvent(ExportReportUiEvent.OpenSavedFile) },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(Icons.Rounded.Description, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Abrir Archivo")
+                    }
                 }
 
                 Button(

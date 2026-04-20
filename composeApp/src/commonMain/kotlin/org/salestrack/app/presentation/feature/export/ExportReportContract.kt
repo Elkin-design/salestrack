@@ -12,6 +12,7 @@ data class ExportReportUiState(
     val selectedDestination: ExportDestination = ExportDestination.SaveLocal,
     val includeSellerColumn: Boolean = false,
     val lastResult: String? = null,
+    val savedArtifact: org.salestrack.app.domain.model.ExportArtifact? = null,
     val errorMessage: String? = null,
 ) : UiState
 
@@ -20,6 +21,7 @@ sealed interface ExportReportUiEvent : UiEvent {
     data class DestinationChanged(val value: ExportDestination) : ExportReportUiEvent
     data class IncludeSellerColumnChanged(val value: Boolean) : ExportReportUiEvent
     data object ExportClicked : ExportReportUiEvent
+    data object OpenSavedFile : ExportReportUiEvent
 }
 
 sealed interface ExportReportUiEffect : UiEffect {

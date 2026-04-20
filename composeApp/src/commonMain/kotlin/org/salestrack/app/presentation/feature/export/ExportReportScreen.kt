@@ -39,6 +39,7 @@ fun ExportReportRoute(
             exportPdfUseCase = container.exportPdfUseCase,
             exportExcelUseCase = container.exportExcelUseCase,
             exportCsvUseCase = container.exportCsvUseCase,
+            fileSaver = org.salestrack.app.core.utils.platformFileSaver,
         )
     }
     val uiState by viewModel.state.collectAsState()
@@ -92,20 +93,6 @@ fun ExportReportScreen(
             }
         }
 
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Destino", style = MaterialTheme.typography.titleMedium)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ExportDestination.entries.forEach { destination ->
-                        FilterChip(
-                            selected = uiState.selectedDestination == destination,
-                            onClick = { onEvent(ExportReportUiEvent.DestinationChanged(destination)) },
-                            label = { Text(destination.name) },
-                        )
-                    }
-                }
-            }
-        }
 
         Card(modifier = Modifier.fillMaxWidth()) {
             Row(
@@ -119,6 +106,15 @@ fun ExportReportScreen(
                     checked = uiState.includeSellerColumn,
                     onCheckedChange = { onEvent(ExportReportUiEvent.IncludeSellerColumnChanged(it)) },
                 )
+            }
+        }
+
+        if (uiState.savedArtifact != null) {
+            androidx.compose.material3.OutlinedButton(
+                onClick = { onEvent(ExportReportUiEvent.OpenSavedFile) },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Abrir Archivo")
             }
         }
 

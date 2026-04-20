@@ -135,6 +135,7 @@ fun appModule(config: EnvironmentConfig) = module {
         RealExportRepository(
             pdfAdapter = BasicPdfExportAdapter(),
             excelAdapter = SpreadsheetXmlExcelExportAdapter(),
+            fileSaver = org.salestrack.app.core.utils.platformFileSaver,
         )
     }
     single<PrintRepository> { FakePrintRepository() }

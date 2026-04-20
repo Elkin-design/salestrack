@@ -34,4 +34,5 @@ data class ExportArtifact(
     val mimeType: String,
     val destination: ExportDestination,
     val preview: String,
+    val savedPath: String? = null,
 )

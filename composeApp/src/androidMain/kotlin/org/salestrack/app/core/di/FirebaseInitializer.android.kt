@@ -17,18 +17,18 @@ class AndroidFirebaseInitializer(private val context: Context) : FirebaseInitial
 }
 
 // Estado interno para guardar el contexto antes de la inicialización
-private var androidContext: Context? = null
+internal var androidContextStore: Context? = null
 
 /**
  * Debe llamarse desde MainActivity/Application con el Context de Android
  * ANTES de que se llame a initializeFirebase() desde commonMain.
  */
 fun setAndroidContext(context: Context) {
-    androidContext = context
+    androidContextStore = context
 }
 
 actual fun getFirebaseInitializer(): FirebaseInitializer {
-    val ctx = androidContext
+    val ctx = androidContextStore
         ?: throw IllegalStateException(
             "❌ Android: llama a setAndroidContext(context) en MainActivity antes de inicializar Firebase."
         )

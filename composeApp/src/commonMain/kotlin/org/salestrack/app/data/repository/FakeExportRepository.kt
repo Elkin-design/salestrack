@@ -13,6 +13,7 @@ import org.salestrack.app.domain.repository.ExportRepository
 class RealExportRepository(
     private val pdfAdapter: PdfExportAdapter,
     private val excelAdapter: ExcelExportAdapter,
+    private val fileSaver: org.salestrack.app.core.utils.FileSaver,
 ) : ExportRepository {
     override suspend fun exportReport(
         payload: ExportReportPayload,
@@ -25,12 +26,22 @@ class RealExportRepository(
             ExportFormat.Csv -> generateCsv(payload)
         }
 
+        val savedPath = fileSaver.saveFile(
+            fileName = "salestrack_report_${System.currentTimeMillis()}.${generated.fileExtension}",
+            bytes = generated.bytes
+        )
+
+        if (savedPath == null) {
+            return AppResult.Failure(Throwable("No se pudo guardar el archivo localmente"))
+        }
+
         return AppResult.Success(
             ExportArtifact(
                 fileName = "salestrack_report.${generated.fileExtension}",
                 mimeType = generated.mimeType,
                 destination = destination,
                 preview = generated.preview,
+                savedPath = savedPath,
             ),
         )
     }
