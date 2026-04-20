@@ -261,6 +261,21 @@ class FirestoreInventoryDataSource(
         }
     }
 
+    override suspend fun deleteProduct(productId: String): AppResult<Unit> {
+        return try {
+            val doc = productsRef().document(productId).get()
+            if (!doc.exists) {
+                return AppResult.Failure(NoSuchElementException("Producto no encontrado"))
+            }
+            val product = doc.data<Product>()
+            val updated = product.copy(isActive = false)
+            productsRef().document(productId).set(updated)
+            AppResult.Success(Unit)
+        } catch (e: Exception) {
+            AppResult.Failure(e)
+        }
+    }
+
     override suspend fun getLowStockProducts(): AppResult<List<Product>> {
         return try {
             val prods = productsRef().get().documents.map { it.data<Product>() }

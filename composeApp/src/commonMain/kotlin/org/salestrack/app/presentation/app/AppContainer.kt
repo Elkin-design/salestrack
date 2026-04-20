@@ -22,6 +22,7 @@ import org.salestrack.app.domain.usecase.export.ExportExcelUseCase
 import org.salestrack.app.domain.usecase.export.ExportPdfUseCase
 import org.salestrack.app.domain.usecase.inventory.AddProductUseCase
 import org.salestrack.app.domain.usecase.inventory.AdjustStockUseCase
+import org.salestrack.app.domain.usecase.inventory.DeleteProductUseCase
 import org.salestrack.app.domain.usecase.inventory.EditProductUseCase
 import org.salestrack.app.domain.usecase.inventory.ExportCatalogCsvUseCase
 import org.salestrack.app.domain.usecase.inventory.ExportCatalogExcelUseCase
@@ -69,6 +70,7 @@ class AppContainer(
     val getRolePermissionsUseCase: GetRolePermissionsUseCase,
     val addProductUseCase: AddProductUseCase,
     val editProductUseCase: EditProductUseCase,
+    val deleteProductUseCase: DeleteProductUseCase,
     val filterProductsUseCase: FilterProductsUseCase,
     val adjustStockUseCase: AdjustStockUseCase,
     val getLowStockProductsUseCase: GetLowStockProductsUseCase,

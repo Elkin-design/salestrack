@@ -39,5 +39,7 @@ interface InventoryDataSource {
 
     suspend fun exportCatalogExcel(): AppResult<CatalogExportFile>
 
+    suspend fun deleteProduct(productId: String): AppResult<Unit>
+
     suspend fun getLowStockProducts(): AppResult<List<Product>>
 }

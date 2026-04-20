@@ -53,6 +53,7 @@ sealed interface InventoryUiEvent : UiEvent {
     data class ToggleAddDialog(val visible: Boolean) : InventoryUiEvent
     data class StartEdit(val product: Product?) : InventoryUiEvent
     data class StartAdjust(val product: Product?) : InventoryUiEvent
+    data class DeleteProduct(val productId: String) : InventoryUiEvent
 
     data class SaveNewProduct(
         val name: String,

@@ -10,6 +10,7 @@ import org.salestrack.app.domain.model.StockMovement
 import org.salestrack.app.domain.repository.InventoryRepository
 import org.salestrack.app.domain.usecase.inventory.AddProductUseCase
 import org.salestrack.app.domain.usecase.inventory.AdjustStockUseCase
+import org.salestrack.app.domain.usecase.inventory.DeleteProductUseCase
 import org.salestrack.app.domain.usecase.inventory.EditProductUseCase
 import org.salestrack.app.domain.usecase.inventory.ExportCatalogCsvUseCase
 import org.salestrack.app.domain.usecase.inventory.ExportCatalogExcelUseCase
@@ -22,6 +23,7 @@ class InventoryViewModel(
     private val repository: InventoryRepository,
     private val addProductUseCase: AddProductUseCase,
     private val editProductUseCase: EditProductUseCase,
+    private val deleteProductUseCase: DeleteProductUseCase,
     private val filterProductsUseCase: FilterProductsUseCase,
     private val adjustStockUseCase: AdjustStockUseCase,
     private val getLowStockProductsUseCase: GetLowStockProductsUseCase,
@@ -69,6 +71,7 @@ class InventoryViewModel(
             is InventoryUiEvent.StartAdjust -> setState { it.copy(adjustingProduct = event.product) }
             is InventoryUiEvent.SaveNewProduct -> saveNewProduct(event)
             is InventoryUiEvent.SaveEditedProduct -> saveEditedProduct(event)
+            is InventoryUiEvent.DeleteProduct -> deleteProduct(event.productId)
             is InventoryUiEvent.ApplyStockAdjustment -> applyStockAdjustment(event)
         }
     }
@@ -176,6 +179,19 @@ class InventoryViewModel(
                 }
                 is AppResult.Failure -> {
                     setState { it.copy(errorMessage = result.error.message ?: "Error editando producto") }
+                }
+            }
+        }
+    }
+
+    private fun deleteProduct(productId: String) {
+        scope.launch {
+            when (val result = deleteProductUseCase(productId)) {
+                is AppResult.Success<*> -> {
+                    emitEffect(InventoryUiEffect.ShowMessage("Producto eliminado"))
+                }
+                is AppResult.Failure -> {
+                    setState { it.copy(errorMessage = result.error.message ?: "Error eliminando producto") }
                 }
             }
         }

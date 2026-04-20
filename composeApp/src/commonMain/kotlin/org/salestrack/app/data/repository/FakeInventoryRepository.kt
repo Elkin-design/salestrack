@@ -258,6 +258,19 @@ class FakeInventoryRepository(
         )
     }
 
+    override suspend fun deleteProduct(productId: String): AppResult<Unit> {
+        val currentProducts = dataSource.getCurrentProducts()
+        val index = currentProducts.indexOfFirst { it.id == productId }
+        if (index < 0) {
+            return AppResult.Failure(NoSuchElementException("Producto no encontrado"))
+        }
+        val updated = currentProducts.toMutableList()
+        val product = updated[index]
+        updated[index] = product.copy(isActive = false)
+        dataSource.replaceProducts(updated)
+        return AppResult.Success(Unit)
+    }
+
     override suspend fun getLowStockProducts(): AppResult<List<Product>> {
         val lowStock = dataSource.getCurrentProducts()
             .filter { it.isActive }

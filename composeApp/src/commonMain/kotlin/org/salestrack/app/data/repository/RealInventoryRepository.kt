@@ -85,5 +85,7 @@ class RealInventoryRepository(
 
     override suspend fun exportCatalogExcel(): AppResult<CatalogExportFile> = dataSource.exportCatalogExcel()
 
+    override suspend fun deleteProduct(productId: String): AppResult<Unit> = dataSource.deleteProduct(productId)
+
     override suspend fun getLowStockProducts(): AppResult<List<Product>> = dataSource.getLowStockProducts()
 }

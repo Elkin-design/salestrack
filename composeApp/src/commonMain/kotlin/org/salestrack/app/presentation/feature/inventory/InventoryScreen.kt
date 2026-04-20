@@ -82,6 +82,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.filled.Delete
 import org.salestrack.app.core.utils.formatMoney
 import org.salestrack.app.domain.model.Product
 import org.salestrack.app.domain.model.StockAdjustmentType
@@ -105,6 +106,7 @@ fun InventoryRoute(
             importCatalogCsvUseCase = container.importCatalogCsvUseCase,
             exportCatalogCsvUseCase = container.exportCatalogCsvUseCase,
             exportCatalogExcelUseCase = container.exportCatalogExcelUseCase,
+            deleteProductUseCase = container.deleteProductUseCase,
         )
     }
     val uiState by viewModel.state.collectAsState()
@@ -136,6 +138,7 @@ fun InventoryScreen(
     var isFabVisible by remember { mutableStateOf(true) }
     var lastIndex by remember { mutableStateOf(0) }
     var lastOffset by remember { mutableStateOf(0) }
+    var productToDelete by remember { mutableStateOf<Product?>(null) }
 
     LaunchedEffect(lazyListState.firstVisibleItemIndex, lazyListState.firstVisibleItemScrollOffset) {
         val currentIndex = lazyListState.firstVisibleItemIndex
@@ -257,6 +260,7 @@ fun InventoryScreen(
                 onSelect = { onEvent(InventoryUiEvent.SelectProduct(it)) },
                 onEdit = { onEvent(InventoryUiEvent.StartEdit(it)) },
                 onAdjust = { onEvent(InventoryUiEvent.StartAdjust(it)) },
+                onDelete = { onEvent(InventoryUiEvent.DeleteProduct(it)) },
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 lazyListState = lazyListState
             )
@@ -336,6 +340,33 @@ fun InventoryScreen(
             },
         )
     }
+
+    productToDelete?.let { product ->
+        AlertDialog(
+            onDismissRequest = { productToDelete = null },
+            title = { Text("¿Eliminar producto?", fontWeight = FontWeight.Bold) },
+            text = { Text("¿Estás seguro de que deseas eliminar \"${product.name}\"? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onEvent(InventoryUiEvent.DeleteProduct(product.id))
+                        productToDelete = null
+                    },
+                    colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.error).run {
+                        androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError)
+                    }
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { productToDelete = null }) {
+                    Text("Cancelar")
+                }
+            },
+            shape = RoundedCornerShape(24.dp)
+        )
+    }
 }
 
 @Composable
@@ -407,6 +438,7 @@ private fun CatalogWindow(
     onSelect: (String) -> Unit,
     onEdit: (Product) -> Unit,
     onAdjust: (Product) -> Unit,
+    onDelete: (String) -> Unit,
     modifier: Modifier = Modifier,
     lazyListState: LazyListState,
 ) {
@@ -446,6 +478,7 @@ private fun CatalogWindow(
                 onSelect = { onSelect(product.id) },
                 onEdit = { onEdit(product) },
                 onAdjust = { onAdjust(product) },
+                onDelete = { onDelete(product.id) }
             )
         }
     }
@@ -459,6 +492,7 @@ private fun ProductCard(
     onSelect: () -> Unit,
     onEdit: () -> Unit,
     onAdjust: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     val isLowStock = product.stock <= product.minimumStock
 
@@ -545,6 +579,9 @@ private fun ProductCard(
                     }
                     IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
                         Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                    }
+                    IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                     }
                 }
             }

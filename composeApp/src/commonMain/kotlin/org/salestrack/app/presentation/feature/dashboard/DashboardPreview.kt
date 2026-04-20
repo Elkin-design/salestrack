@@ -105,6 +105,7 @@ private fun createPreviewContainer(): AppContainer {
         override suspend fun importCatalogCsv(csvContent: String) = AppResult.Success(CatalogImportResult(0, 0, 0, emptyList()))
         override suspend fun exportCatalogCsv() = AppResult.Success(CatalogExportFile("", "", ""))
         override suspend fun exportCatalogExcel() = AppResult.Success(CatalogExportFile("", "", ""))
+        override suspend fun deleteProduct(productId: String) = AppResult.Success(Unit)
         override suspend fun getLowStockProducts() = AppResult.Success(emptyList<Product>())
     }
 
@@ -177,6 +178,7 @@ private fun createPreviewContainer(): AppContainer {
         getRolePermissionsUseCase = GetRolePermissionsUseCase(),
         addProductUseCase = AddProductUseCase(inventoryRepo),
         editProductUseCase = EditProductUseCase(inventoryRepo),
+        deleteProductUseCase = DeleteProductUseCase(inventoryRepo),
         filterProductsUseCase = FilterProductsUseCase(),
         adjustStockUseCase = AdjustStockUseCase(inventoryRepo),
         getLowStockProductsUseCase = GetLowStockProductsUseCase(inventoryRepo),
