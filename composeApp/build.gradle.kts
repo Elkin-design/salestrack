@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidLibrary) // <--- Al ser "Library", no permite shrinkResources
+    alias(libs.plugins.androidLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
@@ -18,6 +18,7 @@ kotlin {
 
     jvm()
 
+    // Definición de targets de iOS
     iosX64()
     iosArm64()
     iosSimulatorArm64()
@@ -36,15 +37,12 @@ kotlin {
         pod("FirebaseCore")
         pod("FirebaseAuth")
         pod("FirebaseFirestore")
+        pod("FirebaseCrashlytics")
     }
 
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(libs.firebaseApp)
-                implementation(libs.firebaseAuth)
-                implementation(libs.firebaseFirestore)
-
                 implementation(compose.material3)
                 implementation(compose.foundation)
                 implementation(compose.ui)
@@ -63,19 +61,23 @@ kotlin {
             }
         }
 
-        val commonTest by getting {
+        // ✨ CAPA INTERMEDIA: Donde vive Firebase (Solo Android e iOS)
+        val mobileMain by creating {
+            dependsOn(commonMain)
             dependencies {
-                implementation(libs.kotlin.test)
-                implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.firebaseApp)
+                implementation(libs.firebaseAuth)
+                implementation(libs.firebaseFirestore)
+                implementation(libs.firebaseCrashlytics)
             }
         }
 
         val androidMain by getting {
-            dependencies {
-            }
+            dependsOn(mobileMain)
         }
 
         val jvmMain by getting {
+            dependsOn(commonMain) // Desktop NO usa Firebase
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutinesSwing)
@@ -84,15 +86,26 @@ kotlin {
             }
         }
 
+        // ✨ CORRECCIÓN PARA IOS EN WINDOWS:
+        // Usamos 'creating' por si el plugin no los creó automáticamente
+        val iosMain by creating {
+            dependsOn(mobileMain)
+        }
+
         val iosX64Main by getting
         val iosArm64Main by getting
         val iosSimulatorArm64Main by getting
 
-        val iosMain by creating {
-            dependsOn(commonMain)
-            iosX64Main.dependsOn(this)
-            iosArm64Main.dependsOn(this)
-            iosSimulatorArm64Main.dependsOn(this)
+        // Conectamos los targets individuales a iosMain
+        configure(listOf(iosX64Main, iosArm64Main, iosSimulatorArm64Main)) {
+            dependsOn(iosMain)
+        }
+
+        val commonTest by getting {
+            dependencies {
+                implementation(libs.kotlin.test)
+                implementation(libs.kotlinx.coroutines.test)
+            }
         }
     }
 }
@@ -107,16 +120,9 @@ android {
 
     buildTypes {
         getByName("release") {
-            // La ofuscación de CÓDIGO (R8/ProGuard) SÍ está permitida en librerías
-            isMinifyEnabled = true
-
-            // ✨ CORRECCIÓN: Se cambia a 'false' porque es un módulo de librería
-            isShrinkResources = false
-
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            isMinifyEnabled = false // No ofusques aquí
+            // Estas reglas se pasan automáticamente al módulo :android
+            consumerProguardFiles("proguard-rules.pro")
         }
     }
 }
@@ -124,7 +130,6 @@ android {
 compose.desktop {
     application {
         mainClass = "org.salestrack.app.MainKt"
-
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "org.salestrack.app"

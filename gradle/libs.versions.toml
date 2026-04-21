@@ -22,6 +22,8 @@ googleServices = "4.4.2"
 firebaseKotlin = "2.4.0"
 firebaseBom = "33.9.0"
 firebase-admin = "9.2.0"
+crashlytics = "3.0.3"
+
 
 [libraries]
 "kotlinx-coroutines-core" = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
@@ -52,6 +54,8 @@ koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
 firebaseApp = { module = "dev.gitlive:firebase-app", version.ref = "firebaseKotlin" }
 firebaseAuth = { module = "dev.gitlive:firebase-auth", version.ref = "firebaseKotlin" }
 firebaseFirestore = { module = "dev.gitlive:firebase-firestore", version.ref = "firebaseKotlin" }
+firebaseCrashlytics = { module = "dev.gitlive:firebase-crashlytics", version.ref = "firebaseKotlin" }
+
 #firebaseJavaSdk = { module = "dev.gitlive:firebase-java-sdk", version = "0.6.2" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 skiko-awt-runtime-windows = { module = "org.jetbrains.skiko:skiko-awt-runtime-windows-x64", version = "0.8.18" }
@@ -68,3 +72,4 @@ kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref =
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlytics" }

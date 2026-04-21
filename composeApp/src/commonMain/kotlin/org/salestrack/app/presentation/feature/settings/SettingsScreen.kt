@@ -323,7 +323,28 @@ fun SettingsScreen(
                             }
                         }
                     }
+
+                    SettingsItem(
+                        icon = Icons.Default.BugReport,
+                        title = "Probar Crashlytics",
+                        subtitle = "Provoca un cierre forzado para verificar el envío de reportes"
+                    ) {
+                        Button(
+                            onClick = { onEvent(SettingsUiEvent.TestCrashClicked) },
+                            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.PriorityHigh, null, modifier = Modifier.size(20.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Forzar Error (Crash)", fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
+
 
                 if (uiState.errorMessage != null) {
                     Card(

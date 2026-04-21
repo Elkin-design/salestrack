@@ -2,6 +2,7 @@ package org.salestrack.app.core.firebase
 
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.auth.auth
+import dev.gitlive.firebase.crashlytics.crashlytics
 import dev.gitlive.firebase.firestore.firestore
 
 /**
@@ -12,4 +13,5 @@ import dev.gitlive.firebase.firestore.firestore
 object FirebaseProvider {
     val auth by lazy { Firebase.auth }
     val firestore by lazy { Firebase.firestore }
+    val crashlytics by lazy { Firebase.crashlytics }
 }
