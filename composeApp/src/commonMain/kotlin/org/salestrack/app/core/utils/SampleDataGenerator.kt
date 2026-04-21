@@ -29,34 +29,33 @@ object SampleDataGenerator {
     fun generateSales(products: List<Product>, nowMillis: Long): List<NewSaleInput> {
         val sales = mutableListOf<NewSaleInput>()
         val oneDayMillis = 24 * 60 * 60 * 1000L
-        val oneMonthMillis = 30 * oneDayMillis
-        val oneYearMillis = 365 * oneDayMillis
+        val averageMonthMillis = 30 * oneDayMillis
 
-        // 1. Ventas de Hoy (50 ventas)
-        repeat(50) {
-            val product = products.random()
-            val offset = Random.nextLong(0, oneDayMillis)
-            sales.add(createSaleInput(product, nowMillis - offset))
+        // Generamos datos para los últimos 12 meses (incluyendo el actual)
+        for (monthIndex in 0..11) {
+            val monthStartOffset = monthIndex * averageMonthMillis
+            val monthEndOffset = (monthIndex + 1) * averageMonthMillis
+            
+            // Cantidad de ventas por mes: entre 80 y 120 para que sea realista
+            // El mes actual (index 0) tendrá un impulso extra de ventas
+            val baseSalesCount = if (monthIndex == 0) 150 else Random.nextInt(80, 120)
+            
+            repeat(baseSalesCount) {
+                val product = products.random()
+                // Distribuimos las ventas aleatoriamente dentro del rango de ese mes
+                val offset = Random.nextLong(monthStartOffset, monthEndOffset)
+                
+                // Aseguramos que no se pase del tiempo actual si es el mes 0
+                val safeOffset = if (monthIndex == 0) Random.nextLong(0, averageMonthMillis) else offset
+                
+                sales.add(createSaleInput(product, nowMillis - safeOffset))
+            }
         }
 
-        // 2. Ventas de esta semana (100 ventas, excluyendo hoy)
-        repeat(100) {
+        // Un pequeño extra para "hoy" y "esta semana" en el mes 0 para que se vea muy activo al abrir la app
+        repeat(30) {
             val product = products.random()
-            val offset = Random.nextLong(oneDayMillis, 7 * oneDayMillis)
-            sales.add(createSaleInput(product, nowMillis - offset))
-        }
-
-        // 3. Ventas de este mes (150 ventas, excluyendo esta semana)
-        repeat(150) {
-            val product = products.random()
-            val offset = Random.nextLong(7 * oneDayMillis, oneMonthMillis)
-            sales.add(createSaleInput(product, nowMillis - offset))
-        }
-
-        // 4. Ventas del resto del año (300 ventas, distribuidas mensualmente)
-        repeat(300) {
-            val product = products.random()
-            val offset = Random.nextLong(oneMonthMillis, oneYearMillis)
+            val offset = Random.nextLong(0, oneDayMillis) // Hoy
             sales.add(createSaleInput(product, nowMillis - offset))
         }
 
