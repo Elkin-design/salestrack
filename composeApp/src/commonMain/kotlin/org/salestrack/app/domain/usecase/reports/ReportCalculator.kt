@@ -7,6 +7,9 @@ import org.salestrack.app.domain.model.ReportPoint
 import org.salestrack.app.domain.model.ReportRange
 import org.salestrack.app.domain.model.ReportSummary
 import org.salestrack.app.domain.model.Sale
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 internal object ReportCalculator {
 
@@ -83,22 +86,41 @@ internal object ReportCalculator {
         }
 
         return grouped
-            .toSortedMap(compareByDescending { it })
+            .toSortedMap()
             .map { (bucket, sales) ->
                 ReportPoint(
-                    label = bucket,
+                    label = formatBucketLabel(bucket, period, sales.firstOrNull()?.createdAtMillis ?: 0L),
                     totalAmount = sales.sumOf { it.netTotal },
                     transactionCount = sales.size,
                 )
             }
     }
 
+    private fun formatBucketLabel(bucket: String, period: ReportPeriod, millis: Long): String {
+        val instant = Instant.fromEpochMilliseconds(millis)
+        val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+
+        return when (period) {
+            ReportPeriod.Daily, ReportPeriod.Custom -> {
+                "Día ${localDateTime.dayOfMonth}"
+            }
+            ReportPeriod.Weekly -> {
+                "Sem ${bucket.substringAfter("-")}"
+            }
+            ReportPeriod.Monthly -> {
+                val months = listOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
+                val monthIdx = localDateTime.monthNumber - 1
+                months.getOrElse(monthIdx) { "Mes" }
+            }
+            ReportPeriod.Annual -> {
+                "${localDateTime.year}"
+            }
+        }
+    }
+
     private fun dayBucket(millis: Long): String = "D-${millis / MILLIS_PER_DAY}"
-
     private fun weekBucket(millis: Long): String = "W-${millis / MILLIS_PER_WEEK}"
-
     private fun monthBucket(millis: Long): String = "M-${millis / MILLIS_PER_MONTH}"
-
     private fun yearBucket(millis: Long): String = "Y-${millis / MILLIS_PER_YEAR}"
 
     private const val MILLIS_PER_DAY = 24L * 60L * 60L * 1000L
