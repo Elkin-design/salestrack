@@ -7,12 +7,14 @@ import org.salestrack.app.core.result.AppResult
 import org.salestrack.app.domain.usecase.settings.ObserveSettingsUseCase
 import org.salestrack.app.domain.usecase.settings.PopulateSampleDataUseCase
 import org.salestrack.app.domain.usecase.settings.UpdateSettingsUseCase
+import org.salestrack.app.domain.usecase.auth.SignOutUseCase
 
 class SettingsViewModel(
     dispatcherProvider: DispatcherProvider,
     private val observeSettingsUseCase: ObserveSettingsUseCase,
     private val updateSettingsUseCase: UpdateSettingsUseCase,
     private val populateSampleDataUseCase: PopulateSampleDataUseCase,
+    private val signOutUseCase: SignOutUseCase,
 ) : BaseViewModel<SettingsUiState, SettingsUiEvent, SettingsUiEffect>(
     initialState = SettingsUiState(),
     dispatcherProvider = dispatcherProvider,
@@ -31,7 +33,13 @@ class SettingsViewModel(
             is SettingsUiEvent.DesktopFontScaleChanged -> setState { it.copy(desktopFontScale = event.value) }
             SettingsUiEvent.SaveClicked -> saveSettings()
             SettingsUiEvent.GenerateSampleDataClicked -> generateSampleData()
-            }
+            SettingsUiEvent.SignOutClicked -> signOut()
+        }
+    }
+
+    private fun signOut() {
+        scope.launch {
+            signOutUseCase()
         }
     }
 

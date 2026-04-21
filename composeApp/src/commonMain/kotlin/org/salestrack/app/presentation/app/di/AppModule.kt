@@ -78,6 +78,13 @@ import org.salestrack.app.domain.usecase.settings.UpdateSettingsUseCase
 import org.salestrack.app.domain.usecase.team.GetRolePermissionsUseCase
 import org.salestrack.app.domain.usecase.team.GetTeamSalesUseCase
 import org.salestrack.app.domain.usecase.team.InviteMemberUseCase
+import org.salestrack.app.domain.repository.AuthRepository
+import org.salestrack.app.data.repository.FirebaseAuthRepository
+import org.salestrack.app.domain.usecase.auth.SignInWithGoogleUseCase
+import org.salestrack.app.domain.usecase.auth.SignOutUseCase
+import org.salestrack.app.domain.usecase.auth.GetAuthStateUseCase
+import org.salestrack.app.presentation.feature.auth.AuthViewModel
+import org.salestrack.app.core.utils.platformGoogleSignInNavigator
 import org.salestrack.app.presentation.app.AppContainer
 
 fun appModule(config: EnvironmentConfig) = module {
@@ -142,6 +149,20 @@ fun appModule(config: EnvironmentConfig) = module {
     single<PrintRepository> { FakePrintRepository() }
     single<BackupRepository> { FakeBackupRepository() }
     single<TeamRepository> { FakeTeamRepository(get()) }
+    single<AuthRepository> { FirebaseAuthRepository() }
+
+    single { SignInWithGoogleUseCase(get()) }
+    single { SignOutUseCase(get()) }
+    single { GetAuthStateUseCase(get()) }
+
+    factory { 
+        AuthViewModel(
+            signInWithGoogleUseCase = get(),
+            signOutUseCase = get(),
+            getAuthStateUseCase = get(),
+            googleSignInNavigator = platformGoogleSignInNavigator
+        )
+    }
 
     single { AddSaleUseCase(get(), get()) }
     single { UpdateSaleUseCase(get()) }
@@ -234,6 +255,9 @@ fun appModule(config: EnvironmentConfig) = module {
             exportCsvUseCase = get(),
             printReportUseCase = get(),
             createBackupUseCase = get(),
+            authViewModel = get(),
+            getAuthStateUseCase = get(),
+            signOutUseCase = get(),
         )
     }
 }

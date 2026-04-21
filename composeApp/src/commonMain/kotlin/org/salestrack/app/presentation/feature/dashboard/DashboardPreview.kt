@@ -23,6 +23,11 @@ import org.salestrack.app.domain.usecase.settings.*
 import org.salestrack.app.domain.usecase.team.*
 import org.salestrack.app.data.source.InventoryDataSource
 import org.salestrack.app.data.source.SaleDataSource
+import org.salestrack.app.core.utils.GoogleSignInNavigator
+import org.salestrack.app.presentation.feature.auth.AuthViewModel
+import org.salestrack.app.domain.usecase.auth.SignInWithGoogleUseCase
+import org.salestrack.app.domain.usecase.auth.SignOutUseCase
+import org.salestrack.app.domain.usecase.auth.GetAuthStateUseCase
 import org.salestrack.app.presentation.app.AppContainer
 
 @Preview
@@ -150,6 +155,17 @@ private fun createPreviewContainer(): AppContainer {
         override suspend fun removeMember(memberId: String) = AppResult.Success(Unit)
     }
 
+    val authRepo = object : AuthRepository {
+        override fun observeAuthState() = flowOf(null)
+        override suspend fun signInWithGoogle(idToken: String) = AppResult.Failure(Exception("Not implemented"))
+        override suspend fun signOut() = AppResult.Success(Unit)
+        override fun getCurrentUser() = null
+    }
+
+    val googleNavigator = object : GoogleSignInNavigator {
+        override fun signIn(onResult: (String?, String?) -> Unit) { onResult(null, "Not implemented") }
+    }
+
     // UseCases
     val exportPdf = ExportPdfUseCase(saleRepo, exportRepo)
     val exportExcel = ExportExcelUseCase(saleRepo, exportRepo)
@@ -201,5 +217,13 @@ private fun createPreviewContainer(): AppContainer {
         exportCsvUseCase = exportCsv,
         printReportUseCase = PrintReportUseCase(saleRepo, printRepo),
         createBackupUseCase = CreateBackupUseCase(saleRepo, inventoryRepo, categoryRepo, settingsRepo, notificationRepo, backupRepo),
+        authViewModel = AuthViewModel(
+            SignInWithGoogleUseCase(authRepo),
+            SignOutUseCase(authRepo),
+            GetAuthStateUseCase(authRepo),
+            googleNavigator
+        ),
+        getAuthStateUseCase = GetAuthStateUseCase(authRepo),
+        signOutUseCase = SignOutUseCase(authRepo),
     )
 }

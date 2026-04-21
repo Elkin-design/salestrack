@@ -96,6 +96,7 @@ fun SettingsRoute(
             observeSettingsUseCase = container.observeSettingsUseCase,
             updateSettingsUseCase = container.updateSettingsUseCase,
             populateSampleDataUseCase = container.populateSampleDataUseCase,
+            signOutUseCase = container.signOutUseCase,
         )
     }
     val uiState by viewModel.state.collectAsState()
@@ -323,10 +324,17 @@ fun SettingsScreen(
                             }
                         }
                     }
-
                 }
 
-
+                // Sección: Cuenta
+                SettingsGroup(title = "Cuenta") {
+                    SettingsActionItem(
+                        icon = Icons.Default.Logout,
+                        title = "Cerrar Sesión",
+                        subtitle = "Salir de la cuenta actual",
+                        onClick = { onEvent(SettingsUiEvent.SignOutClicked) }
+                    )
+                }
 
                 if (uiState.errorMessage != null) {
                     Card(

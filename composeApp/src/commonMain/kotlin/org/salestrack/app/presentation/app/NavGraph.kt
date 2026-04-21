@@ -60,6 +60,11 @@ import org.salestrack.app.presentation.feature.reports.ReportsRoute
 import org.salestrack.app.presentation.feature.sales.SalesRoute
 import org.salestrack.app.presentation.feature.settings.SettingsRoute
 import org.salestrack.app.domain.model.ReportPeriod
+import org.salestrack.app.presentation.feature.auth.LoginScreen
+import org.salestrack.app.presentation.feature.auth.AuthUiState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import kotlinx.coroutines.flow.collectLatest
 
 data class NavigationDestination(
     val route: AppDestination,
@@ -96,6 +101,7 @@ private val destinations = listOf(
 )
 
 enum class AppDestination {
+    Login,
     Dashboard,
     Sales,
     Inventory,
@@ -107,9 +113,22 @@ enum class AppDestination {
 
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
+    val container = rememberAppContainer()
+    val authViewModel = container.authViewModel
+    val authUiState by authViewModel.uiState.collectAsState()
+    
     var currentDestination by remember { mutableStateOf(AppDestination.Dashboard) }
     var initialReportPeriod by remember { mutableStateOf(ReportPeriod.Daily) }
-    val container = rememberAppContainer()
+
+    // Manejo de la navegación obligatoria basada en la autenticación
+    LaunchedEffect(authUiState.isAuthenticated) {
+        if (!authUiState.isAuthenticated) {
+            currentDestination = AppDestination.Login
+        } else if (currentDestination == AppDestination.Login) {
+            currentDestination = AppDestination.Dashboard
+        }
+    }
+
     val keyboardModifier = modifier.onPreviewKeyEvent { event ->
         if (event.type != KeyEventType.KeyDown || !event.isCtrlPressed) {
             return@onPreviewKeyEvent false
@@ -136,6 +155,10 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             val screenModifier = Modifier.fillMaxSize()
 
             when (currentDestination) {
+                AppDestination.Login -> LoginScreen(
+                    viewModel = authViewModel,
+                    modifier = screenModifier
+                )
                 AppDestination.Dashboard -> {
                     val viewModel = remember(container) {
                         org.salestrack.app.presentation.feature.dashboard.DashboardViewModel(
@@ -182,54 +205,56 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             }
         }
 
-        NavigationBar(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
-            tonalElevation = 0.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .height(56.dp)
-        ) {
-            destinations.forEach { destination ->
-                val selected = destination.route == currentDestination
-                
-                val scale by animateFloatAsState(
-                    targetValue = if (selected) 1.1f else 1.0f,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessLow
+        if (currentDestination != AppDestination.Login) {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                tonalElevation = 0.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .height(56.dp)
+            ) {
+                destinations.forEach { destination ->
+                    val selected = destination.route == currentDestination
+                    
+                    val scale by animateFloatAsState(
+                        targetValue = if (selected) 1.1f else 1.0f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        )
                     )
-                )
 
-                NavigationBarItem(
-                    selected = selected,
-                    onClick = { currentDestination = destination.route },
-                    modifier = Modifier.semantics {
-                        contentDescription = destination.contentDescription
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = destination.icon,
-                            contentDescription = destination.contentDescription,
-                            modifier = Modifier
-                                .size(22.dp)
-                                .scale(scale)
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = destination.label,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 9.sp
+                    NavigationBarItem(
+                        selected = selected,
+                        onClick = { currentDestination = destination.route },
+                        modifier = Modifier.semantics {
+                            contentDescription = destination.contentDescription
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = destination.icon,
+                                contentDescription = destination.contentDescription,
+                                modifier = Modifier
+                                    .size(22.dp)
+                                    .scale(scale)
                             )
+                        },
+                        label = {
+                            Text(
+                                text = destination.label,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 9.sp
+                                )
+                            )
+                        },
+                        alwaysShowLabel = false,
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                         )
-                    },
-                    alwaysShowLabel = false,
-                    colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                        indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                     )
-                )
+                }
             }
         }
     }

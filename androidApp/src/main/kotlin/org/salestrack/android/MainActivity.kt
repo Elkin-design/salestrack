@@ -6,6 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import org.salestrack.app.App
 import org.salestrack.app.core.di.setAndroidContext
+import org.salestrack.app.core.utils.platformGoogleSignInNavigator
+import org.salestrack.app.core.utils.AndroidGoogleSignInNavigator
+import android.content.Intent
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,5 +22,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             App()
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        (platformGoogleSignInNavigator as? AndroidGoogleSignInNavigator)?.handleActivityResult(requestCode, data)
     }
 }

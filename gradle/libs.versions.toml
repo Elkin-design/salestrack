@@ -23,6 +23,7 @@ firebaseKotlin = "2.4.0"
 firebaseBom = "33.9.0"
 firebase-admin = "9.2.0"
 crashlytics = "3.0.3"
+playServicesAuth = "21.3.0"
 
 
 [libraries]
@@ -61,6 +62,7 @@ firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "fir
 skiko-awt-runtime-windows = { module = "org.jetbrains.skiko:skiko-awt-runtime-windows-x64", version = "0.8.18" }
 skiko-windows = { module = "org.jetbrains.skiko:skiko-awt-runtime-windows-x64", version = "0.8.18" }
 firebase-admin = { group = "com.google.firebase", name = "firebase-admin", version.ref = "firebase-admin" }
+play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

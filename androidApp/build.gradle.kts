@@ -46,5 +46,6 @@ kotlin {
 dependencies {
     implementation(projects.composeApp)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.play.services.auth)
     debugImplementation(libs.compose.uiTooling)
 }

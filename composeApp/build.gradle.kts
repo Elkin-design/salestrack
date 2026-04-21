@@ -74,6 +74,9 @@ kotlin {
 
         val androidMain by getting {
             dependsOn(mobileMain)
+            dependencies {
+                implementation(libs.play.services.auth)
+            }
         }
 
         val jvmMain by getting {

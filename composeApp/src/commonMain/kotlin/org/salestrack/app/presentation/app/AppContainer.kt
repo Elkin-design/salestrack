@@ -45,6 +45,9 @@ import org.salestrack.app.domain.usecase.settings.UpdateSettingsUseCase
 import org.salestrack.app.domain.usecase.team.GetRolePermissionsUseCase
 import org.salestrack.app.domain.usecase.team.GetTeamSalesUseCase
 import org.salestrack.app.domain.usecase.team.InviteMemberUseCase
+import org.salestrack.app.presentation.feature.auth.AuthViewModel
+import org.salestrack.app.domain.usecase.auth.GetAuthStateUseCase
+import org.salestrack.app.domain.usecase.auth.SignOutUseCase
 
 class AppContainer(
     val dispatcherProvider: DispatcherProvider,
@@ -92,5 +95,8 @@ class AppContainer(
     val exportCsvUseCase: ExportCsvUseCase,
     val printReportUseCase: PrintReportUseCase,
     val createBackupUseCase: CreateBackupUseCase,
+    val authViewModel: AuthViewModel,
+    val getAuthStateUseCase: GetAuthStateUseCase,
+    val signOutUseCase: SignOutUseCase,
 )
 
