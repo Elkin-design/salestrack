@@ -31,9 +31,6 @@ class SettingsViewModel(
             is SettingsUiEvent.DesktopFontScaleChanged -> setState { it.copy(desktopFontScale = event.value) }
             SettingsUiEvent.SaveClicked -> saveSettings()
             SettingsUiEvent.GenerateSampleDataClicked -> generateSampleData()
-            SettingsUiEvent.TestCrashClicked -> {
-                // Forzamos un crash para probar Crashlytics
-                throw RuntimeException("Test Crash from SalesTrack Settings")
             }
         }
     }

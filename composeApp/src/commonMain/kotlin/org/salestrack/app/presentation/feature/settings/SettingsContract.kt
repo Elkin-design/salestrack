@@ -26,7 +26,6 @@ sealed interface SettingsUiEvent : UiEvent {
     data class DesktopFontScaleChanged(val value: Float) : SettingsUiEvent
     data object SaveClicked : SettingsUiEvent
     data object GenerateSampleDataClicked : SettingsUiEvent
-    data object TestCrashClicked : SettingsUiEvent
 }
 
 sealed interface SettingsUiEffect : UiEffect {
