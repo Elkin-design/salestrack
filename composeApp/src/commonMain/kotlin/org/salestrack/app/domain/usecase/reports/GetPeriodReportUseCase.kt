@@ -16,12 +16,21 @@ class GetPeriodReportUseCase(
         fromMillis: Long,
         toMillis: Long,
         category: String?,
+        offset: Int = 0,
     ): AppResult<ReportData> {
+        val adjustedNow = when (period) {
+            ReportPeriod.Daily -> nowMillis + (offset * 24L * 60L * 60L * 1000L)
+            ReportPeriod.Weekly -> nowMillis + (offset * 7L * 24L * 60L * 60L * 1000L)
+            ReportPeriod.Monthly -> nowMillis + (offset * 30L * 24L * 60L * 60L * 1000L)
+            ReportPeriod.Annual -> nowMillis + (offset * 365L * 24L * 60L * 60L * 1000L)
+            ReportPeriod.Custom -> nowMillis
+        }
+
         val range = when (period) {
-            ReportPeriod.Daily -> ReportRange(nowMillis - HALF_DAY, nowMillis + HALF_DAY)
-            ReportPeriod.Weekly -> ReportRange(nowMillis - HALF_WEEK, nowMillis + HALF_WEEK)
-            ReportPeriod.Monthly -> ReportRange(nowMillis - HALF_MONTH, nowMillis + HALF_MONTH)
-            ReportPeriod.Annual -> ReportRange(nowMillis - HALF_YEAR, nowMillis + HALF_YEAR)
+            ReportPeriod.Daily -> ReportRange(adjustedNow - HALF_DAY, adjustedNow + HALF_DAY)
+            ReportPeriod.Weekly -> ReportRange(adjustedNow - HALF_WEEK, adjustedNow + HALF_WEEK)
+            ReportPeriod.Monthly -> ReportRange(adjustedNow - HALF_MONTH, adjustedNow + HALF_MONTH)
+            ReportPeriod.Annual -> ReportRange(adjustedNow - HALF_YEAR, adjustedNow + HALF_YEAR)
             ReportPeriod.Custom -> {
                 if (fromMillis > toMillis) {
                     return AppResult.Failure(IllegalArgumentException("El rango es inválido"))

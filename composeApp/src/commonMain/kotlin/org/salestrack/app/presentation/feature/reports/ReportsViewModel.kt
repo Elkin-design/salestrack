@@ -33,7 +33,7 @@ class ReportsViewModel(
         when (event) {
             ReportsUiEvent.Refresh -> loadReport()
             is ReportsUiEvent.ChangePeriod -> {
-                setState { it.copy(selectedPeriod = event.period) }
+                setState { it.copy(selectedPeriod = event.period, periodOffset = 0) }
                 loadReport()
             }
             is ReportsUiEvent.ChangeCategory -> {
@@ -45,6 +45,10 @@ class ReportsViewModel(
                 if (state.value.selectedPeriod == ReportPeriod.Custom) {
                     loadReport()
                 }
+            }
+            is ReportsUiEvent.MoveOffset -> {
+                setState { it.copy(periodOffset = it.periodOffset + event.delta) }
+                loadReport()
             }
         }
     }
@@ -69,6 +73,7 @@ class ReportsViewModel(
                 fromMillis = current.customFromMillis,
                 toMillis = current.customToMillis,
                 category = current.selectedCategory,
+                offset = current.periodOffset,
             )
 
             when (result) {

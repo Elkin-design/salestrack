@@ -15,6 +15,7 @@ data class ReportsUiState(
     val customToMillis: Long = 0L,
     val report: ReportData? = null,
     val errorMessage: String? = null,
+    val periodOffset: Int = 0,
 ) : UiState
 
 sealed interface ReportsUiEvent : UiEvent {
@@ -22,6 +23,7 @@ sealed interface ReportsUiEvent : UiEvent {
     data class ChangePeriod(val period: ReportPeriod) : ReportsUiEvent
     data class ChangeCategory(val category: String?) : ReportsUiEvent
     data class ChangeCustomRange(val fromMillis: Long, val toMillis: Long) : ReportsUiEvent
+    data class MoveOffset(val delta: Int) : ReportsUiEvent
 }
 
 sealed interface ReportsUiEffect : UiEffect {

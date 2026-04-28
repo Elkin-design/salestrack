@@ -8,9 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.ReceiptLong
-import androidx.compose.material.icons.automirrored.rounded.ShowChart
+import androidx.compose.material.icons.automirrored.rounded.*
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +21,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.salestrack.app.core.utils.formatMoney
 import org.salestrack.app.domain.model.ReportPeriod
 import org.salestrack.app.presentation.app.AppContainer
@@ -135,116 +136,138 @@ fun ReportsScreen(
             }
         }
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            if (uiState.isLoading) {
-                item {
-                    Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+        // Period Navigator
+        if (!uiState.isLoading && uiState.report != null && uiState.selectedPeriod != ReportPeriod.Custom) {
+            PeriodNavigator(
+                range = uiState.report.range,
+                period = uiState.selectedPeriod,
+                offset = uiState.periodOffset,
+                onMove = { onEvent(ReportsUiEvent.MoveOffset(it)) }
+            )
+        }
+
+        AnimatedContent(
+            targetState = uiState.periodOffset,
+            transitionSpec = {
+                if (targetState > initialState) {
+                    (slideInHorizontally { width -> width } + fadeIn()).togetherWith(slideOutHorizontally { width -> -width } + fadeOut())
+                } else {
+                    (slideInHorizontally { width -> -width } + fadeIn()).togetherWith(slideOutHorizontally { width -> width } + fadeOut())
+                }.using(SizeTransform(clip = false))
+            },
+            label = "ReportContentAnimation"
+        ) { _ ->
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                if (uiState.isLoading) {
+                    item {
+                        Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
                     }
-                }
-            } else if (uiState.report != null) {
-                val report = uiState.report
-                
-                // Chart Card
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(20.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(
-                                        "Tendencia de Ventas",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        "Ingresos por periodo",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                } else if (uiState.report != null) {
+                    val report = uiState.report
+                    
+                    // Chart Card
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(24.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(20.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            "Tendencia de Ventas",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            "Ingresos por periodo",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Icon(Icons.AutoMirrored.Rounded.ShowChart, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                 }
-                                Icon(Icons.AutoMirrored.Rounded.ShowChart, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                            }
-                            
-                            Spacer(Modifier.height(24.dp))
-                            
-                            if (uiState.selectedPeriod == ReportPeriod.Daily) {
-                                AnalyticsBarChart(points = report.points)
-                            } else {
-                                AnalyticsLineChart(points = report.points)
+                                
+                                Spacer(Modifier.height(24.dp))
+                                
+                                if (uiState.selectedPeriod == ReportPeriod.Daily) {
+                                    AnalyticsBarChart(points = report.points)
+                                } else {
+                                    AnalyticsLineChart(points = report.points)
+                                }
                             }
                         }
                     }
-                }
 
-                // KPIs Grid
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            KpiCard(
-                                title = "Ventas Totales",
-                                value = "$${formatMoney(report.summary.totalAmount)}",
-                                icon = Icons.Rounded.AccountBalanceWallet,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.weight(1f)
-                            )
-                            KpiCard(
-                                title = "Transacciones",
-                                value = report.summary.transactionCount.toString(),
-                                icon = Icons.AutoMirrored.Rounded.ReceiptLong,
-                                color = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            KpiCard(
-                                title = "Ticket Promedio",
-                                value = "$${formatMoney(report.summary.averageTicket)}",
-                                icon = Icons.Rounded.ConfirmationNumber,
-                                color = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.weight(1f)
-                            )
-                            KpiCard(
-                                title = "Top Producto",
-                                value = report.summary.topProductByVolume.ifBlank { "N/A" },
-                                icon = Icons.Rounded.Star,
-                                color = Color(0xFFFFA000),
-                                modifier = Modifier.weight(1f)
-                            )
+                    // KPIs Grid
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                KpiCard(
+                                    title = "Ventas Totales",
+                                    value = "$${formatMoney(report.summary.totalAmount)}",
+                                    icon = Icons.Rounded.AccountBalanceWallet,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                KpiCard(
+                                    title = "Transacciones",
+                                    value = report.summary.transactionCount.toString(),
+                                    icon = Icons.AutoMirrored.Rounded.ReceiptLong,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                KpiCard(
+                                    title = "Ticket Promedio",
+                                    value = "$${formatMoney(report.summary.averageTicket)}",
+                                    icon = Icons.Rounded.ConfirmationNumber,
+                                    color = MaterialTheme.colorScheme.tertiary,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                KpiCard(
+                                    title = "Top Producto",
+                                    value = report.summary.topProductByVolume.ifBlank { "N/A" },
+                                    icon = Icons.Rounded.Star,
+                                    color = Color(0xFFFFA000),
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                         }
                     }
-                }
 
-                // Categories breakdown
-                item {
-                    Text(
-                        "Distribución por Categoría",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
+                    // Categories breakdown
+                    item {
+                        Text(
+                            "Distribución por Categoría",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
 
-                items(report.summary.categoryBreakdown) { category ->
-                    CategoryItem(
-                        name = category.category,
-                        amount = category.amount,
-                        percentage = (category.amount / report.summary.totalAmount).toFloat()
-                    )
+                    items(report.summary.categoryBreakdown) { category ->
+                        CategoryItem(
+                            name = category.category,
+                            amount = category.amount,
+                            percentage = (category.amount / report.summary.totalAmount).toFloat()
+                        )
+                    }
                 }
             }
         }
@@ -325,3 +348,86 @@ private fun CategoryItem(
     }
 }
 
+@Composable
+private fun PeriodNavigator(
+    range: org.salestrack.app.domain.model.ReportRange,
+    period: ReportPeriod,
+    offset: Int,
+    onMove: (Int) -> Unit
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = { onMove(-1) },
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                )
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Rounded.KeyboardArrowLeft,
+                    contentDescription = "Anterior",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = when (period) {
+                        ReportPeriod.Daily -> "Día Seleccionado"
+                        ReportPeriod.Weekly -> "Semana Seleccionada"
+                        ReportPeriod.Monthly -> "Mes Seleccionado"
+                        ReportPeriod.Annual -> "Año Seleccionado"
+                        else -> "Periodo"
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = formatRangeLabel(range, period),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            IconButton(
+                onClick = { onMove(1) },
+                enabled = offset < 0,
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                    contentDescription = "Siguiente",
+                    tint = if (offset < 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+private fun formatRangeLabel(range: org.salestrack.app.domain.model.ReportRange, period: ReportPeriod): String {
+    val from = Instant.fromEpochMilliseconds(range.fromMillis).toLocalDateTime(TimeZone.currentSystemDefault())
+    val to = Instant.fromEpochMilliseconds(range.toMillis).toLocalDateTime(TimeZone.currentSystemDefault())
+    
+    val months = listOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
+    
+    return when (period) {
+        ReportPeriod.Daily -> "${from.dayOfMonth} ${months[from.monthNumber - 1]}"
+        ReportPeriod.Weekly -> "${from.dayOfMonth} ${months[from.monthNumber - 1]} - ${to.dayOfMonth} ${months[to.monthNumber - 1]}"
+        ReportPeriod.Monthly -> "${months[from.monthNumber - 1]} ${from.year}"
+        ReportPeriod.Annual -> "${from.year}"
+        else -> ""
+    }
+}
