@@ -82,6 +82,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import org.salestrack.app.core.utils.formatMoney
 import org.salestrack.app.domain.model.Product
 import org.salestrack.app.domain.model.Sale
@@ -611,7 +612,8 @@ private fun SaleFormDialog(
                         androidx.compose.material3.DropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false },
-                            modifier = Modifier.fillMaxWidth(0.9f)
+                            modifier = Modifier.fillMaxWidth(0.9f),
+                            properties = PopupProperties(focusable = false)
                         ) {
                             filteredProducts.take(5).forEach { prod ->
                                 androidx.compose.material3.DropdownMenuItem(
