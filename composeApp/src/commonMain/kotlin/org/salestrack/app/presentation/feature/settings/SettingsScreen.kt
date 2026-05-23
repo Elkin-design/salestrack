@@ -95,7 +95,6 @@ fun SettingsRoute(
             dispatcherProvider = container.dispatcherProvider,
             observeSettingsUseCase = container.observeSettingsUseCase,
             updateSettingsUseCase = container.updateSettingsUseCase,
-            populateSampleDataUseCase = container.populateSampleDataUseCase,
             signOutUseCase = container.signOutUseCase,
         )
     }
@@ -296,35 +295,6 @@ fun SettingsScreen(
                     )
                 }
 
-                // Sección: Herramientas de Desarrollador
-                SettingsGroup(title = "Herramientas de Desarrollador") {
-                    SettingsItem(
-                        icon = Icons.Default.Terminal,
-                        title = "Generar Datos de Prueba (Restaurante)",
-                        subtitle = "Crea automáticamente productos y un año de ventas para demostración"
-                    ) {
-                        Button(
-                            onClick = { onEvent(SettingsUiEvent.GenerateSampleDataClicked) },
-                            enabled = !uiState.isGeneratingData,
-                            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            if (uiState.isGeneratingData) {
-                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Generando...")
-                            } else {
-                                Icon(Icons.Default.AutoMode, null, modifier = Modifier.size(20.dp))
-                                Spacer(Modifier.width(8.dp))
-                                Text("Poblar Base de Datos", fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                }
 
                 // Sección: Cuenta
                 SettingsGroup(title = "Cuenta") {

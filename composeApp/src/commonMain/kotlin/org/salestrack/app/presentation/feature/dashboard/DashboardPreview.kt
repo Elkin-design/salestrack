@@ -209,7 +209,6 @@ private fun createPreviewContainer(): AppContainer {
         deleteCategoryUseCase = DeleteCategoryUseCase(categoryRepo),
         observeSettingsUseCase = ObserveSettingsUseCase(settingsRepo),
         updateSettingsUseCase = UpdateSettingsUseCase(settingsRepo, timeProvider),
-        populateSampleDataUseCase = PopulateSampleDataUseCase(inventoryRepo, saleRepo, timeProvider),
         observeNotificationSettingsUseCase = ObserveNotificationSettingsUseCase(notificationRepo),
         updateNotificationSettingsUseCase = UpdateNotificationSettingsUseCase(notificationRepo, timeProvider),
         exportPdfUseCase = exportPdf,

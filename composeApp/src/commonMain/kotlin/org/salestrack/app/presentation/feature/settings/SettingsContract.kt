@@ -9,7 +9,6 @@ import org.salestrack.app.domain.model.CurrencyCode
 data class SettingsUiState(
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
-    val isGeneratingData: Boolean = false,
     val currency: CurrencyCode = CurrencyCode.COP,
     val numberFormatLocale: String = "es-CO",
     val timeZoneId: String = "America/Bogota",
@@ -25,7 +24,6 @@ sealed interface SettingsUiEvent : UiEvent {
     data class ThemeModeChanged(val value: AppThemeMode) : SettingsUiEvent
     data class DesktopFontScaleChanged(val value: Float) : SettingsUiEvent
     data object SaveClicked : SettingsUiEvent
-    data object GenerateSampleDataClicked : SettingsUiEvent
     data object SignOutClicked : SettingsUiEvent
 }
 

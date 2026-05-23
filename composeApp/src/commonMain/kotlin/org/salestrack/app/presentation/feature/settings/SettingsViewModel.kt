@@ -5,7 +5,6 @@ import org.salestrack.app.core.dispatcher.DispatcherProvider
 import org.salestrack.app.core.presentation.BaseViewModel
 import org.salestrack.app.core.result.AppResult
 import org.salestrack.app.domain.usecase.settings.ObserveSettingsUseCase
-import org.salestrack.app.domain.usecase.settings.PopulateSampleDataUseCase
 import org.salestrack.app.domain.usecase.settings.UpdateSettingsUseCase
 import org.salestrack.app.domain.usecase.auth.SignOutUseCase
 
@@ -13,7 +12,6 @@ class SettingsViewModel(
     dispatcherProvider: DispatcherProvider,
     private val observeSettingsUseCase: ObserveSettingsUseCase,
     private val updateSettingsUseCase: UpdateSettingsUseCase,
-    private val populateSampleDataUseCase: PopulateSampleDataUseCase,
     private val signOutUseCase: SignOutUseCase,
 ) : BaseViewModel<SettingsUiState, SettingsUiEvent, SettingsUiEffect>(
     initialState = SettingsUiState(),
@@ -32,7 +30,6 @@ class SettingsViewModel(
             is SettingsUiEvent.ThemeModeChanged -> setState { it.copy(themeMode = event.value) }
             is SettingsUiEvent.DesktopFontScaleChanged -> setState { it.copy(desktopFontScale = event.value) }
             SettingsUiEvent.SaveClicked -> saveSettings()
-            SettingsUiEvent.GenerateSampleDataClicked -> generateSampleData()
             SettingsUiEvent.SignOutClicked -> signOut()
         }
     }
@@ -91,23 +88,4 @@ class SettingsViewModel(
         }
     }
 
-    private fun generateSampleData() {
-        scope.launch {
-            setState { it.copy(isGeneratingData = true, errorMessage = null) }
-            when (val result = populateSampleDataUseCase.execute()) {
-                is AppResult.Success -> {
-                    setState { it.copy(isGeneratingData = false) }
-                    emitEffect(SettingsUiEffect.ShowMessage("Datos de restaurante generados exitosamente"))
-                }
-                is AppResult.Failure -> {
-                    setState {
-                        it.copy(
-                            isGeneratingData = false,
-                            errorMessage = result.error.message ?: "Error al generar datos de prueba",
-                        )
-                    }
-                }
-            }
-        }
-    }
 }
