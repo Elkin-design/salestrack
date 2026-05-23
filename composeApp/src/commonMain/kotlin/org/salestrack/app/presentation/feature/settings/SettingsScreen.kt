@@ -151,39 +151,6 @@ fun SettingsScreen(
                 )
             }
         },
-        bottomBar = {
-            if (!uiState.isLoading) {
-                Surface(
-                    tonalElevation = 8.dp,
-                    shadowElevation = 8.dp,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Button(
-                        onClick = { onEvent(SettingsUiEvent.SaveClicked) },
-                        enabled = !uiState.isSaving,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                            .height(56.dp),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        if (uiState.isSaving) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Text("Guardando...")
-                        } else {
-                            Icon(Icons.Default.Save, contentDescription = null)
-                            Spacer(Modifier.width(12.dp))
-                            Text("Guardar Cambios", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
-        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -203,81 +170,6 @@ fun SettingsScreen(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                // Sección: Localización y Moneda
-                SettingsGroup(title = "Localización y Moneda") {
-                    SettingsItem(
-                        icon = Icons.Default.CurrencyExchange,
-                        title = "Moneda del Sistema",
-                        subtitle = "Selecciona la moneda principal para tus ventas"
-                    ) {
-                        Row(
-                            Modifier.fillMaxWidth().padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            CurrencyCode.entries.forEach { currency ->
-                                FilterChip(
-                                    selected = uiState.currency == currency,
-                                    onClick = { onEvent(SettingsUiEvent.CurrencyChanged(currency)) },
-                                    label = { Text(currency.name) },
-                                    leadingIcon = if (uiState.currency == currency) {
-                                        { Icon(Icons.Default.Check, null, modifier = Modifier.size(16.dp)) }
-                                    } else null,
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    SettingsTextFieldItem(
-                        icon = Icons.Default.Language,
-                        title = "Formato Regional (Locale)",
-                        value = uiState.numberFormatLocale,
-                        onValueChange = { onEvent(SettingsUiEvent.NumberFormatLocaleChanged(it)) },
-                        placeholder = "Ej: es-CO"
-                    )
-
-                    SettingsTextFieldItem(
-                        icon = Icons.Default.Schedule,
-                        title = "Zona Horaria",
-                        value = uiState.timeZoneId,
-                        onValueChange = { onEvent(SettingsUiEvent.TimeZoneChanged(it)) },
-                        placeholder = "Ej: America/Bogota"
-                    )
-                }
-
-                // Sección: Personalización Visual
-                SettingsGroup(title = "Apariencia") {
-                    SettingsItem(
-                        icon = Icons.Default.Palette,
-                        title = "Tema de la Aplicación",
-                        subtitle = "Ajusta el modo visual según tu preferencia"
-                    ) {
-                        Row(
-                            Modifier.fillMaxWidth().padding(top = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            AppThemeMode.entries.forEach { mode ->
-                                FilterChip(
-                                    selected = uiState.themeMode == mode,
-                                    onClick = { onEvent(SettingsUiEvent.ThemeModeChanged(mode)) },
-                                    label = { Text(mode.name) },
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    SettingsTextFieldItem(
-                        icon = Icons.Default.TextFormat,
-                        title = "Escala de Fuente (Desktop)",
-                        value = uiState.desktopFontScale.toString(),
-                        onValueChange = {
-                            val newValue = it.toFloatOrNull() ?: uiState.desktopFontScale
-                            onEvent(SettingsUiEvent.DesktopFontScaleChanged(newValue))
-                        },
-                        placeholder = "Escala 0.8 a 2.0"
-                    )
-                }
 
                 // Sección: Gestión
                 SettingsGroup(title = "Gestión") {
