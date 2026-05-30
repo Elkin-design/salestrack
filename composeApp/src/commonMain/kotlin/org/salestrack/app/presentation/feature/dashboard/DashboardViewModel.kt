@@ -1,6 +1,11 @@
 package org.salestrack.app.presentation.feature.dashboard
 
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.toInstant
 import org.salestrack.app.core.dispatcher.DispatcherProvider
 import org.salestrack.app.core.presentation.BaseViewModel
 import org.salestrack.app.domain.model.Sale
@@ -118,14 +123,39 @@ class DashboardViewModel(
         sales: List<Sale>,
         nowMillis: Long,
     ): List<DashboardTrendPoint> {
+        val timeZone = TimeZone.currentSystemDefault()
+        val currentDateTime = Instant.fromEpochMilliseconds(nowMillis).toLocalDateTime(timeZone)
+        val todayStartMillis = LocalDateTime(
+            currentDateTime.year,
+            currentDateTime.monthNumber,
+            currentDateTime.dayOfMonth,
+            0, 0, 0, 0
+        ).toInstant(timeZone).toEpochMilliseconds()
+
         return (6 downTo 0).map { offset ->
-            val dayStart = nowMillis - (offset * oneDayMillis)
-            val dayEnd = dayStart + oneDayMillis
+            val midpointMillis = todayStartMillis - (offset * 86_400_000L) + (12 * 3600 * 1000L)
+            val targetDate = Instant.fromEpochMilliseconds(midpointMillis).toLocalDateTime(timeZone)
+            
+            val dayStartMillis = LocalDateTime(
+                targetDate.year,
+                targetDate.monthNumber,
+                targetDate.dayOfMonth,
+                0, 0, 0, 0
+            ).toInstant(timeZone).toEpochMilliseconds()
+            
+            val dayEndMillis = LocalDateTime(
+                targetDate.year,
+                targetDate.monthNumber,
+                targetDate.dayOfMonth,
+                23, 59, 59, 999_999_999
+            ).toInstant(timeZone).toEpochMilliseconds()
+
             val amount = sales
                 .asSequence()
-                .filter { it.createdAtMillis in dayStart until dayEnd }
+                .filter { it.createdAtMillis in dayStartMillis..dayEndMillis }
                 .sumOf { it.netTotal }
-            val label = if (offset == 0) "Hoy" else "D-${offset}"
+            
+            val label = targetDate.dayOfMonth.toString()
 
             DashboardTrendPoint(label = label, amount = amount)
         }
