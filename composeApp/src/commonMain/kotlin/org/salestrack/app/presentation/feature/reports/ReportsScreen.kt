@@ -204,11 +204,7 @@ fun ReportsScreen(
                                 
                                 Spacer(Modifier.height(24.dp))
                                 
-                                if (uiState.selectedPeriod == ReportPeriod.Daily) {
-                                    AnalyticsBarChart(points = report.points)
-                                } else {
-                                    AnalyticsLineChart(points = report.points)
-                                }
+                                AnalyticsLineChart(points = report.points)
                             }
                         }
                     }

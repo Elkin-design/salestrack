@@ -1,6 +1,11 @@
 package org.salestrack.app.domain.usecase.reports
 
 import kotlinx.coroutines.flow.first
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.LocalDateTime
 import org.salestrack.app.core.result.AppResult
 import org.salestrack.app.domain.model.ReportData
 import org.salestrack.app.domain.model.ReportPeriod
@@ -18,19 +23,47 @@ class GetPeriodReportUseCase(
         category: String?,
         offset: Int = 0,
     ): AppResult<ReportData> {
-        val adjustedNow = when (period) {
-            ReportPeriod.Daily -> nowMillis + (offset * 24L * 60L * 60L * 1000L)
-            ReportPeriod.Weekly -> nowMillis + (offset * 7L * 24L * 60L * 60L * 1000L)
-            ReportPeriod.Monthly -> nowMillis + (offset * 30L * 24L * 60L * 60L * 1000L)
-            ReportPeriod.Annual -> nowMillis + (offset * 365L * 24L * 60L * 60L * 1000L)
-            ReportPeriod.Custom -> nowMillis
-        }
+        val timeZone = TimeZone.currentSystemDefault()
+        val nowDateTime = Instant.fromEpochMilliseconds(nowMillis).toLocalDateTime(timeZone)
+
+        val todayStartMillis = LocalDateTime(
+            nowDateTime.year,
+            nowDateTime.monthNumber,
+            nowDateTime.dayOfMonth,
+            0, 0, 0, 0
+        ).toInstant(timeZone).toEpochMilliseconds()
 
         val range = when (period) {
-            ReportPeriod.Daily -> ReportRange(adjustedNow - HALF_DAY, adjustedNow + HALF_DAY)
-            ReportPeriod.Weekly -> ReportRange(adjustedNow - HALF_WEEK, adjustedNow + HALF_WEEK)
-            ReportPeriod.Monthly -> ReportRange(adjustedNow - HALF_MONTH, adjustedNow + HALF_MONTH)
-            ReportPeriod.Annual -> ReportRange(adjustedNow - HALF_YEAR, adjustedNow + HALF_YEAR)
+            ReportPeriod.Daily -> {
+                val targetMillis = todayStartMillis + (offset * MILLIS_PER_DAY)
+                ReportRange(targetMillis, targetMillis + MILLIS_PER_DAY - 1)
+            }
+            ReportPeriod.Weekly -> {
+                val targetEndDayMillis = todayStartMillis + (offset * 7L * MILLIS_PER_DAY)
+                val targetStartDayMillis = targetEndDayMillis - (6L * MILLIS_PER_DAY)
+                ReportRange(targetStartDayMillis, targetEndDayMillis + MILLIS_PER_DAY - 1)
+            }
+            ReportPeriod.Monthly -> {
+                var y = nowDateTime.year
+                var m = nowDateTime.monthNumber + offset
+                while (m < 1) { m += 12; y -= 1 }
+                while (m > 12) { m -= 12; y += 1 }
+                
+                val startOfMonthMillis = LocalDateTime(y, m, 1, 0, 0, 0, 0).toInstant(timeZone).toEpochMilliseconds()
+                
+                var nextM = m + 1
+                var nextY = y
+                if (nextM > 12) { nextM = 1; nextY += 1 }
+                val startOfNextMonthMillis = LocalDateTime(nextY, nextM, 1, 0, 0, 0, 0).toInstant(timeZone).toEpochMilliseconds()
+                
+                ReportRange(startOfMonthMillis, startOfNextMonthMillis - 1)
+            }
+            ReportPeriod.Annual -> {
+                val y = nowDateTime.year + offset
+                val startOfYearMillis = LocalDateTime(y, 1, 1, 0, 0, 0, 0).toInstant(timeZone).toEpochMilliseconds()
+                val startOfNextYearMillis = LocalDateTime(y + 1, 1, 1, 0, 0, 0, 0).toInstant(timeZone).toEpochMilliseconds()
+                ReportRange(startOfYearMillis, startOfNextYearMillis - 1)
+            }
             ReportPeriod.Custom -> {
                 if (fromMillis > toMillis) {
                     return AppResult.Failure(IllegalArgumentException("El rango es inválido"))
@@ -50,10 +83,7 @@ class GetPeriodReportUseCase(
     }
 
     private companion object {
-        const val HALF_DAY = 12L * 60L * 60L * 1000L
-        const val HALF_WEEK = 3L * 24L * 60L * 60L * 1000L
-        const val HALF_MONTH = 15L * 24L * 60L * 60L * 1000L
-        const val HALF_YEAR = 182L * 24L * 60L * 60L * 1000L
+        const val MILLIS_PER_DAY = 24L * 60L * 60L * 1000L
     }
 }
 

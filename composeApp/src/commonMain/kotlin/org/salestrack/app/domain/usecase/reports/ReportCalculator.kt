@@ -28,7 +28,7 @@ internal object ReportCalculator {
             .toList()
 
         val summary = buildSummary(filtered)
-        val points = buildPoints(filtered, period)
+        val points = buildPoints(filtered, period, range)
 
         return ReportData(
             range = range,
@@ -74,59 +74,94 @@ internal object ReportCalculator {
         )
     }
 
-    private fun buildPoints(items: List<Sale>, period: ReportPeriod): List<ReportPoint> {
-        val grouped = items.groupBy { sale ->
-            when (period) {
-                ReportPeriod.Daily -> dayBucket(sale.createdAtMillis)
-                ReportPeriod.Weekly -> weekBucket(sale.createdAtMillis)
-                ReportPeriod.Monthly -> monthBucket(sale.createdAtMillis)
-                ReportPeriod.Annual -> yearBucket(sale.createdAtMillis)
-                ReportPeriod.Custom -> dayBucket(sale.createdAtMillis)
-            }
-        }
+    private fun buildPoints(items: List<Sale>, period: ReportPeriod, range: ReportRange): List<ReportPoint> {
+        val timeZone = TimeZone.currentSystemDefault()
+        val startDateTime = Instant.fromEpochMilliseconds(range.fromMillis).toLocalDateTime(timeZone)
+        val endDateTime = Instant.fromEpochMilliseconds(range.toMillis).toLocalDateTime(timeZone)
 
-        return grouped
-            .toSortedMap()
-            .map { (bucket, sales) ->
-                ReportPoint(
-                    label = formatBucketLabel(bucket, period, sales.firstOrNull()?.createdAtMillis ?: 0L),
-                    totalAmount = sales.sumOf { it.netTotal },
-                    transactionCount = sales.size,
-                )
-            }
-    }
+        // Generate buckets based on period
+        val buckets = mutableListOf<String>()
+        val labels = mutableListOf<String>()
 
-    private fun formatBucketLabel(bucket: String, period: ReportPeriod, millis: Long): String {
-        val instant = Instant.fromEpochMilliseconds(millis)
-        val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-
-        return when (period) {
-            ReportPeriod.Daily, ReportPeriod.Custom -> {
-                "Día ${localDateTime.dayOfMonth}"
+        when (period) {
+            ReportPeriod.Daily -> {
+                for (hour in 0..23) {
+                    buckets.add(String.format("%02d", hour))
+                    labels.add(String.format("%02d:00", hour))
+                }
             }
             ReportPeriod.Weekly -> {
-                "Sem ${bucket.substringAfter("-")}"
+                val dayNames = listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
+                for (i in 0..6) {
+                    val targetMillis = range.fromMillis + (i * 24L * 60L * 60L * 1000L)
+                    val dt = Instant.fromEpochMilliseconds(targetMillis).toLocalDateTime(timeZone)
+                    buckets.add("${dt.year}-${dt.monthNumber}-${dt.dayOfMonth}")
+                    labels.add(dayNames[dt.dayOfWeek.ordinal])
+                }
             }
             ReportPeriod.Monthly -> {
-                val months = listOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
-                val monthIdx = localDateTime.monthNumber - 1
-                months.getOrElse(monthIdx) { "Mes" }
+                val endDay = endDateTime.dayOfMonth
+                for (i in 1..endDay) {
+                    buckets.add("${startDateTime.year}-${startDateTime.monthNumber}-$i")
+                    labels.add(i.toString())
+                }
             }
             ReportPeriod.Annual -> {
-                "${localDateTime.year}"
+                val monthNames = listOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
+                for (i in 1..12) {
+                    buckets.add("${startDateTime.year}-$i")
+                    labels.add(monthNames[i - 1])
+                }
+            }
+            ReportPeriod.Custom -> {
+                // If diff is <= 31 days, daily, else monthly
+                val diffDays = (range.toMillis - range.fromMillis) / (24L * 60L * 60L * 1000L)
+                if (diffDays <= 31) {
+                    for (i in 0..diffDays) {
+                        val targetMillis = range.fromMillis + (i * 24L * 60L * 60L * 1000L)
+                        val dt = Instant.fromEpochMilliseconds(targetMillis).toLocalDateTime(timeZone)
+                        buckets.add("${dt.year}-${dt.monthNumber}-${dt.dayOfMonth}")
+                        labels.add(dt.dayOfMonth.toString())
+                    }
+                } else {
+                    for (i in 0..(diffDays/30)) {
+                        val targetMillis = range.fromMillis + (i * 30L * 24L * 60L * 60L * 1000L)
+                        val dt = Instant.fromEpochMilliseconds(targetMillis).toLocalDateTime(timeZone)
+                        val b = "${dt.year}-${dt.monthNumber}"
+                        if (!buckets.contains(b)) {
+                            buckets.add(b)
+                            val monthNames = listOf("Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic")
+                            labels.add(monthNames[dt.monthNumber - 1])
+                        }
+                    }
+                }
             }
         }
+
+        // Group items
+        val grouped = items.groupBy { sale ->
+            val dt = Instant.fromEpochMilliseconds(sale.createdAtMillis).toLocalDateTime(timeZone)
+            when (period) {
+                ReportPeriod.Daily -> String.format("%02d", dt.hour)
+                ReportPeriod.Weekly, ReportPeriod.Monthly -> "${dt.year}-${dt.monthNumber}-${dt.dayOfMonth}"
+                ReportPeriod.Annual -> "${dt.year}-${dt.monthNumber}"
+                ReportPeriod.Custom -> {
+                    val diffDays = (range.toMillis - range.fromMillis) / (24L * 60L * 60L * 1000L)
+                    if (diffDays <= 31) "${dt.year}-${dt.monthNumber}-${dt.dayOfMonth}"
+                    else "${dt.year}-${dt.monthNumber}"
+                }
+            }
+        }
+
+        return buckets.mapIndexed { index, bucket ->
+            val bucketSales = grouped[bucket] ?: emptyList()
+            ReportPoint(
+                label = labels[index],
+                totalAmount = bucketSales.sumOf { it.netTotal },
+                transactionCount = bucketSales.size,
+            )
+        }
     }
-
-    private fun dayBucket(millis: Long): String = "D-${millis / MILLIS_PER_DAY}"
-    private fun weekBucket(millis: Long): String = "W-${millis / MILLIS_PER_WEEK}"
-    private fun monthBucket(millis: Long): String = "M-${millis / MILLIS_PER_MONTH}"
-    private fun yearBucket(millis: Long): String = "Y-${millis / MILLIS_PER_YEAR}"
-
-    private const val MILLIS_PER_DAY = 24L * 60L * 60L * 1000L
-    private const val MILLIS_PER_WEEK = 7L * MILLIS_PER_DAY
-    private const val MILLIS_PER_MONTH = 30L * MILLIS_PER_DAY
-    private const val MILLIS_PER_YEAR = 365L * MILLIS_PER_DAY
 }
 
 
