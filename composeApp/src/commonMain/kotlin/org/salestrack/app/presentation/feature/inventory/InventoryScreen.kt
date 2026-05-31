@@ -61,6 +61,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -589,6 +594,7 @@ private fun ProductCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProductFormDialog(
     title: String,
@@ -598,108 +604,254 @@ private fun ProductFormDialog(
 ) {
     var name by remember(initialProduct) { mutableStateOf(initialProduct?.name ?: "") }
     var description by remember(initialProduct) { mutableStateOf(initialProduct?.description ?: "") }
-    var price by remember(initialProduct) { mutableStateOf((initialProduct?.unitPrice ?: 0.0).toString()) }
+    var price by remember(initialProduct) { 
+        mutableStateOf(if (initialProduct == null) "" else initialProduct.unitPrice.toString()) 
+    }
     var unit by remember(initialProduct) { mutableStateOf(initialProduct?.unit ?: "Unidad") }
     var barcode by remember(initialProduct) { mutableStateOf(initialProduct?.barcode ?: "") }
     var category by remember(initialProduct) { mutableStateOf(initialProduct?.category ?: "General") }
-    var stock by remember(initialProduct) { mutableStateOf((initialProduct?.stock ?: 0).toString()) }
-    var minimum by remember(initialProduct) { mutableStateOf((initialProduct?.minimumStock ?: 0).toString()) }
+    var stock by remember(initialProduct) { 
+        mutableStateOf(if (initialProduct == null) "" else initialProduct.stock.toString()) 
+    }
+    var minimum by remember(initialProduct) { 
+        mutableStateOf(if (initialProduct == null) "" else initialProduct.minimumStock.toString()) 
+    }
 
-    AlertDialog(
+    var expandedUnit by remember { mutableStateOf(false) }
+    var expandedCategory by remember { mutableStateOf(false) }
+
+    val unitOptions = listOf("Unidad", "Kg", "g", "L", "ml", "Caja", "Paquete", "Servicio")
+    val categoryOptions = listOf("General", "Alimentos", "Bebidas", "Limpieza", "Electrónica", "Ropa", "Salud", "Hogar", "Servicios")
+
+    Dialog(
         onDismissRequest = onDismiss,
-        title = { Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) },
-        text = {
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth(0.95f)
+                .padding(vertical = 8.dp),
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp
+        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(3.dp), // PADDING DE 3 PX SOLICITADO
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Nombre") },
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Descripción") },
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = price,
-                        onValueChange = { price = it },
-                        label = { Text("Precio") },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-                    )
-                    OutlinedTextField(
-                        value = unit,
-                        onValueChange = { unit = it },
-                        label = { Text("Unidad") },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
-                    )
+                Spacer(modifier = Modifier.height(8.dp))
+                // Icono sumamente profesional, compacto y elegante
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                    border = BorderStroke(1.5f.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)),
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = if (initialProduct == null) Icons.Default.ShoppingCart else Icons.Default.Edit, 
+                            contentDescription = null, 
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
-                OutlinedTextField(
-                    value = category,
-                    onValueChange = { category = it },
-                    label = { Text("Categoría") },
-                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = barcode,
-                    onValueChange = { barcode = it },
-                    label = { Text("Código de barras (opcional)") },
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                        .weight(weight = 1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
                     OutlinedTextField(
-                        value = stock,
-                        onValueChange = { stock = it },
-                        label = { Text("Stock Inicial") },
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Nombre del producto") },
+                        placeholder = { Text("Ej. Refresco de cola") },
                         shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
                     )
                     OutlinedTextField(
-                        value = minimum,
-                        onValueChange = { minimum = it },
-                        label = { Text("Umbral Mín.") },
+                        value = description,
+                        onValueChange = { description = it },
+                        label = { Text("Descripción") },
+                        placeholder = { Text("Opcional") },
                         shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 1,
+                        maxLines = 2
                     )
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        OutlinedTextField(
+                            value = price,
+                            onValueChange = { input ->
+                                val filtered = input.filter { it.isDigit() || it == '.' }
+                                price = if (filtered.startsWith("0") && filtered.length > 1 && !filtered.startsWith("0.")) {
+                                    filtered.removePrefix("0")
+                                } else {
+                                    filtered
+                                }
+                            },
+                            label = { Text("Precio") },
+                            prefix = { Text("$") },
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            singleLine = true
+                        )
+                        
+                        ExposedDropdownMenuBox(
+                            expanded = expandedUnit,
+                            onExpandedChange = { expandedUnit = !expandedUnit },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            OutlinedTextField(
+                                value = unit,
+                                onValueChange = { unit = it },
+                                label = { Text("Unidad") },
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedUnit) },
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.menuAnchor()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expandedUnit,
+                                onDismissRequest = { expandedUnit = false }
+                            ) {
+                                unitOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option) },
+                                        onClick = {
+                                            unit = option
+                                            expandedUnit = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
+                    ExposedDropdownMenuBox(
+                        expanded = expandedCategory,
+                        onExpandedChange = { expandedCategory = !expandedCategory },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = category,
+                            onValueChange = { category = it },
+                            label = { Text("Categoría") },
+                            readOnly = true,
+                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory) },
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth().menuAnchor()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedCategory,
+                            onDismissRequest = { expandedCategory = false }
+                        ) {
+                            categoryOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option) },
+                                        onClick = {
+                                            category = option
+                                            expandedCategory = false
+                                        }
+                                    )
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = barcode,
+                        onValueChange = { barcode = it },
+                        label = { Text("Código de barras") },
+                        placeholder = { Text("Opcional") },
+                        leadingIcon = { Icon(Icons.Default.Storage, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        OutlinedTextField(
+                            value = stock,
+                            onValueChange = { input ->
+                                val filtered = input.filter { it.isDigit() }
+                                stock = if (filtered.startsWith("0") && filtered.length > 1) {
+                                    filtered.removePrefix("0")
+                                } else {
+                                    filtered
+                                }
+                            },
+                            label = { Text("Stock Inicial") },
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = minimum,
+                            onValueChange = { input ->
+                                val filtered = input.filter { it.isDigit() }
+                                minimum = if (filtered.startsWith("0") && filtered.length > 1) {
+                                    filtered.removePrefix("0")
+                                } else {
+                                    filtered
+                                }
+                            },
+                            label = { Text("Umbral Mínimo") },
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true
+                        )
+                    }
                 }
+                
+                Spacer(modifier = Modifier.height(10.dp))
+                
+                // Botones de acción
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp)) { 
+                        Text("Cancelar") 
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            onSave(
+                                name,
+                                description,
+                                price.toDoubleOrNull() ?: 0.0,
+                                unit,
+                                barcode.ifBlank { null },
+                                category,
+                                stock.toIntOrNull() ?: 0,
+                                minimum.toIntOrNull() ?: 0,
+                            )
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        enabled = name.isNotBlank() && price.isNotBlank()
+                    ) { 
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Guardar") 
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    onSave(
-                        name,
-                        description,
-                        price.toDoubleOrNull() ?: 0.0,
-                        unit,
-                        barcode.ifBlank { null },
-                        category,
-                        stock.toIntOrNull() ?: 0,
-                        minimum.toIntOrNull() ?: 0,
-                    )
-                },
-            ) { Text("Guardar") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
-        shape = RoundedCornerShape(24.dp)
-    )
+        }
+    }
 }
 
 @Composable
