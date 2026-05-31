@@ -1,6 +1,8 @@
 package org.salestrack.app.presentation.feature.category
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,6 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.BorderStroke
 import org.salestrack.app.presentation.app.AppContainer
 
 @Composable
@@ -59,86 +63,65 @@ fun CategoryManagementScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var showAddDialog by remember { mutableStateOf(false) }
+
+    val colorPresets = listOf(
+        "#4F46E5", // Indigo
+        "#0D9488", // Teal
+        "#10B981", // Esmeralda
+        "#3B82F6", // Azul
+        "#EC4899", // Rosa
+        "#F59E0B", // Ámbar
+        "#F97316", // Naranja
+        "#EF4444"  // Rojo
+    )
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("Gestión de Categorías", fontWeight = FontWeight.Bold) },
+                title = { Text("Gestión de Categorías", fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.5).sp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground
                 )
+            )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { showAddDialog = true },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                text = { Text("Añadir Categoría", fontWeight = FontWeight.Bold) },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = RoundedCornerShape(16.dp),
+                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp)
             )
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+                .padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = 0.dp
+                )
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Sección de nueva categoría
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.AddCircle, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Añadir Nueva Categoría", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                    }
-                    
-                    OutlinedTextField(
-                        value = uiState.newCategoryName,
-                        onValueChange = { onEvent(CategoryManagementUiEvent.NewNameChanged(it)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Nombre de categoría") },
-                        shape = RoundedCornerShape(12.dp),
-                        singleLine = true
-                    )
-                    
-                    OutlinedTextField(
-                        value = uiState.newCategoryColorHex,
-                        onValueChange = { onEvent(CategoryManagementUiEvent.NewColorChanged(it)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Color Hex (ej: #FF5733)") },
-                        shape = RoundedCornerShape(12.dp),
-                        singleLine = true,
-                        leadingIcon = {
-                            val color = runCatching { Color(parseColor(uiState.newCategoryColorHex)) }.getOrDefault(Color.Gray)
-                            Box(Modifier.size(20.dp).background(color, CircleShape))
-                        }
-                    )
-                    
-                    Button(
-                        onClick = { onEvent(CategoryManagementUiEvent.SaveNewCategory) },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("Guardar Categoría", fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-
             Text(
                 "Tus Categorías",
                 style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.primary,
-                    letterSpacing = 1.sp
-                )
+                    letterSpacing = 1.2.sp
+                ),
+                modifier = Modifier.padding(top = 8.dp)
             )
 
             if (uiState.isLoading) {
@@ -151,7 +134,8 @@ fun CategoryManagementScreen(
                 }
             } else {
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(top = 4.dp, bottom = 88.dp), // Espacio inferior para desplazar las tarjetas por encima del botón flotante
                     modifier = Modifier.weight(1f)
                 ) {
                     items(uiState.categories, key = { it.id }) { category ->
@@ -171,30 +155,201 @@ fun CategoryManagementScreen(
         }
     }
 
+    // Ventana modal emergente para agregar nueva categoría (Se esconde al Guardar)
+    if (showAddDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddDialog = false },
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Text(
+                        "Añadir Nueva Categoría",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    )
+                }
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedTextField(
+                        value = uiState.newCategoryName,
+                        onValueChange = { onEvent(CategoryManagementUiEvent.NewNameChanged(it)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Nombre de categoría") },
+                        shape = RoundedCornerShape(14.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f)
+                        )
+                    )
+                    
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = uiState.newCategoryColorHex,
+                            onValueChange = { onEvent(CategoryManagementUiEvent.NewColorChanged(it)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("Color Hex (ej: #4F46E5)") },
+                            shape = RoundedCornerShape(14.dp),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f)
+                            ),
+                            leadingIcon = {
+                                val color = runCatching { Color(parseColor(uiState.newCategoryColorHex)) }.getOrDefault(Color.Gray)
+                                Box(
+                                    Modifier
+                                        .size(24.dp)
+                                        .background(color, CircleShape)
+                                        .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), CircleShape)
+                                )
+                            }
+                        )
+
+                        // Selector rápido de colores preestablecidos (Práctico y Elegante)
+                        Text(
+                            "Colores sugeridos:",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)
+                        ) {
+                            colorPresets.forEach { presetHex ->
+                                val presetColor = Color(parseColor(presetHex))
+                                val isSelected = uiState.newCategoryColorHex.equals(presetHex, ignoreCase = true)
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(presetColor)
+                                        .clickable {
+                                            onEvent(CategoryManagementUiEvent.NewColorChanged(presetHex))
+                                        }
+                                        .border(
+                                            width = if (isSelected) 3.dp else 1.dp,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                            shape = CircleShape
+                                        )
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onEvent(CategoryManagementUiEvent.SaveNewCategory)
+                        showAddDialog = false // Esconder ventana una vez se le dé a guardar
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("Guardar Categoría", fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddDialog = false }) {
+                    Text("Cancelar")
+                }
+            },
+            shape = RoundedCornerShape(24.dp),
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
+
     if (uiState.editingCategory != null) {
         AlertDialog(
             onDismissRequest = { onEvent(CategoryManagementUiEvent.StartEdit(null)) },
-            title = { Text("Editar Categoría") },
+            title = { Text("Editar Categoría", fontWeight = FontWeight.Bold) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     OutlinedTextField(
                         value = uiState.editingName,
                         onValueChange = { onEvent(CategoryManagementUiEvent.EditNameChanged(it)) },
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text("Nombre") },
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f)
+                        )
                     )
-                    OutlinedTextField(
-                        value = uiState.editingColorHex,
-                        onValueChange = { onEvent(CategoryManagementUiEvent.EditColorChanged(it)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Color Hex") },
-                        shape = RoundedCornerShape(12.dp)
-                    )
+                    
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = uiState.editingColorHex,
+                            onValueChange = { onEvent(CategoryManagementUiEvent.EditColorChanged(it)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("Color Hex") },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f)
+                            ),
+                            leadingIcon = {
+                                val color = runCatching { Color(parseColor(uiState.editingColorHex)) }.getOrDefault(Color.Gray)
+                                Box(
+                                    Modifier
+                                        .size(20.dp)
+                                        .background(color, CircleShape)
+                                        .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), CircleShape)
+                                )
+                            }
+                        )
+
+                        // Selector rápido de edición
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            colorPresets.forEach { presetHex ->
+                                val presetColor = Color(parseColor(presetHex))
+                                val isSelected = uiState.editingColorHex.equals(presetHex, ignoreCase = true)
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clip(CircleShape)
+                                        .background(presetColor)
+                                        .clickable {
+                                            onEvent(CategoryManagementUiEvent.EditColorChanged(presetHex))
+                                        }
+                                        .border(
+                                            width = if (isSelected) 3.dp else 0.dp,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                            shape = CircleShape
+                                        )
+                                )
+                            }
+                        }
+                    }
                 }
             },
             confirmButton = {
-                Button(onClick = { onEvent(CategoryManagementUiEvent.SaveEditedCategory) }) {
+                Button(
+                    onClick = { onEvent(CategoryManagementUiEvent.SaveEditedCategory) },
+                    shape = RoundedCornerShape(12.dp)
+                ) {
                     Text("Guardar Cambios")
                 }
             },
@@ -203,7 +358,8 @@ fun CategoryManagementScreen(
                     Text("Cancelar")
                 }
             },
-            shape = RoundedCornerShape(20.dp)
+            shape = RoundedCornerShape(24.dp),
+            containerColor = MaterialTheme.colorScheme.surface
         )
     }
 }
@@ -219,29 +375,61 @@ private fun CategoryItem(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = CardDefaults.outlinedCardBorder()
+        border = BorderStroke(1.dp, color.copy(alpha = 0.25f)), // Bordes coloreados elegantes según la categoría
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .background(color, RoundedCornerShape(10.dp))
-            )
+                    .size(42.dp)
+                    .background(
+                        color = color.copy(alpha = 0.15f), // Fondo suave coloreado
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(16.dp)
+                        .background(color, CircleShape)
+                )
+            }
             Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(name, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
                 Text(colorHex, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+            IconButton(
+                onClick = onEdit,
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.06f), CircleShape)
+            ) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = "Editar",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
             }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(MaterialTheme.colorScheme.error.copy(alpha = 0.06f), CircleShape)
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Eliminar",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
     }
