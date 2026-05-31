@@ -290,6 +290,7 @@ fun InventoryScreen(
     if (uiState.isAddDialogVisible) {
         ProductFormDialog(
             title = "Nuevo producto",
+            errorMessage = uiState.errorMessage,
             onDismiss = { onEvent(InventoryUiEvent.ToggleAddDialog(false)) },
             onSave = { name, description, price, unit, barcode, category, stock, minimum ->
                 onEvent(
@@ -312,6 +313,7 @@ fun InventoryScreen(
         ProductFormDialog(
             title = "Editar producto",
             initialProduct = product,
+            errorMessage = uiState.errorMessage,
             onDismiss = { onEvent(InventoryUiEvent.StartEdit(null)) },
             onSave = { name, description, price, unit, barcode, category, stock, minimum ->
                 onEvent(
@@ -334,6 +336,7 @@ fun InventoryScreen(
     uiState.adjustingProduct?.let { product ->
         StockAdjustmentDialog(
             product = product,
+            errorMessage = uiState.errorMessage,
             onDismiss = { onEvent(InventoryUiEvent.StartAdjust(null)) },
             onApply = { delta, reason, type ->
                 onEvent(
@@ -600,6 +603,7 @@ private fun ProductCard(
 @Composable
 private fun ProductFormDialog(
     title: String,
+    errorMessage: String? = null,
     onDismiss: () -> Unit,
     onSave: (String, String, Double, String, String?, String, Int, Int) -> Unit,
     initialProduct: Product? = null,
@@ -640,6 +644,12 @@ private fun ProductFormDialog(
         unfocusedTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
     )
 
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+            isSaving = false
+        }
+    }
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -673,6 +683,34 @@ private fun ProductFormDialog(
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(22.dp)
                         )
+                    }
+                }
+                
+                errorMessage?.let { error ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Surface(
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Warning, 
+                                contentDescription = null, 
+                                tint = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = error, 
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
                 
@@ -905,6 +943,7 @@ private fun ProductFormDialog(
 @Composable
 private fun StockAdjustmentDialog(
     product: Product,
+    errorMessage: String? = null,
     onDismiss: () -> Unit,
     onApply: (Int, String, StockAdjustmentType) -> Unit,
 ) {
@@ -923,6 +962,12 @@ private fun StockAdjustmentDialog(
         focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
         unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
     )
+
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+            isSaving = false
+        }
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -958,6 +1003,34 @@ private fun StockAdjustmentDialog(
                             tint = MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.size(22.dp)
                         )
+                    }
+                }
+                
+                errorMessage?.let { error ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Surface(
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Warning, 
+                                contentDescription = null, 
+                                tint = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = error, 
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
                 
