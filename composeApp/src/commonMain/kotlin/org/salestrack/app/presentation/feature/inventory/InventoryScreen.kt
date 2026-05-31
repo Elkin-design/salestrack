@@ -47,6 +47,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
@@ -620,6 +621,7 @@ private fun ProductFormDialog(
 
     var expandedUnit by remember { mutableStateOf(false) }
     var expandedCategory by remember { mutableStateOf(false) }
+    var isSaving by remember { mutableStateOf(false) }
 
     val unitOptions = listOf("Unidad", "Kg", "g", "L", "ml", "Caja", "Paquete", "Servicio")
     val categoryOptions = listOf("General", "Alimentos", "Bebidas", "Limpieza", "Electrónica", "Ropa", "Salud", "Hogar", "Servicios")
@@ -693,7 +695,8 @@ private fun ProductFormDialog(
                         shape = RoundedCornerShape(16.dp),
                         colors = premiumTextFieldColors,
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        enabled = !isSaving
                     )
                     OutlinedTextField(
                         value = description,
@@ -705,7 +708,8 @@ private fun ProductFormDialog(
                         colors = premiumTextFieldColors,
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 1,
-                        maxLines = 2
+                        maxLines = 2,
+                        enabled = !isSaving
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         OutlinedTextField(
@@ -725,12 +729,13 @@ private fun ProductFormDialog(
                             colors = premiumTextFieldColors,
                             modifier = Modifier.weight(1f),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            singleLine = true
+                            singleLine = true,
+                            enabled = !isSaving
                         )
                         
                         ExposedDropdownMenuBox(
-                            expanded = expandedUnit,
-                            onExpandedChange = { expandedUnit = !expandedUnit },
+                            expanded = expandedUnit && !isSaving,
+                            onExpandedChange = { if (!isSaving) expandedUnit = !expandedUnit },
                             modifier = Modifier.weight(1f)
                         ) {
                             OutlinedTextField(
@@ -742,10 +747,11 @@ private fun ProductFormDialog(
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedUnit) },
                                 shape = RoundedCornerShape(16.dp),
                                 colors = premiumTextFieldColors,
-                                modifier = Modifier.menuAnchor()
+                                modifier = Modifier.menuAnchor(),
+                                enabled = !isSaving
                             )
                             ExposedDropdownMenu(
-                                expanded = expandedUnit,
+                                expanded = expandedUnit && !isSaving,
                                 onDismissRequest = { expandedUnit = false }
                             ) {
                                 unitOptions.forEach { option ->
@@ -762,8 +768,8 @@ private fun ProductFormDialog(
                     }
                     
                     ExposedDropdownMenuBox(
-                        expanded = expandedCategory,
-                        onExpandedChange = { expandedCategory = !expandedCategory },
+                        expanded = expandedCategory && !isSaving,
+                        onExpandedChange = { if (!isSaving) expandedCategory = !expandedCategory },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         OutlinedTextField(
@@ -775,10 +781,11 @@ private fun ProductFormDialog(
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory) },
                             shape = RoundedCornerShape(16.dp),
                             colors = premiumTextFieldColors,
-                            modifier = Modifier.fillMaxWidth().menuAnchor()
+                            modifier = Modifier.fillMaxWidth().menuAnchor(),
+                            enabled = !isSaving
                         )
                         ExposedDropdownMenu(
-                            expanded = expandedCategory,
+                            expanded = expandedCategory && !isSaving,
                             onDismissRequest = { expandedCategory = false }
                         ) {
                             categoryOptions.forEach { option ->
@@ -802,7 +809,8 @@ private fun ProductFormDialog(
                         shape = RoundedCornerShape(16.dp),
                         colors = premiumTextFieldColors,
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        enabled = !isSaving
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         OutlinedTextField(
@@ -821,7 +829,8 @@ private fun ProductFormDialog(
                             colors = premiumTextFieldColors,
                             modifier = Modifier.weight(1f),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true
+                            singleLine = true,
+                            enabled = !isSaving
                         )
                         OutlinedTextField(
                             value = minimum,
@@ -839,7 +848,8 @@ private fun ProductFormDialog(
                             colors = premiumTextFieldColors,
                             modifier = Modifier.weight(1f),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true
+                            singleLine = true,
+                            enabled = !isSaving
                         )
                     }
                 }
@@ -852,12 +862,13 @@ private fun ProductFormDialog(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp)) { 
+                    TextButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), enabled = !isSaving) { 
                         Text("Cancelar") 
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
+                            isSaving = true
                             onSave(
                                 name,
                                 description,
@@ -870,11 +881,19 @@ private fun ProductFormDialog(
                             )
                         },
                         shape = RoundedCornerShape(12.dp),
-                        enabled = name.isNotBlank() && price.isNotBlank()
+                        enabled = name.isNotBlank() && price.isNotBlank() && !isSaving
                     ) { 
-                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                        if (isSaving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                        }
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Guardar") 
+                        Text(if (isSaving) "Guardando..." else "Guardar") 
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -889,62 +908,177 @@ private fun StockAdjustmentDialog(
     onDismiss: () -> Unit,
     onApply: (Int, String, StockAdjustmentType) -> Unit,
 ) {
-    var delta by remember { mutableStateOf("0") }
+    var delta by remember { mutableStateOf("") }
     var reason by remember { mutableStateOf("") }
     var type by remember { mutableStateOf(StockAdjustmentType.Entry) }
+    var isSaving by remember { mutableStateOf(false) }
 
-    AlertDialog(
+    val premiumTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+        focusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.03f),
+        unfocusedContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.02f),
+        focusedLabelColor = MaterialTheme.colorScheme.primary,
+        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+        focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+    )
+
+    Dialog(
         onDismissRequest = onDismiss,
-        title = {
-            Column {
-                Text("Ajuste de Stock", fontWeight = FontWeight.Bold)
-                Text(product.name, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
-            }
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = delta,
-                    onValueChange = { delta = it },
-                    label = { Text("Cantidad a sumar (+ o -)") },
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-                OutlinedTextField(
-                    value = reason,
-                    onValueChange = { reason = it },
-                    label = { Text("Motivo/Justificación") },
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Text("Tipo de ajuste:", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(listOf(StockAdjustmentType.Entry, StockAdjustmentType.PhysicalCount, StockAdjustmentType.Loss)) { option ->
-                        FilterChip(
-                            selected = type == option,
-                            onClick = { type = option },
-                            label = { Text(option.asLabel()) },
-                            shape = RoundedCornerShape(100)
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .padding(vertical = 8.dp),
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(3.dp), // PADDING DE 3 PX SOLICITADO
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Icono sumamente profesional, compacto y elegante
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+                    border = BorderStroke(1.5f.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f)),
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Build, 
+                            contentDescription = null, 
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                 }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Text(
+                    text = "Ajuste de Stock", 
+                    style = MaterialTheme.typography.titleMedium, 
+                    fontWeight = FontWeight.Bold, 
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = product.name, 
+                    style = MaterialTheme.typography.bodyMedium, 
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    OutlinedTextField(
+                        value = delta,
+                        onValueChange = { input ->
+                            // Permitir dígitos y el signo menos para ajustes negativos
+                            val filtered = input.filter { it.isDigit() || it == '-' }
+                            delta = if (filtered.startsWith("0") && filtered.length > 1) {
+                                filtered.removePrefix("0")
+                            } else if (filtered.startsWith("-0") && filtered.length > 2) {
+                                "-" + filtered.substring(2)
+                            } else {
+                                filtered
+                            }
+                        },
+                        label = { Text("Cantidad a sumar (+ o -)") },
+                        leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = premiumTextFieldColors,
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        enabled = !isSaving
+                    )
+                    OutlinedTextField(
+                        value = reason,
+                        onValueChange = { reason = it },
+                        label = { Text("Motivo/Justificación") },
+                        leadingIcon = { Icon(Icons.Default.Info, contentDescription = null) },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = premiumTextFieldColors,
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        enabled = !isSaving
+                    )
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("Tipo de ajuste:", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(listOf(StockAdjustmentType.Entry, StockAdjustmentType.PhysicalCount, StockAdjustmentType.Loss)) { option ->
+                            FilterChip(
+                                selected = type == option,
+                                onClick = { if (!isSaving) type = option },
+                                label = { Text(option.asLabel()) },
+                                shape = RoundedCornerShape(100),
+                                enabled = !isSaving
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Botones de acción
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onDismiss, shape = RoundedCornerShape(12.dp), enabled = !isSaving) { 
+                        Text("Cancelar") 
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            isSaving = true
+                            onApply(delta.toIntOrNull() ?: 0, reason, type)
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        enabled = delta.isNotBlank() && !isSaving
+                    ) { 
+                        if (isSaving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(if (isSaving) "Aplicando..." else "Aplicar") 
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = { onApply(delta.toIntOrNull() ?: 0, reason, type) }
-            ) { Text("Aplicar") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
-        shape = RoundedCornerShape(24.dp)
-    )
+        }
+    }
 }
 
 private fun StockAdjustmentType.asLabel(): String = when (this) {
     StockAdjustmentType.Entry -> "Entrada"
     StockAdjustmentType.PhysicalCount -> "Inventario Físico"
-    StockAdjustmentType.Loss -> "Pérdida/Merna"
+    StockAdjustmentType.Loss -> "Pérdida"
     StockAdjustmentType.Sale -> "Venta"
     StockAdjustmentType.Return -> "Devolución"
 }
