@@ -114,6 +114,7 @@ fun InventoryRoute(
             exportCatalogCsvUseCase = container.exportCatalogCsvUseCase,
             exportCatalogExcelUseCase = container.exportCatalogExcelUseCase,
             deleteProductUseCase = container.deleteProductUseCase,
+            observeCategoriesUseCase = container.observeCategoriesUseCase,
         )
     }
     val uiState by viewModel.state.collectAsState()
@@ -292,6 +293,7 @@ fun InventoryScreen(
             title = "Nuevo producto",
             errorMessage = uiState.errorMessage,
             onDismiss = { onEvent(InventoryUiEvent.ToggleAddDialog(false)) },
+            categoryOptions = uiState.availableCategories,
             onSave = { name, description, price, unit, barcode, category, stock, minimum ->
                 onEvent(
                     InventoryUiEvent.SaveNewProduct(
@@ -315,6 +317,7 @@ fun InventoryScreen(
             initialProduct = product,
             errorMessage = uiState.errorMessage,
             onDismiss = { onEvent(InventoryUiEvent.StartEdit(null)) },
+            categoryOptions = uiState.availableCategories,
             onSave = { name, description, price, unit, barcode, category, stock, minimum ->
                 onEvent(
                     InventoryUiEvent.SaveEditedProduct(
@@ -607,6 +610,7 @@ private fun ProductFormDialog(
     onDismiss: () -> Unit,
     onSave: (String, String, Double, String, String?, String, Int, Int) -> Unit,
     initialProduct: Product? = null,
+    categoryOptions: List<String> = emptyList(),
 ) {
     var name by remember(initialProduct) { mutableStateOf(initialProduct?.name ?: "") }
     var description by remember(initialProduct) { mutableStateOf(initialProduct?.description ?: "") }
@@ -628,7 +632,9 @@ private fun ProductFormDialog(
     var isSaving by remember { mutableStateOf(false) }
 
     val unitOptions = listOf("Unidad", "Kg", "g", "L", "ml", "Caja", "Paquete", "Servicio")
-    val categoryOptions = listOf("General", "Alimentos", "Bebidas", "Limpieza", "Electrónica", "Ropa", "Salud", "Hogar", "Servicios")
+    val actualCategoryOptions = categoryOptions.ifEmpty {
+        listOf("General", "Alimentos", "Bebidas", "Limpieza", "Electrónica", "Ropa", "Salud", "Hogar", "Servicios")
+    }
 
     // Colores premium con degradados suaves y comportamiento de enfoque pulido
     val premiumTextFieldColors = OutlinedTextFieldDefaults.colors(
@@ -826,7 +832,7 @@ private fun ProductFormDialog(
                             expanded = expandedCategory && !isSaving,
                             onDismissRequest = { expandedCategory = false }
                         ) {
-                            categoryOptions.forEach { option ->
+                            actualCategoryOptions.forEach { option ->
                                     DropdownMenuItem(
                                         text = { Text(option) },
                                         onClick = {

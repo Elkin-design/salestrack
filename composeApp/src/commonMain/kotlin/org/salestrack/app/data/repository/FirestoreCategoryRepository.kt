@@ -17,17 +17,19 @@ class FirestoreCategoryRepository(
 
     override fun observeCategories(): Flow<List<Category>> {
         return categoriesRef()
-            .orderBy("name", Direction.ASCENDING)
             .snapshots
             .map { snap ->
-                snap.documents.map { it.data<Category>() }.filter { it.isActive }
+                snap.documents
+                    .mapNotNull { doc -> runCatching { doc.data<Category>() }.getOrNull() }
+                    .filter { it.isActive }
+                    .sortedBy { it.name.lowercase() }
             }
     }
 
     override suspend fun createCategory(name: String, colorHex: String): AppResult<Category> {
         return try {
             val snapshot = categoriesRef().get()
-            val existing = snapshot.documents.map { it.data<Category>() }
+            val existing = snapshot.documents.mapNotNull { doc -> runCatching { doc.data<Category>() }.getOrNull() }
             
             if (existing.any { it.name.equals(name, ignoreCase = true) && it.isActive }) {
                 return AppResult.Failure(IllegalStateException("La categoria ya existe"))
@@ -53,7 +55,7 @@ class FirestoreCategoryRepository(
     override suspend fun updateCategory(category: Category): AppResult<Category> {
         return try {
             val snapshot = categoriesRef().get()
-            val existing = snapshot.documents.map { it.data<Category>() }
+            val existing = snapshot.documents.mapNotNull { doc -> runCatching { doc.data<Category>() }.getOrNull() }
             
             if (existing.any { it.id != category.id && it.name.equals(category.name, ignoreCase = true) && it.isActive }) {
                 return AppResult.Failure(IllegalStateException("Ya existe una categoria con ese nombre"))
@@ -73,7 +75,8 @@ class FirestoreCategoryRepository(
             val doc = categoriesRef().document(categoryId).get()
             if (!doc.exists) return AppResult.Failure(NoSuchElementException("Categoria no encontrada"))
             
-            val category = doc.data<Category>()
+            val category = runCatching { doc.data<Category>() }.getOrNull() 
+                ?: return AppResult.Failure(IllegalStateException("Error al deserializar la categoria"))
             val updated = category.copy(isActive = false, updatedAtMillis = timeProvider.nowMillis())
             
             categoriesRef().document(categoryId).set(updated)

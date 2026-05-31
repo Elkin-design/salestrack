@@ -18,6 +18,9 @@ import org.salestrack.app.domain.usecase.inventory.FilterProductsUseCase
 import org.salestrack.app.domain.usecase.inventory.GetLowStockProductsUseCase
 import org.salestrack.app.domain.usecase.inventory.ImportCatalogCsvUseCase
 
+import org.salestrack.app.domain.model.Category
+import org.salestrack.app.domain.usecase.category.ObserveCategoriesUseCase
+
 class InventoryViewModel(
     dispatcherProvider: DispatcherProvider,
     private val repository: InventoryRepository,
@@ -30,6 +33,7 @@ class InventoryViewModel(
     private val importCatalogCsvUseCase: ImportCatalogCsvUseCase,
     private val exportCatalogCsvUseCase: ExportCatalogCsvUseCase,
     private val exportCatalogExcelUseCase: ExportCatalogExcelUseCase,
+    private val observeCategoriesUseCase: ObserveCategoriesUseCase? = null,
 ) : BaseViewModel<InventoryUiState, InventoryUiEvent, InventoryUiEffect>(
     initialState = InventoryUiState(),
     dispatcherProvider = dispatcherProvider,
@@ -37,10 +41,12 @@ class InventoryViewModel(
 
     private var latestProducts: List<Product> = emptyList()
     private var latestMovements: List<StockMovement> = emptyList()
+    private var latestCategories: List<Category> = emptyList()
 
     init {
         observeProducts()
         observeMovements()
+        observeCategories()
         refreshLowStock()
     }
 
@@ -80,11 +86,32 @@ class InventoryViewModel(
         scope.launch {
             repository.observeProducts().collect { products ->
                 latestProducts = products
-                val categories = products.map { it.category }.distinct().sorted()
-                setState { it.copy(isLoading = false, availableCategories = categories) }
+                updateAvailableCategories()
                 applyFilters()
             }
         }
+    }
+
+    private fun observeCategories() {
+        val useCase = observeCategoriesUseCase ?: return
+        scope.launch {
+            useCase().collect { categories ->
+                latestCategories = categories.filter { it.isActive }
+                updateAvailableCategories()
+            }
+        }
+    }
+
+    private fun updateAvailableCategories() {
+        val productCategories = latestProducts.map { it.category }
+        val configuredCategories = latestCategories.map { it.name }
+        val defaultCategories = listOf("General", "Alimentos", "Bebidas", "Limpieza", "Electrónica", "Ropa", "Salud", "Hogar", "Servicios")
+        
+        val merged = (productCategories + configuredCategories + defaultCategories)
+            .distinct()
+            .sortedBy { it.lowercase() }
+            
+        setState { it.copy(isLoading = false, availableCategories = merged) }
     }
 
     private fun observeMovements() {

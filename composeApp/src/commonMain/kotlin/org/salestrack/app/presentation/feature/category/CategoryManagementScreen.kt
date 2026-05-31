@@ -32,6 +32,7 @@ fun CategoryManagementRoute(
             createCategoryUseCase = container.createCategoryUseCase,
             updateCategoryUseCase = container.updateCategoryUseCase,
             deleteCategoryUseCase = container.deleteCategoryUseCase,
+            inventoryRepository = container.inventoryRepository,
         )
     }
     val uiState by viewModel.state.collectAsState()

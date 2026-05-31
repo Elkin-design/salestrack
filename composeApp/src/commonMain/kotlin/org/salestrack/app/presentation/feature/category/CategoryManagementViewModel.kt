@@ -1,10 +1,13 @@
 package org.salestrack.app.presentation.feature.category
 
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import org.salestrack.app.core.dispatcher.DispatcherProvider
 import org.salestrack.app.core.presentation.BaseViewModel
 import org.salestrack.app.core.result.AppResult
 import org.salestrack.app.domain.model.Category
+import org.salestrack.app.domain.model.Product
+import org.salestrack.app.domain.repository.InventoryRepository
 import org.salestrack.app.domain.usecase.category.CreateCategoryUseCase
 import org.salestrack.app.domain.usecase.category.DeleteCategoryUseCase
 import org.salestrack.app.domain.usecase.category.ObserveCategoriesUseCase
@@ -16,13 +19,18 @@ class CategoryManagementViewModel(
     private val createCategoryUseCase: CreateCategoryUseCase,
     private val updateCategoryUseCase: UpdateCategoryUseCase,
     private val deleteCategoryUseCase: DeleteCategoryUseCase,
+    private val inventoryRepository: InventoryRepository? = null,
 ) : BaseViewModel<CategoryManagementUiState, CategoryManagementUiEvent, CategoryManagementUiEffect>(
     initialState = CategoryManagementUiState(),
     dispatcherProvider = dispatcherProvider,
 ) {
 
+    private var latestConfiguredCategories: List<Category> = emptyList()
+    private var latestProducts: List<Product> = emptyList()
+
     init {
         observeCategories()
+        observeProducts()
     }
 
     override fun onEvent(event: CategoryManagementUiEvent) {
@@ -41,14 +49,50 @@ class CategoryManagementViewModel(
     private fun observeCategories() {
         scope.launch {
             observeCategoriesUseCase().collect { categories ->
-                setState {
-                    it.copy(
-                        isLoading = false,
-                        categories = categories.filter { category -> category.isActive },
-                        errorMessage = null,
-                    )
-                }
+                latestConfiguredCategories = categories.filter { it.isActive }
+                updateCategoriesState()
             }
+        }
+    }
+
+    private fun observeProducts() {
+        val repo = inventoryRepository ?: return
+        scope.launch {
+            repo.observeProducts().collect { products ->
+                latestProducts = products
+                updateCategoriesState()
+            }
+        }
+    }
+
+    private fun updateCategoriesState() {
+        val configured = latestConfiguredCategories
+        
+        val productCategories = latestProducts
+            .map { it.category.trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+            
+        val tempCategories = productCategories.mapNotNull { name ->
+            val alreadyExists = configured.any { it.name.equals(name, ignoreCase = true) }
+            if (!alreadyExists) {
+                Category(
+                    id = "TEMP-${name.lowercase()}",
+                    name = name,
+                    colorHex = "#9E9E9E", 
+                    updatedAtMillis = 0L
+                )
+            } else null
+        }
+        
+        val merged = (configured + tempCategories).sortedBy { it.name.lowercase() }
+        
+        setState {
+            it.copy(
+                isLoading = false,
+                categories = merged,
+                errorMessage = null
+            )
         }
     }
 
@@ -82,14 +126,21 @@ class CategoryManagementViewModel(
             val current = state.value
             val category = current.editingCategory ?: return@launch
 
-            when (
-                val result = updateCategoryUseCase(
-                    category.copy(
-                        name = current.editingName,
-                        colorHex = current.editingColorHex,
-                    ),
+            val categoryToSave = if (category.id.startsWith("TEMP-")) {
+                Category(
+                    id = "C-${System.currentTimeMillis()}-1",
+                    name = current.editingName,
+                    colorHex = current.editingColorHex,
+                    updatedAtMillis = System.currentTimeMillis()
                 )
-            ) {
+            } else {
+                category.copy(
+                    name = current.editingName,
+                    colorHex = current.editingColorHex,
+                )
+            }
+
+            when (val result = updateCategoryUseCase(categoryToSave)) {
                 is AppResult.Success -> {
                     setState {
                         it.copy(
