@@ -87,6 +87,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.filled.Delete
 import org.salestrack.app.core.utils.formatMoney
 import org.salestrack.app.domain.model.Product
@@ -623,6 +624,20 @@ private fun ProductFormDialog(
     val unitOptions = listOf("Unidad", "Kg", "g", "L", "ml", "Caja", "Paquete", "Servicio")
     val categoryOptions = listOf("General", "Alimentos", "Bebidas", "Limpieza", "Electrónica", "Ropa", "Salud", "Hogar", "Servicios")
 
+    // Colores premium con degradados suaves y comportamiento de enfoque pulido
+    val premiumTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+        focusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.03f),
+        unfocusedContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.02f),
+        focusedLabelColor = MaterialTheme.colorScheme.primary,
+        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+        focusedLeadingIconColor = MaterialTheme.colorScheme.primary,
+        unfocusedLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+        focusedTrailingIconColor = MaterialTheme.colorScheme.primary,
+        unfocusedTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+    )
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -674,7 +689,9 @@ private fun ProductFormDialog(
                         onValueChange = { name = it },
                         label = { Text("Nombre del producto") },
                         placeholder = { Text("Ej. Refresco de cola") },
-                        shape = RoundedCornerShape(12.dp),
+                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = premiumTextFieldColors,
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -683,7 +700,9 @@ private fun ProductFormDialog(
                         onValueChange = { description = it },
                         label = { Text("Descripción") },
                         placeholder = { Text("Opcional") },
-                        shape = RoundedCornerShape(12.dp),
+                        leadingIcon = { Icon(Icons.Default.Info, contentDescription = null) },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = premiumTextFieldColors,
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 1,
                         maxLines = 2
@@ -699,9 +718,11 @@ private fun ProductFormDialog(
                                     filtered
                                 }
                             },
-                            label = { Text("Precio") },
-                            prefix = { Text("$") },
-                            shape = RoundedCornerShape(12.dp),
+                            label = { Text("Precio", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp)) },
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
+                            prefix = { Text("$", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp)) },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = premiumTextFieldColors,
                             modifier = Modifier.weight(1f),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             singleLine = true
@@ -715,10 +736,12 @@ private fun ProductFormDialog(
                             OutlinedTextField(
                                 value = unit,
                                 onValueChange = { unit = it },
-                                label = { Text("Unidad") },
+                                label = { Text("Unidad", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp)) },
+                                textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
                                 readOnly = true,
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedUnit) },
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = premiumTextFieldColors,
                                 modifier = Modifier.menuAnchor()
                             )
                             ExposedDropdownMenu(
@@ -748,9 +771,10 @@ private fun ProductFormDialog(
                             onValueChange = { category = it },
                             label = { Text("Categoría") },
                             readOnly = true,
-                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategory) },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = premiumTextFieldColors,
                             modifier = Modifier.fillMaxWidth().menuAnchor()
                         )
                         ExposedDropdownMenu(
@@ -774,8 +798,9 @@ private fun ProductFormDialog(
                         onValueChange = { barcode = it },
                         label = { Text("Código de barras") },
                         placeholder = { Text("Opcional") },
-                        leadingIcon = { Icon(Icons.Default.Storage, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                        shape = RoundedCornerShape(12.dp),
+                        leadingIcon = { Icon(Icons.Default.Storage, contentDescription = null) },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = premiumTextFieldColors,
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -790,8 +815,10 @@ private fun ProductFormDialog(
                                     filtered
                                 }
                             },
-                            label = { Text("Stock Inicial") },
-                            shape = RoundedCornerShape(12.dp),
+                            label = { Text("Stock Inicial", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp)) },
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = premiumTextFieldColors,
                             modifier = Modifier.weight(1f),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true
@@ -806,8 +833,10 @@ private fun ProductFormDialog(
                                     filtered
                                 }
                             },
-                            label = { Text("Umbral Mínimo") },
-                            shape = RoundedCornerShape(12.dp),
+                            label = { Text("Umbral Mínimo", style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp)) },
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = premiumTextFieldColors,
                             modifier = Modifier.weight(1f),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true
