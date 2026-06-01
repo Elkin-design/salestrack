@@ -22,17 +22,17 @@ class BasicPdfExportAdapter : PdfExportAdapter {
             add("")
             add(
                 if (payload.includeSellerColumn) {
-                    "Producto | Categoria | Cantidad | Neto | Vendedor"
+                    "Producto | Categoria | Cantidad | Neto | Vendedor | Fecha | Mes | Sem."
                 } else {
-                    "Producto | Categoria | Cantidad | Neto"
+                    "Producto | Categoria | Cantidad | Neto | Fecha | Mes | Sem."
                 },
             )
             payload.rows.take(40).forEach { row ->
                 add(
                     if (payload.includeSellerColumn) {
-                        "${row.productName} | ${row.category} | ${row.quantity} | ${row.netTotal} | ${row.sellerName}"
+                        "${row.productName} | ${row.category} | ${row.quantity} | ${row.netTotal} | ${row.sellerName} | ${row.dateLabel} | ${row.monthLabel} | ${row.weekLabel}"
                     } else {
-                        "${row.productName} | ${row.category} | ${row.quantity} | ${row.netTotal}"
+                        "${row.productName} | ${row.category} | ${row.quantity} | ${row.netTotal} | ${row.dateLabel} | ${row.monthLabel} | ${row.weekLabel}"
                     },
                 )
             }

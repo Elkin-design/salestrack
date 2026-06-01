@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
@@ -112,9 +114,19 @@ fun ExportReportScreen(
         if (uiState.savedArtifact != null) {
             androidx.compose.material3.OutlinedButton(
                 onClick = { onEvent(ExportReportUiEvent.OpenSavedFile) },
+                enabled = !uiState.isOpening && !uiState.isExporting,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Abrir Archivo")
+                if (uiState.isOpening) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                    androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp))
+                    Text("Abriendo...")
+                } else {
+                    Text("Abrir Archivo")
+                }
             }
         }
 

@@ -13,7 +13,7 @@ import org.salestrack.app.domain.repository.ExportRepository
 class RealExportRepository(
     private val pdfAdapter: PdfExportAdapter,
     private val excelAdapter: ExcelExportAdapter,
-    private val fileSaver: org.salestrack.app.core.utils.FileSaver,
+    private val fileSaver: org.salestrack.app.core.utils.FileSaver = org.salestrack.app.core.utils.platformFileSaver,
 ) : ExportRepository {
     override suspend fun exportReport(
         payload: ExportReportPayload,
@@ -48,16 +48,16 @@ class RealExportRepository(
 
     private fun generateCsv(payload: ExportReportPayload): GeneratedDocument {
         val header = if (payload.includeSellerColumn) {
-            "Producto,Categoria,Cantidad,Precio,Descuento,Neto,Vendedor"
+            "Producto,Categoria,Cantidad,Precio,Descuento,Neto,Vendedor,Fecha,Mes,Semana"
         } else {
-            "Producto,Categoria,Cantidad,Precio,Descuento,Neto"
+            "Producto,Categoria,Cantidad,Precio,Descuento,Neto,Fecha,Mes,Semana"
         }
 
         val lines = payload.rows.map { row ->
             if (payload.includeSellerColumn) {
-                "${escapeCsv(row.productName)},${escapeCsv(row.category)},${row.quantity},${row.unitPrice},${row.discount},${row.netTotal},${escapeCsv(row.sellerName)}"
+                "${escapeCsv(row.productName)},${escapeCsv(row.category)},${row.quantity},${row.unitPrice},${row.discount},${row.netTotal},${escapeCsv(row.sellerName)},${escapeCsv(row.dateLabel)},${escapeCsv(row.monthLabel)},${escapeCsv(row.weekLabel)}"
             } else {
-                "${escapeCsv(row.productName)},${escapeCsv(row.category)},${row.quantity},${row.unitPrice},${row.discount},${row.netTotal}"
+                "${escapeCsv(row.productName)},${escapeCsv(row.category)},${row.quantity},${row.unitPrice},${row.discount},${row.netTotal},${escapeCsv(row.dateLabel)},${escapeCsv(row.monthLabel)},${escapeCsv(row.weekLabel)}"
             }
         }
 

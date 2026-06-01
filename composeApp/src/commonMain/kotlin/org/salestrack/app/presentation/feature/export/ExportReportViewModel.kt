@@ -14,7 +14,7 @@ class ExportReportViewModel(
     private val exportPdfUseCase: ExportPdfUseCase,
     private val exportExcelUseCase: ExportExcelUseCase,
     private val exportCsvUseCase: ExportCsvUseCase,
-    private val fileSaver: org.salestrack.app.core.utils.FileSaver,
+    private val fileSaver: org.salestrack.app.core.utils.FileSaver = org.salestrack.app.core.utils.platformFileSaver,
 ) : BaseViewModel<ExportReportUiState, ExportReportUiEvent, ExportReportUiEffect>(
     initialState = ExportReportUiState(),
     dispatcherProvider = dispatcherProvider,
@@ -22,7 +22,14 @@ class ExportReportViewModel(
 
     override fun onEvent(event: ExportReportUiEvent) {
         when (event) {
-            is ExportReportUiEvent.FormatChanged -> setState { it.copy(selectedFormat = event.value) }
+            is ExportReportUiEvent.FormatChanged -> setState {
+                it.copy(
+                    selectedFormat = event.value,
+                    savedArtifact = null,
+                    lastResult = null,
+                    errorMessage = null
+                )
+            }
             is ExportReportUiEvent.DestinationChanged -> setState { it.copy(selectedDestination = event.value) }
             is ExportReportUiEvent.IncludeSellerColumnChanged -> setState { it.copy(includeSellerColumn = event.value) }
             ExportReportUiEvent.ExportClicked -> export()
@@ -34,7 +41,14 @@ class ExportReportViewModel(
         val artifact = state.value.savedArtifact ?: return
         val path = artifact.savedPath ?: return
         scope.launch {
-            fileSaver.openFile(path, artifact.mimeType)
+            setState { it.copy(isOpening = true) }
+            try {
+                fileSaver.openFile(path, artifact.mimeType)
+                // A short delay gives visual feedback while the external viewer application launches
+                kotlinx.coroutines.delay(1200L)
+            } finally {
+                setState { it.copy(isOpening = false) }
+            }
         }
     }
 

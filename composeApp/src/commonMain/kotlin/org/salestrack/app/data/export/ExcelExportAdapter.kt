@@ -9,24 +9,23 @@ interface ExcelExportAdapter {
 class SpreadsheetXmlExcelExportAdapter : ExcelExportAdapter {
     override fun generate(payload: ExportReportPayload): GeneratedDocument {
         val headerCells = if (payload.includeSellerColumn) {
-            listOf("Producto", "Categoria", "Cantidad", "Precio", "Descuento", "Neto", "Vendedor")
+            listOf("Producto", "Categoria", "Cantidad", "Precio", "Descuento", "Neto", "Vendedor", "Fecha", "Mes", "Semana")
         } else {
-            listOf("Producto", "Categoria", "Cantidad", "Precio", "Descuento", "Neto")
+            listOf("Producto", "Categoria", "Cantidad", "Precio", "Descuento", "Neto", "Fecha", "Mes", "Semana")
         }
 
-        val workbookXml = buildString {
-            append("<?xml version=\"1.0\"?>")
-            append("<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\" ")
-            append("xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\">")
+        val csvContent = buildString {
+            // Write UTF-8 BOM so Excel/Sheets on all platforms detect UTF-8 encoding correctly
+            append('\uFEFF')
+            
+            // Header
+            append(headerCells.joinToString(",") { "\"${escapeCsv(it)}\"" })
+            append("\n")
 
-            append("<Worksheet ss:Name=\"Resumen\"><Table>")
-            appendRow(listOf("Titulo", payload.title))
-            appendRow(listOf("Periodo", payload.periodLabel))
-            appendRow(listOf("Total", payload.totalAmount.toString()))
-            append("</Table></Worksheet>")
+            // Summary Info
+            append("\"Resumen: ${escapeCsv(payload.title)}\",\"Periodo: ${escapeCsv(payload.periodLabel)}\",\"Total: ${payload.totalAmount}\"\n\n")
 
-            append("<Worksheet ss:Name=\"Detalle\"><Table>")
-            appendRow(headerCells)
+            // Detail Rows
             payload.rows.forEach { row ->
                 val detail = mutableListOf(
                     row.productName,
@@ -39,37 +38,23 @@ class SpreadsheetXmlExcelExportAdapter : ExcelExportAdapter {
                 if (payload.includeSellerColumn) {
                     detail += row.sellerName
                 }
-                appendRow(detail)
+                detail += row.dateLabel
+                detail += row.monthLabel
+                detail += row.weekLabel
+                append(detail.joinToString(",") { "\"${escapeCsv(it)}\"" })
+                append("\n")
             }
-            append("</Table></Worksheet>")
-
-            append("</Workbook>")
         }
 
         return GeneratedDocument(
-            bytes = workbookXml.toByteArray(Charsets.UTF_8),
-            mimeType = "application/vnd.ms-excel",
-            fileExtension = "xls",
+            bytes = csvContent.toByteArray(Charsets.UTF_8),
+            mimeType = "text/csv",
+            fileExtension = "csv",
             preview = "Resumen+Detalle | cols=${headerCells.joinToString(",")}",
         )
     }
 
-    private fun StringBuilder.appendRow(values: List<String>) {
-        append("<Row>")
-        values.forEach { value ->
-            append("<Cell><Data ss:Type=\"String\">")
-            append(escapeXml(value))
-            append("</Data></Cell>")
-        }
-        append("</Row>")
-    }
-
-    private fun escapeXml(value: String): String {
-        return value
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace("\"", "&quot;")
-            .replace("'", "&apos;")
+    private fun escapeCsv(value: String): String {
+        return value.replace("\"", "\"\"")
     }
 }

@@ -8,6 +8,7 @@ import org.salestrack.app.domain.model.ExportFormat
 
 data class ExportReportUiState(
     val isExporting: Boolean = false,
+    val isOpening: Boolean = false,
     val selectedFormat: ExportFormat = ExportFormat.Pdf,
     val selectedDestination: ExportDestination = ExportDestination.SaveLocal,
     val includeSellerColumn: Boolean = false,

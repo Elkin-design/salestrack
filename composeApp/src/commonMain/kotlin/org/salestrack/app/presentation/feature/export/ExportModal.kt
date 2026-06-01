@@ -111,11 +111,18 @@ fun ExportModal(
                         onClick = { viewModel.onEvent(ExportReportUiEvent.OpenSavedFile) },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(16.dp),
+                        enabled = !uiState.isOpening && !uiState.isExporting,
                         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                     ) {
-                        Icon(Icons.Rounded.Description, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Abrir Archivo")
+                        if (uiState.isOpening) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Abriendo...")
+                        } else {
+                            Icon(Icons.Rounded.Description, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Abrir Archivo")
+                        }
                     }
                 }
 

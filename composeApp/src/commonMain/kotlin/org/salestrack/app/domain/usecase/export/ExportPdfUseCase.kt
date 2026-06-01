@@ -10,6 +10,10 @@ import org.salestrack.app.domain.model.ExportRow
 import org.salestrack.app.domain.repository.ExportRepository
 import org.salestrack.app.domain.repository.SaleRepository
 
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+
 class ExportPdfUseCase(
     private val saleRepository: SaleRepository,
     private val exportRepository: ExportRepository,
@@ -19,7 +23,28 @@ class ExportPdfUseCase(
         includeSellerColumn: Boolean = false,
     ): AppResult<ExportArtifact> {
         val sales = saleRepository.observeSales().first().filter { !it.isDeleted }
+        val timeZone = TimeZone.currentSystemDefault()
         val rows = sales.map { sale ->
+            val localDateTime = Instant.fromEpochMilliseconds(sale.createdAtMillis).toLocalDateTime(timeZone)
+            val dateLabel = "${localDateTime.dayOfMonth.toString().padStart(2, '0')}/${localDateTime.monthNumber.toString().padStart(2, '0')}/${localDateTime.year}"
+            val monthLabel = when (localDateTime.monthNumber) {
+                1 -> "Enero"
+                2 -> "Febrero"
+                3 -> "Marzo"
+                4 -> "Abril"
+                5 -> "Mayo"
+                6 -> "Junio"
+                7 -> "Julio"
+                8 -> "Agosto"
+                9 -> "Septiembre"
+                10 -> "Octubre"
+                11 -> "Noviembre"
+                12 -> "Diciembre"
+                else -> ""
+            }
+            val weekOfMonth = ((localDateTime.dayOfMonth - 1) / 7) + 1
+            val weekLabel = "Semana $weekOfMonth"
+
             ExportRow(
                 productName = sale.productName,
                 category = sale.category,
@@ -28,6 +53,9 @@ class ExportPdfUseCase(
                 discount = sale.discount,
                 netTotal = sale.netTotal,
                 sellerName = sale.sellerName,
+                dateLabel = dateLabel,
+                monthLabel = monthLabel,
+                weekLabel = weekLabel,
             )
         }
         val payload = ExportReportPayload(

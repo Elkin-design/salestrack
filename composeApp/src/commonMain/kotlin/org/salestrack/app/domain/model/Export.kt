@@ -19,6 +19,9 @@ data class ExportRow(
     val discount: Double,
     val netTotal: Double,
     val sellerName: String,
+    val dateLabel: String = "",
+    val monthLabel: String = "",
+    val weekLabel: String = "",
 )
 
 data class ExportReportPayload(

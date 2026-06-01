@@ -33,7 +33,7 @@ class ExportExcelUseCaseTest {
         val result = useCase(destination = ExportDestination.SaveLocal)
 
         assertTrue(result is AppResult.Success)
-        assertTrue(result.value.fileName.endsWith(".xls"))
+        assertTrue(result.value.fileName.endsWith(".csv"))
         assertTrue(result.value.preview.contains("Resumen+Detalle"))
     }
 
