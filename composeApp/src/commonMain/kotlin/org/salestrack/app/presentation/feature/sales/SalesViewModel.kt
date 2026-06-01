@@ -1,5 +1,6 @@
 package org.salestrack.app.presentation.feature.sales
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.salestrack.app.core.dispatcher.DispatcherProvider
 import org.salestrack.app.core.presentation.BaseViewModel
@@ -84,6 +85,8 @@ class SalesViewModel(
 
     private fun saveNewSale(event: SalesUiEvent.SaveNewSale) {
         scope.launch {
+            setState { it.copy(isSaving = true, errorMessage = null) }
+            delay(1200) // Demora de animación premium para simular guardado en base de datos
             val result = addSaleUseCase(
                 NewSaleInput(
                     productName = event.productName,
@@ -97,11 +100,11 @@ class SalesViewModel(
             )
             when (result) {
                 is AppResult.Success -> {
-                    setState { it.copy(isAddDialogVisible = false) }
+                    setState { it.copy(isSaving = false, isAddDialogVisible = false) }
                     emitEffect(SalesUiEffect.ShowMessage("Venta creada"))
                 }
                 is AppResult.Failure -> {
-                    setState { it.copy(errorMessage = result.error.message ?: "Error al crear venta") }
+                    setState { it.copy(isSaving = false, errorMessage = result.error.message ?: "Error al crear venta") }
                 }
             }
         }
@@ -109,6 +112,8 @@ class SalesViewModel(
 
     private fun saveEditedSale(event: SalesUiEvent.SaveEditedSale) {
         scope.launch {
+            setState { it.copy(isSaving = true, errorMessage = null) }
+            delay(1200) // Demora de animación premium para simular guardado en base de datos
             val result = updateSaleUseCase(
                 Sale(
                     id = event.id,
@@ -124,11 +129,11 @@ class SalesViewModel(
             )
             when (result) {
                 is AppResult.Success -> {
-                    setState { it.copy(editingSale = null) }
+                    setState { it.copy(isSaving = false, editingSale = null) }
                     emitEffect(SalesUiEffect.ShowMessage("Venta actualizada"))
                 }
                 is AppResult.Failure -> {
-                    setState { it.copy(errorMessage = result.error.message ?: "Error al editar venta") }
+                    setState { it.copy(isSaving = false, errorMessage = result.error.message ?: "Error al editar venta") }
                 }
             }
         }

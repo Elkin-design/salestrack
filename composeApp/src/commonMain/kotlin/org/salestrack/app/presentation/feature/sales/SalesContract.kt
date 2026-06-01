@@ -17,6 +17,7 @@ data class SalesUiState(
     val editingSale: Sale? = null,
     val detailSale: Sale? = null,
     val errorMessage: String? = null,
+    val isSaving: Boolean = false,
 ) : UiState
 
 sealed interface SalesUiEvent : UiEvent {

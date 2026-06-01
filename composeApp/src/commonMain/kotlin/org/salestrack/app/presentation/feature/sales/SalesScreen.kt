@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -290,6 +291,8 @@ fun SalesScreen(
         SaleFormDialog(
             title = "Nueva venta",
             inventoryProducts = uiState.inventoryProducts,
+            isSaving = uiState.isSaving,
+            errorMessage = uiState.errorMessage,
             onDismiss = { onEvent(SalesUiEvent.ToggleAddDialog(false)) },
             onSave = { product, category, quantity, unitPrice, discount, seller, productId ->
                 onEvent(
@@ -319,6 +322,8 @@ fun SalesScreen(
             title = "Editar venta",
             initialSale = sale,
             inventoryProducts = uiState.inventoryProducts,
+            isSaving = uiState.isSaving,
+            errorMessage = uiState.errorMessage,
             onDismiss = { onEvent(SalesUiEvent.StartEdit(null)) },
             onSave = { product, category, quantity, unitPrice, discount, seller, productId ->
                 onEvent(
@@ -546,156 +551,4 @@ private fun DetailRow(
         Text(text = label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(text = value, style = valueStyle, color = MaterialTheme.colorScheme.onSurface)
     }
-}
-
-@Composable
-private fun SaleFormDialog(
-    title: String,
-    inventoryProducts: List<Product>,
-    onDismiss: () -> Unit,
-    onSave: (product: String, category: String, quantity: Int, unitPrice: Double, discount: Double, seller: String, productId: String?) -> Unit,
-    initialSale: Sale? = null,
-) {
-    var productQuery by remember(initialSale) { mutableStateOf(initialSale?.productName ?: "") }
-    var selectedProductId by remember(initialSale) { mutableStateOf(initialSale?.productId) }
-    var category by remember(initialSale) { mutableStateOf(initialSale?.category ?: "General") }
-    var quantity by remember(initialSale) { mutableStateOf((initialSale?.quantity ?: 1).toString()) }
-    var price by remember(initialSale) { mutableStateOf((initialSale?.unitPrice ?: 0.0).toString()) }
-    var discount by remember(initialSale) { mutableStateOf((initialSale?.discount ?: 0.0).toString()) }
-    var seller by remember(initialSale) { mutableStateOf(initialSale?.sellerName ?: "Vendedor") }
-
-    var expanded by remember { mutableStateOf(false) }
-    val filteredProducts = remember(productQuery, inventoryProducts) {
-        if (productQuery.isBlank()) inventoryProducts 
-        else inventoryProducts.filter { it.name.contains(productQuery, ignoreCase = true) }
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Box {
-                    OutlinedTextField(
-                        value = productQuery,
-                        onValueChange = { 
-                            productQuery = it
-                            expanded = true
-                            // Reset selection if typing manually
-                            if (selectedProductId != null) {
-                                selectedProductId = null
-                            }
-                        },
-                        label = { Text("Producto") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        leadingIcon = { Icon(Icons.Default.ShoppingCart, contentDescription = null) },
-                        trailingIcon = {
-                            IconButton(onClick = { expanded = !expanded }) {
-                                Icon(Icons.AutoMirrored.Filled.List, contentDescription = null)
-                            }
-                        }
-                    )
-                    
-                    if (expanded && filteredProducts.isNotEmpty()) {
-                        androidx.compose.material3.DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            modifier = Modifier.fillMaxWidth(0.9f),
-                            properties = PopupProperties(focusable = false)
-                        ) {
-                            filteredProducts.take(5).forEach { prod ->
-                                androidx.compose.material3.DropdownMenuItem(
-                                    text = { 
-                                        Column {
-                                            Text(prod.name, fontWeight = FontWeight.Bold)
-                                            Text("${prod.category} · Stock: ${prod.stock}", style = MaterialTheme.typography.labelSmall)
-                                        }
-                                    },
-                                    onClick = {
-                                        productQuery = prod.name
-                                        selectedProductId = prod.id
-                                        category = prod.category
-                                        price = prod.unitPrice.toString()
-                                        expanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                OutlinedTextField(
-                    value = category,
-                    onValueChange = { category = it },
-                    label = { Text("Categoría") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) }
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = quantity,
-                        onValueChange = { quantity = it },
-                        label = { Text("Cantidad") },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
-                    OutlinedTextField(
-                        value = price,
-                        onValueChange = { price = it },
-                        label = { Text("Precio Unit.") },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-                    )
-                }
-                OutlinedTextField(
-                    value = discount,
-                    onValueChange = { discount = it },
-                    label = { Text("Descuento") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-                )
-                OutlinedTextField(
-                    value = seller,
-                    onValueChange = { seller = it },
-                    label = { Text("Vendedor") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) }
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    onSave(
-                        productQuery,
-                        category,
-                        quantity.toIntOrNull() ?: 0,
-                        price.toDoubleOrNull() ?: 0.0,
-                        discount.toDoubleOrNull() ?: 0.0,
-                        seller,
-                        selectedProductId
-                    )
-                },
-            ) { Text("Guardar") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
-        shape = RoundedCornerShape(24.dp)
-    )
 }
