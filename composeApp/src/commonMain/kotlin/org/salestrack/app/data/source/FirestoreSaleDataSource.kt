@@ -1,6 +1,7 @@
 package org.salestrack.app.data.source
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import org.salestrack.app.core.firebase.FirebaseHelpers
 import org.salestrack.app.core.result.AppResult
@@ -26,6 +27,7 @@ class FirestoreSaleDataSource(
             .map { snapshot ->
                 snapshot.documents.map { it.data<Sale>() }.filter { !it.isDeleted }
             }
+            .catch { emit(emptyList()) }
     }
 
     override suspend fun addSale(input: NewSaleInput): AppResult<Sale> {

@@ -117,7 +117,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     val authViewModel = container.authViewModel
     val authUiState by authViewModel.uiState.collectAsState()
     
-    var currentDestination by remember { mutableStateOf(AppDestination.Dashboard) }
+    var currentDestination by remember {
+        mutableStateOf(if (authUiState.isAuthenticated) AppDestination.Dashboard else AppDestination.Login)
+    }
     var initialReportPeriod by remember { mutableStateOf(ReportPeriod.Daily) }
 
     // Manejo de la navegación obligatoria basada en la autenticación

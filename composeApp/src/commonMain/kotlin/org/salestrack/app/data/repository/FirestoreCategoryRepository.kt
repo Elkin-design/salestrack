@@ -1,6 +1,7 @@
 package org.salestrack.app.data.repository
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import org.salestrack.app.core.firebase.FirebaseHelpers
 import org.salestrack.app.core.result.AppResult
@@ -24,6 +25,7 @@ class FirestoreCategoryRepository(
                     .filter { it.isActive }
                     .sortedBy { it.name.lowercase() }
             }
+            .catch { emit(emptyList()) }
     }
 
     override suspend fun createCategory(name: String, colorHex: String): AppResult<Category> {

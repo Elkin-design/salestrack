@@ -1,6 +1,7 @@
 package org.salestrack.app.data.source
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import org.salestrack.app.core.firebase.FirebaseHelpers
 import org.salestrack.app.core.result.AppResult
@@ -24,13 +25,13 @@ class FirestoreInventoryDataSource(
     override fun observeProducts(): Flow<List<Product>> {
         return productsRef().snapshots.map { snapshot ->
             snapshot.documents.map { it.data<Product>() }.filter { it.isActive }
-        }
+        }.catch { emit(emptyList()) }
     }
 
     override fun observeStockMovements(productId: String?): Flow<List<StockMovement>> {
         return movementsRef().orderBy("createdAtMillis", Direction.DESCENDING).snapshots.map { snap ->
             snap.documents.map { it.data<StockMovement>() }.filter { productId == null || it.productId == productId }
-        }
+        }.catch { emit(emptyList()) }
     }
 
     override suspend fun addProduct(input: NewProductInput): AppResult<Product> {
