@@ -174,8 +174,8 @@ fun appModule(config: EnvironmentConfig) = module {
     single { GetTeamSalesUseCase() }
     single { InviteMemberUseCase(get()) }
     single { GetRolePermissionsUseCase() }
-    single { AddProductUseCase(get()) }
-    single { EditProductUseCase(get()) }
+    single { AddProductUseCase(get(), get()) }
+    single { EditProductUseCase(get(), get()) }
     single { DeleteProductUseCase(get()) }
     single { FilterProductsUseCase() }
     single { AdjustStockUseCase(get()) }

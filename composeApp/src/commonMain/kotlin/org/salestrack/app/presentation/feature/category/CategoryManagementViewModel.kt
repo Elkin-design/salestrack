@@ -67,25 +67,7 @@ class CategoryManagementViewModel(
 
     private fun updateCategoriesState() {
         val configured = latestConfiguredCategories
-        
-        val productCategories = latestProducts
-            .map { it.category.trim() }
-            .filter { it.isNotBlank() }
-            .distinct()
-            
-        val tempCategories = productCategories.mapNotNull { name ->
-            val alreadyExists = configured.any { it.name.equals(name, ignoreCase = true) }
-            if (!alreadyExists) {
-                Category(
-                    id = "TEMP-${name.lowercase()}",
-                    name = name,
-                    colorHex = "#9E9E9E", 
-                    updatedAtMillis = 0L
-                )
-            } else null
-        }
-        
-        val merged = (configured + tempCategories).sortedBy { it.name.lowercase() }
+        val merged = configured.sortedBy { it.name.lowercase() }
         
         setState {
             it.copy(

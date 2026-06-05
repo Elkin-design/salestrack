@@ -103,6 +103,7 @@ fun SalesRoute(
             updateSaleUseCase = container.updateSaleUseCase,
             deleteSaleUseCase = container.deleteSaleUseCase,
             filterSalesUseCase = container.filterSalesUseCase,
+            observeCategoriesUseCase = container.observeCategoriesUseCase,
         )
     }
     val uiState by viewModel.state.collectAsState()

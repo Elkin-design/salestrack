@@ -103,11 +103,9 @@ class InventoryViewModel(
     }
 
     private fun updateAvailableCategories() {
-        val productCategories = latestProducts.map { it.category }
         val configuredCategories = latestCategories.map { it.name }
-        val defaultCategories = listOf("General", "Alimentos", "Bebidas", "Limpieza", "Electrónica", "Ropa", "Salud", "Hogar", "Servicios")
         
-        val merged = (productCategories + configuredCategories + defaultCategories)
+        val merged = configuredCategories
             .distinct()
             .sortedBy { it.lowercase() }
             

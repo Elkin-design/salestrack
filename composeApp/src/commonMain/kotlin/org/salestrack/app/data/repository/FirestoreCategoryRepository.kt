@@ -3,6 +3,10 @@ package org.salestrack.app.data.repository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.salestrack.app.core.firebase.FirebaseHelpers
 import org.salestrack.app.core.result.AppResult
 import org.salestrack.app.core.utils.TimeProvider
@@ -14,16 +18,46 @@ class FirestoreCategoryRepository(
     private val timeProvider: TimeProvider,
 ) : CategoryRepository {
 
+    private var hasSeeded = false
+    private val repositoryScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default)
+
+    private fun seedDefaultCategories() {
+        repositoryScope.launch {
+            try {
+                val defaults = listOf(
+                    Category(id = "C-GEN", name = "General", colorHex = "#9E9E9E", isActive = true, updatedAtMillis = timeProvider.nowMillis()),
+                    Category(id = "C-ALI", name = "Alimentos", colorHex = "#FF9800", isActive = true, updatedAtMillis = timeProvider.nowMillis()),
+                    Category(id = "C-BEB", name = "Bebidas", colorHex = "#2196F3", isActive = true, updatedAtMillis = timeProvider.nowMillis()),
+                    Category(id = "C-LIM", name = "Limpieza", colorHex = "#4CAF50", isActive = true, updatedAtMillis = timeProvider.nowMillis()),
+                    Category(id = "C-ELE", name = "Electrónica", colorHex = "#9C27B0", isActive = true, updatedAtMillis = timeProvider.nowMillis()),
+                    Category(id = "C-ROP", name = "Ropa", colorHex = "#E91E63", isActive = true, updatedAtMillis = timeProvider.nowMillis()),
+                    Category(id = "C-SAL", name = "Salud", colorHex = "#00BCD4", isActive = true, updatedAtMillis = timeProvider.nowMillis()),
+                    Category(id = "C-HOG", name = "Hogar", colorHex = "#795548", isActive = true, updatedAtMillis = timeProvider.nowMillis()),
+                    Category(id = "C-SER", name = "Servicios", colorHex = "#607D8B", isActive = true, updatedAtMillis = timeProvider.nowMillis())
+                )
+                for (cat in defaults) {
+                    categoriesRef().document(cat.id).set(cat)
+                }
+            } catch (e: Exception) {
+                // Ignore seeding errors
+            }
+        }
+    }
+
     private fun categoriesRef() = FirebaseHelpers.userRootDocument().collection("categories")
 
     override fun observeCategories(): Flow<List<Category>> {
         return categoriesRef()
             .snapshots
             .map { snap ->
-                snap.documents
+                val list = snap.documents
                     .mapNotNull { doc -> runCatching { doc.data<Category>() }.getOrNull() }
                     .filter { it.isActive }
-                    .sortedBy { it.name.lowercase() }
+                if (list.isEmpty() && !hasSeeded) {
+                    hasSeeded = true
+                    seedDefaultCategories()
+                }
+                list.sortedBy { it.name.lowercase() }
             }
             .catch { emit(emptyList()) }
     }

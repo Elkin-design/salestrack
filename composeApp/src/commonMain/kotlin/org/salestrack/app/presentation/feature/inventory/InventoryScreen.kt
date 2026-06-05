@@ -633,7 +633,7 @@ private fun ProductFormDialog(
 
     val unitOptions = listOf("Unidad", "Kg", "g", "L", "ml", "Caja", "Paquete", "Servicio")
     val actualCategoryOptions = categoryOptions.ifEmpty {
-        listOf("General", "Alimentos", "Bebidas", "Limpieza", "Electrónica", "Ropa", "Salud", "Hogar", "Servicios")
+        emptyList()
     }
 
     // Colores premium con degradados suaves y comportamiento de enfoque pulido

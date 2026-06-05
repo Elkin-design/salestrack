@@ -13,6 +13,8 @@ import org.salestrack.app.domain.usecase.sales.AddSaleUseCase
 import org.salestrack.app.domain.usecase.sales.DeleteSaleUseCase
 import org.salestrack.app.domain.usecase.sales.FilterSalesUseCase
 import org.salestrack.app.domain.usecase.sales.UpdateSaleUseCase
+import org.salestrack.app.domain.usecase.category.ObserveCategoriesUseCase
+import org.salestrack.app.domain.model.Category
 
 class SalesViewModel(
     dispatcherProvider: DispatcherProvider,
@@ -22,16 +24,19 @@ class SalesViewModel(
     private val updateSaleUseCase: UpdateSaleUseCase,
     private val deleteSaleUseCase: DeleteSaleUseCase,
     private val filterSalesUseCase: FilterSalesUseCase,
+    private val observeCategoriesUseCase: ObserveCategoriesUseCase? = null,
 ) : BaseViewModel<SalesUiState, SalesUiEvent, SalesUiEffect>(
     initialState = SalesUiState(),
     dispatcherProvider = dispatcherProvider,
 ) {
 
     private var latestSales: List<Sale> = emptyList()
+    private var latestCategories: List<Category> = emptyList()
 
     init {
         observeSales()
         observeInventory()
+        observeCategories()
     }
 
     override fun onEvent(event: SalesUiEvent) {
@@ -58,9 +63,18 @@ class SalesViewModel(
         scope.launch {
             repository.observeSales().collect { sales ->
                 latestSales = sales
-                val categories = sales.map { it.category }.distinct().sorted()
-                setState { it.copy(isLoading = false, availableCategories = categories) }
                 applyFilters()
+            }
+        }
+    }
+
+    private fun observeCategories() {
+        val useCase = observeCategoriesUseCase ?: return
+        scope.launch {
+            useCase().collect { categories ->
+                latestCategories = categories.filter { it.isActive }
+                val names = latestCategories.map { it.name }.distinct().sortedBy { it.lowercase() }
+                setState { it.copy(isLoading = false, availableCategories = names) }
             }
         }
     }
@@ -142,7 +156,7 @@ class SalesViewModel(
     private fun deleteSale(saleId: String) {
         scope.launch {
             when (val result = deleteSaleUseCase(saleId)) {
-                is AppResult.Success -> emitEffect(SalesUiEffect.ShowMessage("Venta eliminada"))
+                is AppResult.Success<*> -> emitEffect(SalesUiEffect.ShowMessage("Venta eliminada"))
                 is AppResult.Failure -> setState {
                     it.copy(errorMessage = result.error.message ?: "Error al eliminar venta")
                 }

@@ -8,7 +8,9 @@ import org.salestrack.app.core.FakeDispatcherProvider
 import org.salestrack.app.core.FakeTimeProvider
 import org.salestrack.app.data.mock.MockInventoryFactory
 import org.salestrack.app.data.repository.FakeInventoryRepository
+import org.salestrack.app.data.repository.FakeCategoryRepository
 import org.salestrack.app.data.source.InMemoryInventoryDataSource
+import org.salestrack.app.data.source.InMemoryCategoryDataSource
 import org.salestrack.app.domain.model.StockAdjustmentType
 import org.salestrack.app.domain.usecase.inventory.AddProductUseCase
 import org.salestrack.app.domain.usecase.inventory.AdjustStockUseCase
@@ -34,11 +36,27 @@ class InventoryViewModelTest {
             timeProvider = FakeTimeProvider(1_000L),
         )
 
+        val fakeTimeProvider = FakeTimeProvider(1_000L)
+        val categoryRepo = FakeCategoryRepository(
+            dataSource = InMemoryCategoryDataSource(
+                listOf(
+                    org.salestrack.app.domain.model.Category("1", "Bebidas", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("2", "Snacks", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("3", "Abarrotes", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("4", "Lacteos", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("5", "Panaderia", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("6", "Lacteos y Huevos", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("7", "Granos", "#FF0000", true, 0L)
+                )
+            ),
+            timeProvider = fakeTimeProvider
+        )
+
         val viewModel = InventoryViewModel(
             dispatcherProvider = FakeDispatcherProvider(dispatcher),
             repository = repository,
-            addProductUseCase = AddProductUseCase(repository),
-            editProductUseCase = EditProductUseCase(repository),
+            addProductUseCase = AddProductUseCase(repository, categoryRepo),
+            editProductUseCase = EditProductUseCase(repository, categoryRepo),
             filterProductsUseCase = FilterProductsUseCase(),
             adjustStockUseCase = AdjustStockUseCase(repository),
             getLowStockProductsUseCase = GetLowStockProductsUseCase(repository),
@@ -61,11 +79,27 @@ class InventoryViewModelTest {
             timeProvider = FakeTimeProvider(1_000L),
         )
 
+        val fakeTimeProvider = FakeTimeProvider(1_000L)
+        val categoryRepo = FakeCategoryRepository(
+            dataSource = InMemoryCategoryDataSource(
+                listOf(
+                    org.salestrack.app.domain.model.Category("1", "Bebidas", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("2", "Snacks", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("3", "Abarrotes", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("4", "Lacteos", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("5", "Panaderia", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("6", "Lacteos y Huevos", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("7", "Granos", "#FF0000", true, 0L)
+                )
+            ),
+            timeProvider = fakeTimeProvider
+        )
+
         val viewModel = InventoryViewModel(
             dispatcherProvider = FakeDispatcherProvider(dispatcher),
             repository = repository,
-            addProductUseCase = AddProductUseCase(repository),
-            editProductUseCase = EditProductUseCase(repository),
+            addProductUseCase = AddProductUseCase(repository, categoryRepo),
+            editProductUseCase = EditProductUseCase(repository, categoryRepo),
             filterProductsUseCase = FilterProductsUseCase(),
             adjustStockUseCase = AdjustStockUseCase(repository),
             getLowStockProductsUseCase = GetLowStockProductsUseCase(repository),
@@ -90,11 +124,27 @@ class InventoryViewModelTest {
             timeProvider = FakeTimeProvider(1_000L),
         )
 
+        val fakeTimeProvider = FakeTimeProvider(1_000L)
+        val categoryRepo = FakeCategoryRepository(
+            dataSource = InMemoryCategoryDataSource(
+                listOf(
+                    org.salestrack.app.domain.model.Category("1", "Bebidas", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("2", "Snacks", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("3", "Abarrotes", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("4", "Lacteos", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("5", "Panaderia", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("6", "Lacteos y Huevos", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("7", "Granos", "#FF0000", true, 0L)
+                )
+            ),
+            timeProvider = fakeTimeProvider
+        )
+
         val viewModel = InventoryViewModel(
             dispatcherProvider = FakeDispatcherProvider(dispatcher),
             repository = repository,
-            addProductUseCase = AddProductUseCase(repository),
-            editProductUseCase = EditProductUseCase(repository),
+            addProductUseCase = AddProductUseCase(repository, categoryRepo),
+            editProductUseCase = EditProductUseCase(repository, categoryRepo),
             filterProductsUseCase = FilterProductsUseCase(),
             adjustStockUseCase = AdjustStockUseCase(repository),
             getLowStockProductsUseCase = GetLowStockProductsUseCase(repository),
@@ -125,11 +175,27 @@ class InventoryViewModelTest {
             timeProvider = FakeTimeProvider(1_000L),
         )
 
+        val fakeTimeProvider = FakeTimeProvider(1_000L)
+        val categoryRepo = FakeCategoryRepository(
+            dataSource = InMemoryCategoryDataSource(
+                listOf(
+                    org.salestrack.app.domain.model.Category("1", "Bebidas", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("2", "Snacks", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("3", "Abarrotes", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("4", "Lacteos", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("5", "Panaderia", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("6", "Lacteos y Huevos", "#FF0000", true, 0L),
+                    org.salestrack.app.domain.model.Category("7", "Granos", "#FF0000", true, 0L)
+                )
+            ),
+            timeProvider = fakeTimeProvider
+        )
+
         val viewModel = InventoryViewModel(
             dispatcherProvider = FakeDispatcherProvider(dispatcher),
             repository = repository,
-            addProductUseCase = AddProductUseCase(repository),
-            editProductUseCase = EditProductUseCase(repository),
+            addProductUseCase = AddProductUseCase(repository, categoryRepo),
+            editProductUseCase = EditProductUseCase(repository, categoryRepo),
             filterProductsUseCase = FilterProductsUseCase(),
             adjustStockUseCase = AdjustStockUseCase(repository),
             getLowStockProductsUseCase = GetLowStockProductsUseCase(repository),
