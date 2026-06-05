@@ -73,4 +73,16 @@ class FirestoreSaleDataSource(
             AppResult.Failure(e)
         }
     }
+
+    override suspend fun clearAllSales(): AppResult<Unit> {
+        return try {
+            val snapshot = salesCollection().get()
+            for (doc in snapshot.documents) {
+                salesCollection().document(doc.id).delete()
+            }
+            AppResult.Success(Unit)
+        } catch (e: Exception) {
+            AppResult.Failure(e)
+        }
+    }
 }

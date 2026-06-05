@@ -103,11 +103,7 @@ fun appModule(config: EnvironmentConfig) = module {
     single { InMemoryTeamDataSource(MockTeamFactory.create()) }
 
     single<SaleRepository> {
-        when (get<EnvironmentConfig>().backendProvider) {
-            BackendProvider.MOCK -> FakeSaleRepository(dataSource = get(), timeProvider = get())
-            BackendProvider.FIRESTORE_STUB,
-            BackendProvider.FIRESTORE -> RealSaleRepository(dataSource = get())
-        }
+        RealSaleRepository(dataSource = get())
     }
 
     single<SaleDataSource> {
@@ -117,11 +113,7 @@ fun appModule(config: EnvironmentConfig) = module {
     }
 
     single<InventoryRepository> {
-        when (get<EnvironmentConfig>().backendProvider) {
-            BackendProvider.MOCK -> FakeInventoryRepository(dataSource = get(), timeProvider = get())
-            BackendProvider.FIRESTORE_STUB,
-            BackendProvider.FIRESTORE -> RealInventoryRepository(dataSource = get())
-        }
+        RealInventoryRepository(dataSource = get())
     }
 
     single<InventoryDataSource> {
@@ -130,11 +122,7 @@ fun appModule(config: EnvironmentConfig) = module {
         )
     }
     single<CategoryRepository> {
-        when (get<EnvironmentConfig>().backendProvider) {
-            BackendProvider.MOCK -> FakeCategoryRepository(dataSource = get(), timeProvider = get())
-            BackendProvider.FIRESTORE_STUB,
-            BackendProvider.FIRESTORE -> FirestoreCategoryRepository(timeProvider = get())
-        }
+        FirestoreCategoryRepository(timeProvider = get())
     }
     single<SettingsRepository> { FakeSettingsRepository(get()) }
     single<NotificationRepository> { FakeNotificationRepository(get()) }
@@ -163,7 +151,7 @@ fun appModule(config: EnvironmentConfig) = module {
         )
     }
 
-    single { AddSaleUseCase(get(), get()) }
+    single { AddSaleUseCase(get(), get(), get()) }
     single { UpdateSaleUseCase(get()) }
     single { DeleteSaleUseCase(get()) }
     single { FilterSalesUseCase() }

@@ -27,4 +27,8 @@ class RealSaleRepository(
     override suspend fun softDeleteSale(saleId: String): AppResult<Unit> {
         return dataSource.softDeleteSale(saleId)
     }
+
+    override suspend fun clearAllSales(): AppResult<Unit> {
+        return dataSource.clearAllSales()
+    }
 }

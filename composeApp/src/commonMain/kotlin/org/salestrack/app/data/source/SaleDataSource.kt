@@ -10,4 +10,5 @@ interface SaleDataSource {
     suspend fun addSale(input: NewSaleInput): AppResult<Sale>
     suspend fun updateSale(sale: Sale): AppResult<Sale>
     suspend fun softDeleteSale(saleId: String): AppResult<Unit>
+    suspend fun clearAllSales(): AppResult<Unit>
 }

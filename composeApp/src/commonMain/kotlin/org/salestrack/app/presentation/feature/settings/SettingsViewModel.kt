@@ -8,11 +8,22 @@ import org.salestrack.app.domain.usecase.settings.ObserveSettingsUseCase
 import org.salestrack.app.domain.usecase.settings.UpdateSettingsUseCase
 import org.salestrack.app.domain.usecase.auth.SignOutUseCase
 
+import org.salestrack.app.domain.repository.SaleRepository
+
 class SettingsViewModel(
     dispatcherProvider: DispatcherProvider,
     private val observeSettingsUseCase: ObserveSettingsUseCase,
     private val updateSettingsUseCase: UpdateSettingsUseCase,
-    private val signOutUseCase: SignOutUseCase,
+    private val signOutUseCase: SignOutUseCase = SignOutUseCase(object : org.salestrack.app.domain.repository.AuthRepository {
+        override fun observeAuthState() = kotlinx.coroutines.flow.flowOf(null)
+        override suspend fun signInWithGoogle(idToken: String) = org.salestrack.app.core.result.AppResult.Failure(Exception())
+        override suspend fun signOut() = org.salestrack.app.core.result.AppResult.Success(Unit)
+        override fun getCurrentUser() = null
+    }),
+    private val saleRepository: SaleRepository = org.salestrack.app.data.repository.FakeSaleRepository(
+        dataSource = org.salestrack.app.data.source.InMemorySaleDataSource(emptyList()),
+        timeProvider = org.salestrack.app.core.utils.SystemTimeProvider()
+    ),
 ) : BaseViewModel<SettingsUiState, SettingsUiEvent, SettingsUiEffect>(
     initialState = SettingsUiState(),
     dispatcherProvider = dispatcherProvider,
@@ -31,6 +42,7 @@ class SettingsViewModel(
             is SettingsUiEvent.DesktopFontScaleChanged -> setState { it.copy(desktopFontScale = event.value) }
             SettingsUiEvent.SaveClicked -> saveSettings()
             SettingsUiEvent.SignOutClicked -> signOut()
+            SettingsUiEvent.ClearSalesClicked -> clearSales()
         }
     }
 
@@ -81,6 +93,26 @@ class SettingsViewModel(
                         it.copy(
                             isSaving = false,
                             errorMessage = result.error.message ?: "No se pudo guardar configuracion",
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun clearSales() {
+        scope.launch {
+            setState { it.copy(isSaving = true, errorMessage = null) }
+            when (val result = saleRepository.clearAllSales()) {
+                is AppResult.Success -> {
+                    setState { it.copy(isSaving = false) }
+                    emitEffect(SettingsUiEffect.ShowMessage("Historial de ventas limpiado"))
+                }
+                is AppResult.Failure -> {
+                    setState {
+                        it.copy(
+                            isSaving = false,
+                            errorMessage = result.error.message ?: "No se pudo limpiar el historial de ventas",
                         )
                     }
                 }

@@ -100,6 +100,7 @@ private fun createPreviewContainer(): AppContainer {
         override suspend fun addSale(input: NewSaleInput) = AppResult.Success(Sale("", "", "", 0, 0.0, 0.0, 0L, "", null, false))
         override suspend fun updateSale(sale: Sale) = AppResult.Success(sale)
         override suspend fun softDeleteSale(saleId: String) = AppResult.Success(Unit)
+        override suspend fun clearAllSales() = AppResult.Success(Unit)
     }
 
     val inventoryRepo = object : InventoryRepository, InventoryDataSource {
@@ -183,7 +184,7 @@ private fun createPreviewContainer(): AppContainer {
         printRepository = printRepo,
         backupRepository = backupRepo,
         teamRepository = teamRepo,
-        addSaleUseCase = AddSaleUseCase(saleRepo, inventoryRepo),
+        addSaleUseCase = AddSaleUseCase(saleRepo, inventoryRepo, categoryRepo),
         updateSaleUseCase = UpdateSaleUseCase(saleRepo),
         deleteSaleUseCase = DeleteSaleUseCase(saleRepo),
         filterSalesUseCase = FilterSalesUseCase(),

@@ -97,6 +97,7 @@ fun SettingsRoute(
             observeSettingsUseCase = container.observeSettingsUseCase,
             updateSettingsUseCase = container.updateSettingsUseCase,
             signOutUseCase = container.signOutUseCase,
+            saleRepository = container.saleRepository,
         )
     }
     val uiState by viewModel.state.collectAsState()
@@ -188,6 +189,41 @@ fun SettingsScreen(
                     )
                 }
 
+                // Sección: Datos
+                var showClearSalesDialog by remember { mutableStateOf(false) }
+
+                if (showClearSalesDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showClearSalesDialog = false },
+                        title = { Text("¿Eliminar todas las ventas?") },
+                        text = { Text("Esta acción eliminará de forma irreversible todo el historial de ventas registrado en Firestore. ¿Deseas continuar?") },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    showClearSalesDialog = false
+                                    onEvent(SettingsUiEvent.ClearSalesClicked)
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            ) {
+                                Text("Eliminar todo", fontWeight = FontWeight.Bold)
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showClearSalesDialog = false }) {
+                                Text("Cancelar")
+                            }
+                        }
+                    )
+                }
+
+                SettingsGroup(title = "Datos") {
+                    SettingsActionItem(
+                        icon = Icons.Default.DeleteForever,
+                        title = "Limpiar Ventas",
+                        subtitle = "Borrar historial de ventas de la BBDD",
+                        onClick = { showClearSalesDialog = true }
+                    )
+                }
 
                 // Sección: Cuenta
                 SettingsGroup(title = "Cuenta") {

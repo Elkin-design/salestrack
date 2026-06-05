@@ -8,13 +8,24 @@ import org.salestrack.app.domain.model.Sale
 import org.salestrack.app.domain.repository.InventoryRepository
 import org.salestrack.app.domain.repository.SaleRepository
 
+import org.salestrack.app.domain.repository.CategoryRepository
+
 class AddSaleUseCase(
     private val repository: SaleRepository,
     private val inventoryRepository: InventoryRepository? = null,
+    private val categoryRepository: CategoryRepository? = null,
 ) {
     suspend operator fun invoke(input: NewSaleInput): AppResult<Sale> {
         if (input.productName.isBlank()) {
             return AppResult.Failure(IllegalArgumentException("El producto es obligatorio"))
+        }
+
+        if (categoryRepository != null) {
+            val activeCategories = categoryRepository.observeCategories().first()
+            val categoryExists = activeCategories.any { it.isActive && it.name.equals(input.category, ignoreCase = true) }
+            if (!categoryExists) {
+                return AppResult.Failure(IllegalArgumentException("La categoría '${input.category}' no es válida o no existe en la base de datos"))
+            }
         }
         if (input.quantity <= 0) {
             return AppResult.Failure(IllegalArgumentException("La cantidad debe ser mayor a 0"))

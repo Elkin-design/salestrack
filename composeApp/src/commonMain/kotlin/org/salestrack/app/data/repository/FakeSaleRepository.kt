@@ -53,5 +53,10 @@ class FakeSaleRepository(
         dataSource.replaceAll(updated)
         return AppResult.Success(Unit)
     }
+
+    override suspend fun clearAllSales(): AppResult<Unit> {
+        dataSource.replaceAll(emptyList())
+        return AppResult.Success(Unit)
+    }
 }
 
