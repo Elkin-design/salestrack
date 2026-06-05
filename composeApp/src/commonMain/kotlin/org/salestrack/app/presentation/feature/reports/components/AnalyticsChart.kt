@@ -64,10 +64,9 @@ fun AnalyticsLineChart(
     val surfaceColor = MaterialTheme.colorScheme.surfaceVariant
     
     val animationProgress = remember { Animatable(0f) }
-    var selectedIndex by remember { mutableStateOf<Int?>(null) }
+    var selectedIndex by remember(points) { mutableStateOf<Int?>(null) }
     
     LaunchedEffect(points) {
-        selectedIndex = null
         animationProgress.animateTo(1f, animationSpec = tween(1200))
     }
 
@@ -237,7 +236,7 @@ fun AnalyticsLineChart(
 
                 // Draw Tooltip for selected point
                 selectedIndex?.let { index ->
-                    val point = points[index]
+                    val point = points.getOrNull(index) ?: return@let
                     val x = index * spacing
                     val y = chartHeight - (point.totalAmount.toFloat() / maxAmount) * chartHeight * animationProgress.value
 
@@ -294,10 +293,9 @@ fun AnalyticsBarChart(
     val surfaceColor = MaterialTheme.colorScheme.surfaceVariant
     
     val animationProgress = remember { Animatable(0f) }
-    var selectedIndex by remember { mutableStateOf<Int?>(null) }
+    var selectedIndex by remember(points) { mutableStateOf<Int?>(null) }
     
     LaunchedEffect(points) {
-        selectedIndex = null
         animationProgress.animateTo(1f, animationSpec = tween(1000))
     }
 
@@ -411,7 +409,7 @@ fun AnalyticsBarChart(
                 
                 // Draw Tooltip for selected bar
                 selectedIndex?.let { index ->
-                    val point = points[index]
+                    val point = points.getOrNull(index) ?: return@let
                     val x = index * (barWidth + gap) + gap / 2
                     val barHeight = (point.totalAmount.toFloat() / maxAmount) * chartHeight * animationProgress.value
 
