@@ -159,7 +159,7 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 16.dp),
+                .padding(bottom = 80.dp),
         ) {
             if (uiState.isLoading) {
                 Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
@@ -186,42 +186,6 @@ fun SettingsScreen(
                         title = "Notificaciones",
                         subtitle = "Alertas de inventario y cierres",
                         onClick = onOpenNotificationSettings
-                    )
-                }
-
-                // Sección: Datos
-                var showClearSalesDialog by remember { mutableStateOf(false) }
-
-                if (showClearSalesDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showClearSalesDialog = false },
-                        title = { Text("¿Eliminar todas las ventas?") },
-                        text = { Text("Esta acción eliminará de forma irreversible todo el historial de ventas registrado en Firestore. ¿Deseas continuar?") },
-                        confirmButton = {
-                            Button(
-                                onClick = {
-                                    showClearSalesDialog = false
-                                    onEvent(SettingsUiEvent.ClearSalesClicked)
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                            ) {
-                                Text("Eliminar todo", fontWeight = FontWeight.Bold)
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showClearSalesDialog = false }) {
-                                Text("Cancelar")
-                            }
-                        }
-                    )
-                }
-
-                SettingsGroup(title = "Datos") {
-                    SettingsActionItem(
-                        icon = Icons.Default.DeleteForever,
-                        title = "Limpiar Ventas",
-                        subtitle = "Borrar historial de ventas de la BBDD",
-                        onClick = { showClearSalesDialog = true }
                     )
                 }
 
