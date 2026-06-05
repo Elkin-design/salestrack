@@ -11,6 +11,8 @@ import org.salestrack.app.core.firebase.FirebaseHelpers
 import org.salestrack.app.core.result.AppResult
 import org.salestrack.app.core.utils.TimeProvider
 import org.salestrack.app.domain.model.Category
+import org.salestrack.app.domain.model.Product
+import org.salestrack.app.domain.model.Sale
 import org.salestrack.app.domain.repository.CategoryRepository
 import dev.gitlive.firebase.firestore.Direction
 
@@ -90,6 +92,11 @@ class FirestoreCategoryRepository(
 
     override suspend fun updateCategory(category: Category): AppResult<Category> {
         return try {
+            val oldDoc = categoriesRef().document(category.id).get()
+            val oldName = if (oldDoc.exists) {
+                runCatching { oldDoc.data<Category>().name }.getOrNull()
+            } else null
+
             val snapshot = categoriesRef().get()
             val existing = snapshot.documents.mapNotNull { doc -> runCatching { doc.data<Category>() }.getOrNull() }
             
@@ -99,6 +106,28 @@ class FirestoreCategoryRepository(
 
             val updated = category.copy(updatedAtMillis = timeProvider.nowMillis())
             categoriesRef().document(category.id).set(updated)
+
+            if (oldName != null && !oldName.equals(category.name, ignoreCase = true)) {
+                // Update products in inventory
+                val productsRef = FirebaseHelpers.userRootDocument().collection("inventory")
+                val productsSnap = productsRef.get()
+                for (doc in productsSnap.documents) {
+                    val product = runCatching { doc.data<Product>() }.getOrNull()
+                    if (product != null && product.category.equals(oldName, ignoreCase = true)) {
+                        productsRef.document(product.id).update(mapOf("category" to category.name))
+                    }
+                }
+
+                // Update sales
+                val salesRef = FirebaseHelpers.userRootDocument().collection("sales")
+                val salesSnap = salesRef.get()
+                for (doc in salesSnap.documents) {
+                    val sale = runCatching { doc.data<Sale>() }.getOrNull()
+                    if (sale != null && sale.category.equals(oldName, ignoreCase = true)) {
+                        salesRef.document(sale.id).update(mapOf("category" to category.name))
+                    }
+                }
+            }
             
             AppResult.Success(updated)
         } catch (e: Exception) {
