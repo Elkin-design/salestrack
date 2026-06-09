@@ -7,6 +7,7 @@ import org.salestrack.app.core.result.AppResult
 import org.salestrack.app.domain.usecase.settings.ObserveSettingsUseCase
 import org.salestrack.app.domain.usecase.settings.UpdateSettingsUseCase
 import org.salestrack.app.domain.usecase.auth.SignOutUseCase
+import org.salestrack.app.domain.usecase.auth.GetAuthStateUseCase
 
 import org.salestrack.app.domain.repository.SaleRepository
 
@@ -14,6 +15,12 @@ class SettingsViewModel(
     dispatcherProvider: DispatcherProvider,
     private val observeSettingsUseCase: ObserveSettingsUseCase,
     private val updateSettingsUseCase: UpdateSettingsUseCase,
+    private val getAuthStateUseCase: GetAuthStateUseCase = GetAuthStateUseCase(object : org.salestrack.app.domain.repository.AuthRepository {
+        override fun observeAuthState() = kotlinx.coroutines.flow.flowOf(null)
+        override suspend fun signInWithGoogle(idToken: String) = org.salestrack.app.core.result.AppResult.Failure(Exception())
+        override suspend fun signOut() = org.salestrack.app.core.result.AppResult.Success(Unit)
+        override fun getCurrentUser() = null
+    }),
     private val signOutUseCase: SignOutUseCase = SignOutUseCase(object : org.salestrack.app.domain.repository.AuthRepository {
         override fun observeAuthState() = kotlinx.coroutines.flow.flowOf(null)
         override suspend fun signInWithGoogle(idToken: String) = org.salestrack.app.core.result.AppResult.Failure(Exception())
@@ -31,6 +38,7 @@ class SettingsViewModel(
 
     init {
         observeSettings()
+        observeAuthState()
     }
 
     override fun onEvent(event: SettingsUiEvent) {
@@ -115,6 +123,20 @@ class SettingsViewModel(
                             errorMessage = result.error.message ?: "No se pudo limpiar el historial de ventas",
                         )
                     }
+                }
+            }
+        }
+    }
+
+    private fun observeAuthState() {
+        scope.launch {
+            getAuthStateUseCase().collect { user ->
+                setState {
+                    it.copy(
+                        userDisplayName = user?.displayName,
+                        userEmail = user?.email,
+                        userPhotoUrl = user?.photoUrl
+                    )
                 }
             }
         }

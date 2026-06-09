@@ -139,7 +139,7 @@ fun appModule(config: EnvironmentConfig) = module {
     single<AuthRepository> { FirebaseAuthRepository() }
 
     single { SignInWithGoogleUseCase(get()) }
-    single { SignOutUseCase(get()) }
+    single { SignOutUseCase(get(), platformGoogleSignInNavigator) }
     single { GetAuthStateUseCase(get()) }
 
     factory { 

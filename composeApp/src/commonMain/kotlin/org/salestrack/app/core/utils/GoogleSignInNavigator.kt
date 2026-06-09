@@ -6,6 +6,7 @@ package org.salestrack.app.core.utils
  */
 interface GoogleSignInNavigator {
     fun signIn(onResult: (idToken: String?, error: String?) -> Unit)
+    fun signOut(onComplete: () -> Unit = {})
 }
 
 /**

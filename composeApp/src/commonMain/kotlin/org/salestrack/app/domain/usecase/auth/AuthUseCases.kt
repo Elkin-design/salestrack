@@ -4,6 +4,9 @@ import org.salestrack.app.core.result.AppResult
 import org.salestrack.app.domain.repository.AuthRepository
 import org.salestrack.app.domain.repository.AuthUser
 
+import org.salestrack.app.core.utils.GoogleSignInNavigator
+import org.salestrack.app.core.utils.platformGoogleSignInNavigator
+
 class SignInWithGoogleUseCase(
     private val repository: AuthRepository
 ) {
@@ -13,10 +16,18 @@ class SignInWithGoogleUseCase(
 }
 
 class SignOutUseCase(
-    private val repository: AuthRepository
+    private val repository: AuthRepository,
+    private val googleSignInNavigator: GoogleSignInNavigator = platformGoogleSignInNavigator
 ) {
     suspend operator fun invoke(): AppResult<Unit> {
-        return repository.signOut()
+        val repoResult = repository.signOut()
+        if (repoResult is AppResult.Success) {
+            // Se cierra la sesión en el cliente nativo de Google para limpiar el token
+            // y que el selector de cuentas vuelva a aparecer.
+            // Para simplificar la suspensión, llamamos a signOut de manera asíncrona.
+            googleSignInNavigator.signOut()
+        }
+        return repoResult
     }
 }
 

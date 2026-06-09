@@ -36,6 +36,21 @@ class AndroidGoogleSignInNavigator : GoogleSignInNavigator {
         activity.startActivityForResult(signInIntent, RC_SIGN_IN)
     }
 
+    override fun signOut(onComplete: () -> Unit) {
+        val activity = androidContextStore as? Activity ?: run {
+            onComplete()
+            return
+        }
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken("104036343928293051753")
+            .requestEmail()
+            .build()
+        val googleSignInClient = GoogleSignIn.getClient(activity, gso)
+        googleSignInClient.signOut().addOnCompleteListener {
+            onComplete()
+        }
+    }
+
     fun handleActivityResult(requestCode: Int, data: Intent?) {
         if (requestCode == RC_SIGN_IN) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)

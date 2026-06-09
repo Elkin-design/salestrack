@@ -15,6 +15,9 @@ data class SettingsUiState(
     val themeMode: AppThemeMode = AppThemeMode.System,
     val desktopFontScale: Float = 1.0f,
     val errorMessage: String? = null,
+    val userDisplayName: String? = null,
+    val userEmail: String? = null,
+    val userPhotoUrl: String? = null,
 ) : UiState
 
 sealed interface SettingsUiEvent : UiEvent {

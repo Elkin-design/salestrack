@@ -96,6 +96,7 @@ fun SettingsRoute(
             dispatcherProvider = container.dispatcherProvider,
             observeSettingsUseCase = container.observeSettingsUseCase,
             updateSettingsUseCase = container.updateSettingsUseCase,
+            getAuthStateUseCase = container.getAuthStateUseCase,
             signOutUseCase = container.signOutUseCase,
             saleRepository = container.saleRepository,
         )
@@ -172,6 +173,50 @@ fun SettingsScreen(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
+                // Tarjeta de Perfil del Usuario
+                val displayName = uiState.userDisplayName ?: "Usuario"
+                val email = uiState.userEmail ?: "Sin correo"
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        UserAvatar(
+                            name = displayName,
+                            modifier = Modifier.size(56.dp)
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = displayName,
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = email,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            )
+                        }
+                    }
+                }
 
                 // Sección: Gestión
                 SettingsGroup(title = "Gestión") {
@@ -377,6 +422,38 @@ private fun SettingsTextFieldItem(
                 focusedBorderColor = MaterialTheme.colorScheme.primary
             ),
             singleLine = true
+        )
+    }
+}
+
+@Composable
+private fun UserAvatar(name: String, modifier: Modifier = Modifier) {
+    val initials = name.split(" ")
+        .filter { it.isNotBlank() }
+        .take(2)
+        .map { it.first().uppercaseChar() }
+        .joinToString("")
+    
+    val gradientColors = listOf(
+        MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.secondary
+    )
+
+    Box(
+        modifier = modifier
+            .background(
+                brush = Brush.linearGradient(gradientColors),
+                shape = CircleShape
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = if (initials.isNotEmpty()) initials else "?",
+            color = Color.White,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
         )
     }
 }

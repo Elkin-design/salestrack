@@ -165,6 +165,7 @@ private fun createPreviewContainer(): AppContainer {
 
     val googleNavigator = object : GoogleSignInNavigator {
         override fun signIn(onResult: (String?, String?) -> Unit) { onResult(null, "Not implemented") }
+        override fun signOut(onComplete: () -> Unit) { onComplete() }
     }
 
     // UseCases
