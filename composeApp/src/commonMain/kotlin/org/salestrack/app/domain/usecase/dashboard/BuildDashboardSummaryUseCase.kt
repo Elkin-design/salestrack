@@ -4,11 +4,10 @@ import org.salestrack.app.domain.model.DashboardSummary
 import org.salestrack.app.domain.model.Sale
 
 class BuildDashboardSummaryUseCase {
-    operator fun invoke(sales: List<Sale>, nowMillis: Long): DashboardSummary {
-        val todayKey = dayKey(nowMillis)
-        val todaySales = sales.filter { dayKey(it.createdAtMillis) == todayKey && !it.isDeleted }
+    operator fun invoke(todaySales: List<Sale>): DashboardSummary {
+        val validTodaySales = todaySales.filter { !it.isDeleted }
 
-        val topProduct = todaySales
+        val topProduct = validTodaySales
             .groupBy { it.productName }
             .mapValues { entry -> entry.value.sumOf { it.quantity } }
             .maxByOrNull { it.value }
@@ -16,17 +15,11 @@ class BuildDashboardSummaryUseCase {
             ?: "Sin ventas"
 
         return DashboardSummary(
-            totalSoldToday = todaySales.sumOf { it.netTotal },
-            transactionCountToday = todaySales.size,
+            totalSoldToday = validTodaySales.sumOf { it.netTotal },
+            transactionCountToday = validTodaySales.size,
             topProductToday = topProduct,
             syncStatus = "Sincronizado",
         )
-    }
-
-    private fun dayKey(millis: Long): Long = millis / MILLIS_PER_DAY
-
-    private companion object {
-        const val MILLIS_PER_DAY = 24L * 60L * 60L * 1000L
     }
 }
 

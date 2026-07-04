@@ -42,6 +42,7 @@ private fun DashboardLoadingPreview() {
         onNavigateToReports = {},
         onNavigateToExport = {},
         onDismissExportModal = {},
+        onEvent = {},
         container = createPreviewContainer(),
     )
 }
@@ -60,6 +61,7 @@ private fun DashboardErrorPreview() {
         onNavigateToReports = {},
         onNavigateToExport = {},
         onDismissExportModal = {},
+        onEvent = {},
         container = createPreviewContainer(),
     )
 }
@@ -84,6 +86,7 @@ private fun DashboardEmptyPreview() {
         onNavigateToReports = {},
         onNavigateToExport = {},
         onDismissExportModal = {},
+        onEvent = {},
         container = createPreviewContainer(),
     )
 }

@@ -64,6 +64,22 @@ class DashboardViewModel(
             is DashboardUiEvent.ToggleExportModal -> {
                 setState { it.copy(showExportModal = event.show) }
             }
+
+            is DashboardUiEvent.ToggleSalesModal -> {
+                setState { it.copy(showSalesModal = event.show) }
+            }
+
+            is DashboardUiEvent.ToggleOrdersModal -> {
+                setState { it.copy(showOrdersModal = event.show) }
+            }
+
+            is DashboardUiEvent.ToggleTopProductsModal -> {
+                setState { it.copy(showTopProductsModal = event.show) }
+            }
+
+            is DashboardUiEvent.ToggleLowStockModal -> {
+                setState { it.copy(showLowStockModal = event.show) }
+            }
         }
     }
 
@@ -98,14 +114,46 @@ class DashboardViewModel(
 
     private fun render(sales: List<Sale>) {
         val nowMillis = timeProvider.nowMillis()
-        val summary = buildSummary(sales, nowMillis)
+        
+        // Calculate today sales
+        val timeZone = TimeZone.currentSystemDefault()
+        val currentDateTime = Instant.fromEpochMilliseconds(nowMillis).toLocalDateTime(timeZone)
+        val todayStartMillis = LocalDateTime(
+            currentDateTime.year,
+            currentDateTime.monthNumber,
+            currentDateTime.dayOfMonth,
+            0, 0, 0, 0
+        ).toInstant(timeZone).toEpochMilliseconds()
+        
+        val todayEndMillis = LocalDateTime(
+            currentDateTime.year,
+            currentDateTime.monthNumber,
+            currentDateTime.dayOfMonth,
+            23, 59, 59, 999_999_999
+        ).toInstant(timeZone).toEpochMilliseconds()
+        
+        val todaySales = sales.filter { it.createdAtMillis in todayStartMillis..todayEndMillis && !it.isDeleted }
+
+        val summary = buildSummary(todaySales)
         val recent = filterSalesUseCase(
             sales = sales,
             query = "",
             category = null,
         ).take(5)
+        
         val weeklyTrend = buildWeeklyTrend(sales, nowMillis)
         val categoryBreakdown = buildCategoryBreakdown(sales)
+        
+        // Product breakdown for today
+        val topProductsToday = todaySales
+            .groupBy { it.productName }
+            .map { (name, productSales) ->
+                DashboardCategoryShare(
+                    category = name.ifBlank { "Desconocido" },
+                    amount = productSales.sumOf { it.quantity.toDouble() }
+                )
+            }
+            .sortedByDescending { it.amount }
 
         setState {
             it.copy(
@@ -114,6 +162,8 @@ class DashboardViewModel(
                 recentSales = recent,
                 weeklyTrend = weeklyTrend,
                 categoryBreakdown = categoryBreakdown,
+                todaySales = todaySales,
+                topProductsToday = topProductsToday,
                 errorMessage = null,
             )
         }

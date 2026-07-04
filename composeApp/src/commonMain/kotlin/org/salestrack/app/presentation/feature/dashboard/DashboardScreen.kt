@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
@@ -21,10 +22,15 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.text.font.FontWeight
@@ -101,11 +107,13 @@ val uiState by viewModel.state.collectAsState()
         onNavigateToReports = { viewModel.onEvent(DashboardUiEvent.NavigateToReports(it)) },
         onNavigateToExport = { viewModel.onEvent(DashboardUiEvent.NavigateToExport) },
         onDismissExportModal = { viewModel.onEvent(DashboardUiEvent.ToggleExportModal(false)) },
+        onEvent = viewModel::onEvent,
         container = container,
         modifier = modifier,
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     uiState: DashboardUiState,
@@ -114,9 +122,138 @@ fun DashboardScreen(
     onNavigateToReports: (ReportPeriod) -> Unit,
     onNavigateToExport: () -> Unit,
     onDismissExportModal: () -> Unit,
+    onEvent: (DashboardUiEvent) -> Unit,
     container: AppContainer,
     modifier: Modifier = Modifier,
 ) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+
+    if (uiState.showSalesModal) {
+        ModalBottomSheet(
+            onDismissRequest = { onEvent(DashboardUiEvent.ToggleSalesModal(false)) },
+            sheetState = sheetState
+        ) {
+            LazyColumn(
+                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item {
+                    Text("Ventas de Hoy", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+                items(uiState.todaySales) { sale ->
+                    RecentSaleCardItem(
+                        saleTitle = sale.productName,
+                        saleMeta = "${sale.quantity} x $${formatMoney(sale.unitPrice)} · ${sale.category}",
+                        total = "$${formatMoney(sale.netTotal)}",
+                    )
+                }
+                if (uiState.todaySales.isEmpty()) {
+                    item { Text("No hay ventas hoy.") }
+                } else {
+                    item { 
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Total", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text("$${formatMoney(uiState.todaySales.sumOf { it.netTotal })}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+            }
+        }
+    }
+
+    if (uiState.showOrdersModal) {
+        ModalBottomSheet(
+            onDismissRequest = { onEvent(DashboardUiEvent.ToggleOrdersModal(false)) },
+            sheetState = sheetState
+        ) {
+            LazyColumn(
+                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item {
+                    Text("Órdenes de Hoy", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+                itemsIndexed(uiState.todaySales) { index, sale ->
+                    RecentSaleCardItem(
+                        saleTitle = "${index + 1}. ${sale.productName}",
+                        saleMeta = "${sale.quantity} x $${formatMoney(sale.unitPrice)} · ${sale.category}",
+                        total = "$${formatMoney(sale.netTotal)}",
+                    )
+                }
+                if (uiState.todaySales.isEmpty()) {
+                    item { Text("No hay órdenes hoy.") }
+                } else {
+                    item { 
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Total", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text("$${formatMoney(uiState.todaySales.sumOf { it.netTotal })}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+            }
+        }
+    }
+
+    if (uiState.showTopProductsModal) {
+        ModalBottomSheet(
+            onDismissRequest = { onEvent(DashboardUiEvent.ToggleTopProductsModal(false)) },
+            sheetState = sheetState
+        ) {
+            LazyColumn(
+                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item {
+                    Text("Productos Top de Hoy", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+                items(uiState.topProductsToday) { product ->
+                    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                        Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(product.category, fontWeight = FontWeight.Medium)
+                            Text("${product.amount.toInt()} uds", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+                if (uiState.topProductsToday.isEmpty()) {
+                    item { Text("No hay datos de productos hoy.") }
+                }
+            }
+        }
+    }
+
+    if (uiState.showLowStockModal) {
+        ModalBottomSheet(
+            onDismissRequest = { onEvent(DashboardUiEvent.ToggleLowStockModal(false)) },
+            sheetState = sheetState
+        ) {
+            LazyColumn(
+                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item {
+                    Text("Stock Crítico", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+                items(uiState.lowStockProducts) { product ->
+                    StockAlertCardItem(
+                        productName = product.name,
+                        stockInfo = "Stock actual: ${product.stock} ${product.unit} (Umbral: ${product.minimumStock})"
+                    )
+                }
+                if (uiState.lowStockProducts.isEmpty()) {
+                    item { Text("No hay productos con stock crítico.") }
+                }
+            }
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -165,6 +302,7 @@ fun DashboardScreen(
                         uiState = uiState,
                         onNavigateToReports = onNavigateToReports,
                         onNavigateToExport = onNavigateToExport,
+                        onEvent = onEvent,
                     )
                 }
             }
@@ -237,6 +375,7 @@ private fun DashboardContent(
     uiState: DashboardUiState,
     onNavigateToReports: (ReportPeriod) -> Unit,
     onNavigateToExport: () -> Unit,
+    onEvent: (DashboardUiEvent) -> Unit,
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val isWide = maxWidth >= 980.dp
@@ -250,6 +389,10 @@ private fun DashboardContent(
                     summary = uiState.summary,
                     lowStockCount = uiState.lowStockProducts.size,
                     isWide = isWide,
+                    onSalesClick = { onEvent(DashboardUiEvent.ToggleSalesModal(true)) },
+                    onOrdersClick = { onEvent(DashboardUiEvent.ToggleOrdersModal(true)) },
+                    onTopProductsClick = { onEvent(DashboardUiEvent.ToggleTopProductsModal(true)) },
+                    onLowStockClick = { onEvent(DashboardUiEvent.ToggleLowStockModal(true)) },
                 )
             }
 

@@ -30,14 +30,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.clickable
 import org.salestrack.app.core.utils.formatMoney
 import org.salestrack.app.domain.model.DashboardSummary
+import org.salestrack.app.presentation.app.AppDestination
 
 @Composable
 fun KpiSection(
     summary: DashboardSummary,
     lowStockCount: Int,
     isWide: Boolean,
+    onSalesClick: () -> Unit,
+    onOrdersClick: () -> Unit,
+    onTopProductsClick: () -> Unit,
+    onLowStockClick: () -> Unit,
 ) {
     if (isWide) {
         Row(
@@ -51,6 +57,7 @@ fun KpiSection(
                 icon = Icons.Rounded.AttachMoney,
                 iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
                 iconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                onClick = onSalesClick,
                 modifier = Modifier.weight(1f),
             )
             KpiCard(
@@ -60,6 +67,7 @@ fun KpiSection(
                 icon = Icons.Rounded.ShoppingCart,
                 iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
                 iconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                onClick = onOrdersClick,
                 modifier = Modifier.weight(1f),
             )
             KpiCard(
@@ -69,6 +77,7 @@ fun KpiSection(
                 icon = Icons.Rounded.Star,
                 iconContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 iconColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                onClick = onTopProductsClick,
                 modifier = Modifier.weight(1f),
             )
             KpiCard(
@@ -78,6 +87,7 @@ fun KpiSection(
                 icon = if (lowStockCount > 0) Icons.Rounded.Warning else Icons.Rounded.Inventory,
                 iconContainerColor = if (lowStockCount > 0) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceVariant,
                 iconColor = if (lowStockCount > 0) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                onClick = onLowStockClick,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -94,6 +104,7 @@ fun KpiSection(
                     icon = Icons.Rounded.AttachMoney,
                     iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
                     iconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    onClick = onSalesClick,
                     modifier = Modifier.weight(1f),
                 )
                 KpiCard(
@@ -103,6 +114,7 @@ fun KpiSection(
                     icon = Icons.Rounded.ShoppingCart,
                     iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
                     iconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    onClick = onOrdersClick,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -117,6 +129,7 @@ fun KpiSection(
                     icon = Icons.Rounded.Star,
                     iconContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
                     iconColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                    onClick = onTopProductsClick,
                     modifier = Modifier.weight(1f),
                 )
                 KpiCard(
@@ -126,6 +139,7 @@ fun KpiSection(
                     icon = if (lowStockCount > 0) Icons.Rounded.Warning else Icons.Rounded.Inventory,
                     iconContainerColor = if (lowStockCount > 0) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceVariant,
                     iconColor = if (lowStockCount > 0) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                    onClick = onLowStockClick,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -141,10 +155,11 @@ private fun KpiCard(
     icon: ImageVector,
     iconContainerColor: Color,
     iconColor: Color,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     ElevatedCard(
-        modifier = modifier,
+        modifier = modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(24.dp),
     ) {
         Column(

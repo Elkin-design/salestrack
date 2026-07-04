@@ -20,6 +20,12 @@ data class DashboardUiState(
     val lowStockProducts: List<Product> = emptyList(),
     val weeklyTrend: List<DashboardTrendPoint> = emptyList(),
     val categoryBreakdown: List<DashboardCategoryShare> = emptyList(),
+    val todaySales: List<Sale> = emptyList(),
+    val topProductsToday: List<DashboardCategoryShare> = emptyList(),
+    val showSalesModal: Boolean = false,
+    val showOrdersModal: Boolean = false,
+    val showTopProductsModal: Boolean = false,
+    val showLowStockModal: Boolean = false,
     val errorMessage: String? = null,
     val showExportModal: Boolean = false,
 ) : UiState
@@ -39,6 +45,10 @@ sealed interface DashboardUiEvent : UiEvent {
     data class NavigateToReports(val period: ReportPeriod) : DashboardUiEvent
     data object NavigateToExport : DashboardUiEvent
     data class ToggleExportModal(val show: Boolean) : DashboardUiEvent
+    data class ToggleSalesModal(val show: Boolean) : DashboardUiEvent
+    data class ToggleOrdersModal(val show: Boolean) : DashboardUiEvent
+    data class ToggleTopProductsModal(val show: Boolean) : DashboardUiEvent
+    data class ToggleLowStockModal(val show: Boolean) : DashboardUiEvent
 }
 
 sealed interface DashboardUiEffect : UiEffect {
