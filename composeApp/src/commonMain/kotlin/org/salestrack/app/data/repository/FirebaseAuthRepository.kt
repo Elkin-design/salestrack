@@ -48,6 +48,20 @@ class FirebaseAuthRepository : AuthRepository {
         return auth.currentUser?.toDomain()
     }
 
+    override suspend fun updateDisplayName(name: String): AppResult<Unit> {
+        return try {
+            val user = auth.currentUser
+            if (user != null) {
+                user.updateProfile(displayName = name)
+                AppResult.Success(Unit)
+            } else {
+                AppResult.Failure(IllegalStateException("No user is signed in"))
+            }
+        } catch (e: Exception) {
+            AppResult.Failure(e)
+        }
+    }
+
     private fun FirebaseUser.toDomain(): AuthUser {
         return AuthUser(
             uid = uid,

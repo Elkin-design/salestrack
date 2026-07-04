@@ -18,6 +18,8 @@ data class SettingsUiState(
     val userDisplayName: String? = null,
     val userEmail: String? = null,
     val userPhotoUrl: String? = null,
+    val showEditNameDialog: Boolean = false,
+    val editNameInputValue: String = "",
 ) : UiState
 
 sealed interface SettingsUiEvent : UiEvent {
@@ -29,6 +31,10 @@ sealed interface SettingsUiEvent : UiEvent {
     data object SaveClicked : SettingsUiEvent
     data object SignOutClicked : SettingsUiEvent
     data object ClearSalesClicked : SettingsUiEvent
+    data object EditNameClicked : SettingsUiEvent
+    data object EditNameDismissed : SettingsUiEvent
+    data class EditNameValueChanged(val value: String) : SettingsUiEvent
+    data object SaveNameClicked : SettingsUiEvent
 }
 
 sealed interface SettingsUiEffect : UiEffect {

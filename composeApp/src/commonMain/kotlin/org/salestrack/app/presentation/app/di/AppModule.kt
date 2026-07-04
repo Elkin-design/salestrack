@@ -141,6 +141,7 @@ fun appModule(config: EnvironmentConfig) = module {
     single { SignInWithGoogleUseCase(get()) }
     single { SignOutUseCase(get(), platformGoogleSignInNavigator) }
     single { GetAuthStateUseCase(get()) }
+    single { org.salestrack.app.domain.usecase.auth.UpdateDisplayNameUseCase(get()) }
 
     factory { 
         AuthViewModel(
@@ -243,6 +244,7 @@ fun appModule(config: EnvironmentConfig) = module {
             authViewModel = get(),
             getAuthStateUseCase = get(),
             signOutUseCase = get(),
+            updateDisplayNameUseCase = get(),
         )
     }
 }

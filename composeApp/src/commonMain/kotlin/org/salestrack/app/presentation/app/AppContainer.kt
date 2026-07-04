@@ -47,6 +47,7 @@ import org.salestrack.app.domain.usecase.team.InviteMemberUseCase
 import org.salestrack.app.presentation.feature.auth.AuthViewModel
 import org.salestrack.app.domain.usecase.auth.GetAuthStateUseCase
 import org.salestrack.app.domain.usecase.auth.SignOutUseCase
+import org.salestrack.app.domain.usecase.auth.UpdateDisplayNameUseCase
 
 class AppContainer(
     val dispatcherProvider: DispatcherProvider,
@@ -96,5 +97,6 @@ class AppContainer(
     val authViewModel: AuthViewModel,
     val getAuthStateUseCase: GetAuthStateUseCase,
     val signOutUseCase: SignOutUseCase,
+    val updateDisplayNameUseCase: UpdateDisplayNameUseCase,
 )
 

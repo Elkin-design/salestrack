@@ -99,6 +99,7 @@ fun SettingsRoute(
             getAuthStateUseCase = container.getAuthStateUseCase,
             signOutUseCase = container.signOutUseCase,
             saleRepository = container.saleRepository,
+            updateDisplayNameUseCase = container.updateDisplayNameUseCase,
         )
     }
     val uiState by viewModel.state.collectAsState()
@@ -191,11 +192,38 @@ fun SettingsScreen(
                                 modifier = Modifier.size(64.dp)
                             )
                             Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = displayName,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = displayName,
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                IconButton(
+                                    onClick = { 
+                                        isMenuExpanded = false
+                                        onEvent(SettingsUiEvent.EditNameClicked) 
+                                    },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .background(
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), 
+                                                CircleShape
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Edit, 
+                                            contentDescription = "Editar nombre", 
+                                            modifier = Modifier.size(14.dp),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = email,
@@ -270,6 +298,71 @@ fun SettingsScreen(
                     }
                 }
             }
+        }
+        
+        if (uiState.showEditNameDialog) {
+            AlertDialog(
+                onDismissRequest = { if (!uiState.isSaving) onEvent(SettingsUiEvent.EditNameDismissed) },
+                title = { 
+                    Text(
+                        "Editar Perfil", 
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                    ) 
+                },
+                text = {
+                    Column {
+                        Text(
+                            "Ingresa cómo quieres que te llamemos o el nombre de tu negocio.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedTextField(
+                            value = uiState.editNameInputValue,
+                            onValueChange = { onEvent(SettingsUiEvent.EditNameValueChanged(it)) },
+                            label = { Text("Nombre a mostrar") },
+                            singleLine = true,
+                            enabled = !uiState.isSaving,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { onEvent(SettingsUiEvent.SaveNameClicked) },
+                        enabled = !uiState.isSaving && uiState.editNameInputValue.isNotBlank(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        if (uiState.isSaving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Guardando...")
+                        } else {
+                            Text("Guardar")
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { onEvent(SettingsUiEvent.EditNameDismissed) },
+                        enabled = !uiState.isSaving
+                    ) {
+                        Text("Cancelar", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                },
+                shape = RoundedCornerShape(24.dp),
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 6.dp
+            )
         }
     }
 }

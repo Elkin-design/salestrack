@@ -34,4 +34,9 @@ interface AuthRepository {
      * Returns the current user immediately if available.
      */
     fun getCurrentUser(): AuthUser?
+
+    /**
+     * Update the display name of the current user.
+     */
+    suspend fun updateDisplayName(name: String): AppResult<Unit>
 }

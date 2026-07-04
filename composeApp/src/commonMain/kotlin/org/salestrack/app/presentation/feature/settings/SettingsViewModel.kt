@@ -8,6 +8,7 @@ import org.salestrack.app.domain.usecase.settings.ObserveSettingsUseCase
 import org.salestrack.app.domain.usecase.settings.UpdateSettingsUseCase
 import org.salestrack.app.domain.usecase.auth.SignOutUseCase
 import org.salestrack.app.domain.usecase.auth.GetAuthStateUseCase
+import org.salestrack.app.domain.usecase.auth.UpdateDisplayNameUseCase
 
 import org.salestrack.app.domain.repository.SaleRepository
 
@@ -20,17 +21,26 @@ class SettingsViewModel(
         override suspend fun signInWithGoogle(idToken: String) = org.salestrack.app.core.result.AppResult.Failure(Exception())
         override suspend fun signOut() = org.salestrack.app.core.result.AppResult.Success(Unit)
         override fun getCurrentUser() = null
+        override suspend fun updateDisplayName(name: String) = org.salestrack.app.core.result.AppResult.Success(Unit)
     }),
     private val signOutUseCase: SignOutUseCase = SignOutUseCase(object : org.salestrack.app.domain.repository.AuthRepository {
         override fun observeAuthState() = kotlinx.coroutines.flow.flowOf(null)
         override suspend fun signInWithGoogle(idToken: String) = org.salestrack.app.core.result.AppResult.Failure(Exception())
         override suspend fun signOut() = org.salestrack.app.core.result.AppResult.Success(Unit)
         override fun getCurrentUser() = null
+        override suspend fun updateDisplayName(name: String) = org.salestrack.app.core.result.AppResult.Success(Unit)
     }),
     private val saleRepository: SaleRepository = org.salestrack.app.data.repository.FakeSaleRepository(
         dataSource = org.salestrack.app.data.source.InMemorySaleDataSource(emptyList()),
         timeProvider = org.salestrack.app.core.utils.SystemTimeProvider()
     ),
+    private val updateDisplayNameUseCase: UpdateDisplayNameUseCase = UpdateDisplayNameUseCase(object : org.salestrack.app.domain.repository.AuthRepository {
+        override fun observeAuthState() = kotlinx.coroutines.flow.flowOf(null)
+        override suspend fun signInWithGoogle(idToken: String) = org.salestrack.app.core.result.AppResult.Failure(Exception())
+        override suspend fun signOut() = org.salestrack.app.core.result.AppResult.Success(Unit)
+        override fun getCurrentUser() = null
+        override suspend fun updateDisplayName(name: String) = org.salestrack.app.core.result.AppResult.Success(Unit)
+    }),
 ) : BaseViewModel<SettingsUiState, SettingsUiEvent, SettingsUiEffect>(
     initialState = SettingsUiState(),
     dispatcherProvider = dispatcherProvider,
@@ -51,6 +61,10 @@ class SettingsViewModel(
             SettingsUiEvent.SaveClicked -> saveSettings()
             SettingsUiEvent.SignOutClicked -> signOut()
             SettingsUiEvent.ClearSalesClicked -> clearSales()
+            SettingsUiEvent.EditNameClicked -> setState { it.copy(showEditNameDialog = true, editNameInputValue = it.userDisplayName ?: "") }
+            SettingsUiEvent.EditNameDismissed -> setState { it.copy(showEditNameDialog = false) }
+            is SettingsUiEvent.EditNameValueChanged -> setState { it.copy(editNameInputValue = event.value) }
+            SettingsUiEvent.SaveNameClicked -> saveDisplayName()
         }
     }
 
@@ -101,6 +115,34 @@ class SettingsViewModel(
                         it.copy(
                             isSaving = false,
                             errorMessage = result.error.message ?: "No se pudo guardar configuracion",
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun saveDisplayName() {
+        val newName = state.value.editNameInputValue
+        if (newName.isBlank()) return
+        scope.launch {
+            setState { it.copy(isSaving = true) }
+            when (val result = updateDisplayNameUseCase(newName)) {
+                is AppResult.Success -> {
+                    setState { 
+                        it.copy(
+                            isSaving = false, 
+                            showEditNameDialog = false,
+                            userDisplayName = newName 
+                        ) 
+                    }
+                    emitEffect(SettingsUiEffect.ShowMessage("Nombre actualizado"))
+                }
+                is AppResult.Failure -> {
+                    setState {
+                        it.copy(
+                            isSaving = false,
+                            errorMessage = result.error.message ?: "Error al actualizar nombre"
                         )
                     }
                 }

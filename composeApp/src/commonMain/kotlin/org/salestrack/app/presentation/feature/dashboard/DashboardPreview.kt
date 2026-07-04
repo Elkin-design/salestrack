@@ -28,6 +28,7 @@ import org.salestrack.app.presentation.feature.auth.AuthViewModel
 import org.salestrack.app.domain.usecase.auth.SignInWithGoogleUseCase
 import org.salestrack.app.domain.usecase.auth.SignOutUseCase
 import org.salestrack.app.domain.usecase.auth.GetAuthStateUseCase
+import org.salestrack.app.domain.usecase.auth.UpdateDisplayNameUseCase
 import org.salestrack.app.presentation.app.AppContainer
 
 @Preview
@@ -161,6 +162,7 @@ private fun createPreviewContainer(): AppContainer {
         override suspend fun signInWithGoogle(idToken: String) = AppResult.Failure(Exception("Not implemented"))
         override suspend fun signOut() = AppResult.Success(Unit)
         override fun getCurrentUser() = null
+        override suspend fun updateDisplayName(name: String) = AppResult.Success(Unit)
     }
 
     val googleNavigator = object : GoogleSignInNavigator {
@@ -226,5 +228,6 @@ private fun createPreviewContainer(): AppContainer {
         ),
         getAuthStateUseCase = GetAuthStateUseCase(authRepo),
         signOutUseCase = SignOutUseCase(authRepo),
+        updateDisplayNameUseCase = UpdateDisplayNameUseCase(authRepo),
     )
 }
