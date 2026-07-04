@@ -137,6 +137,14 @@ fun appModule(config: EnvironmentConfig) = module {
     single<BackupRepository> { FakeBackupRepository() }
     single<TeamRepository> { FakeTeamRepository(get()) }
     single<AuthRepository> { FirebaseAuthRepository() }
+    
+    single<org.salestrack.app.domain.repository.RemoteConfigRepository> {
+        if (config.backendProvider == org.salestrack.app.presentation.app.di.BackendProvider.MOCK) {
+            org.salestrack.app.data.repository.FakeRemoteConfigRepository()
+        } else {
+            org.salestrack.app.data.repository.FirebaseRemoteConfigRepository()
+        }
+    }
 
     single { SignInWithGoogleUseCase(get()) }
     single { SignOutUseCase(get(), platformGoogleSignInNavigator) }

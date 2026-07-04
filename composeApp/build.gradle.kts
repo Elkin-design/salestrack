@@ -38,6 +38,7 @@ kotlin {
         pod("FirebaseAuth")
         pod("FirebaseFirestore")
         pod("FirebaseCrashlytics")
+        pod("FirebaseRemoteConfig")
     }
 
     sourceSets {
@@ -69,6 +70,7 @@ kotlin {
                 implementation(libs.firebaseAuth)
                 implementation(libs.firebaseFirestore)
                 implementation(libs.firebaseCrashlytics)
+                implementation(libs.firebaseConfig)
             }
         }
 

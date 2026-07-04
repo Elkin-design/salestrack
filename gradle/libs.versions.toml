@@ -56,6 +56,7 @@ firebaseApp = { module = "dev.gitlive:firebase-app", version.ref = "firebaseKotl
 firebaseAuth = { module = "dev.gitlive:firebase-auth", version.ref = "firebaseKotlin" }
 firebaseFirestore = { module = "dev.gitlive:firebase-firestore", version.ref = "firebaseKotlin" }
 firebaseCrashlytics = { module = "dev.gitlive:firebase-crashlytics", version.ref = "firebaseKotlin" }
+firebaseConfig = { module = "dev.gitlive:firebase-config", version.ref = "firebaseKotlin" }
 
 #firebaseJavaSdk = { module = "dev.gitlive:firebase-java-sdk", version = "0.6.2" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
