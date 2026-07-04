@@ -217,7 +217,7 @@ fun DashboardScreen(
                     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                         Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(product.category, fontWeight = FontWeight.Medium)
-                            Text("${product.amount.toInt()} uds", fontWeight = FontWeight.Bold)
+                            Text("${product.amount.toInt()} unidades", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
