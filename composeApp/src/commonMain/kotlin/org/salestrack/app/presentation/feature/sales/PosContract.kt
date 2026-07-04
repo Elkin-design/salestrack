@@ -39,7 +39,7 @@ sealed interface PosUiEvent : UiEvent {
     data class ToggleCheckoutDialog(val visible: Boolean) : PosUiEvent
     data class PaymentMethodChanged(val method: PaymentMethod) : PosUiEvent
     data class GlobalDiscountChanged(val discount: Double) : PosUiEvent
-    data class ConfirmSale(val seller: String) : PosUiEvent
+    data class ConfirmSale(val customerName: String) : PosUiEvent
 }
 
 sealed interface PosUiEffect : UiEffect {

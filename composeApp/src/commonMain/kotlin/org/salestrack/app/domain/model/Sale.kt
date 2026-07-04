@@ -32,6 +32,7 @@ data class Sale(
     val items: List<SaleItem> = emptyList(),
     val paymentMethod: PaymentMethod = PaymentMethod.CASH,
     val globalDiscount: Double = 0.0,
+    val customerName: String = "",
     
     // Campos antiguos (mantenidos con valores por defecto para retrocompatibilidad con Firestore)
     val productName: String = "",
@@ -61,6 +62,7 @@ data class NewSaleInput(
     val paymentMethod: PaymentMethod,
     val globalDiscount: Double,
     val sellerName: String,
+    val customerName: String = "",
     val createdAtMillis: Long? = null,
 )
 

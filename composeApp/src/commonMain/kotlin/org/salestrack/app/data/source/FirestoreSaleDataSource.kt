@@ -45,6 +45,7 @@ class FirestoreSaleDataSource(
                 globalDiscount = input.globalDiscount,
                 createdAtMillis = now,
                 sellerName = input.sellerName.trim().ifBlank { "Sin vendedor" },
+                customerName = input.customerName.trim().ifBlank { "Cliente General" },
                 // Retrocompatibilidad con datos antiguos
                 productName = firstItem.productName,
                 category = firstItem.category,

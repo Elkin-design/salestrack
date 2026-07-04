@@ -16,11 +16,10 @@ class FilterSalesUseCase {
             .filter {
                 queryNormalized.isBlank() ||
                     it.productName.lowercase().contains(queryNormalized) ||
-                    it.sellerName.lowercase().contains(queryNormalized)
+                    it.customerName.lowercase().contains(queryNormalized)
             }
             .filter { category.isNullOrBlank() || it.category == category }
             .sortedByDescending { it.createdAtMillis }
             .toList()
     }
 }
-

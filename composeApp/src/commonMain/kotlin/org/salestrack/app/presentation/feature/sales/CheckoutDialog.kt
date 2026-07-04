@@ -64,7 +64,7 @@ fun CheckoutDialog(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var sellerName by remember { mutableStateOf("Cajero 1") }
+    var customerName by remember { mutableStateOf("") }
     
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -219,9 +219,9 @@ fun CheckoutDialog(
                 }
                 
                 OutlinedTextField(
-                    value = sellerName,
-                    onValueChange = { sellerName = it },
-                    label = { Text("Vendedor") },
+                    value = customerName,
+                    onValueChange = { customerName = it },
+                    label = { Text("Cliente (Nombre o Documento)") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -280,7 +280,7 @@ fun CheckoutDialog(
                 }
 
                 Button(
-                    onClick = { onEvent(PosUiEvent.ConfirmSale(sellerName)) },
+                    onClick = { onEvent(PosUiEvent.ConfirmSale(customerName)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),

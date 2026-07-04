@@ -43,7 +43,7 @@ class PosViewModel(
             is PosUiEvent.ToggleCheckoutDialog -> setState { it.copy(isCheckoutDialogVisible = event.visible) }
             is PosUiEvent.PaymentMethodChanged -> setState { it.copy(selectedPaymentMethod = event.method) }
             is PosUiEvent.GlobalDiscountChanged -> setState { it.copy(globalDiscount = event.discount) }
-            is PosUiEvent.ConfirmSale -> confirmSale(event.seller)
+            is PosUiEvent.ConfirmSale -> confirmSale(event.customerName)
             PosUiEvent.Refresh -> applyFilters()
         }
     }
@@ -120,7 +120,7 @@ class PosViewModel(
         setState { it.copy(cart = currentCart) }
     }
 
-    private fun confirmSale(seller: String) {
+    private fun confirmSale(customerName: String) {
         val current = state.value
         if (current.cart.isEmpty()) {
             emitEffect(PosUiEffect.ShowMessage("El carrito está vacío"))
@@ -135,7 +135,8 @@ class PosViewModel(
                 items = current.cart,
                 paymentMethod = current.selectedPaymentMethod,
                 globalDiscount = current.globalDiscount,
-                sellerName = seller,
+                sellerName = "Sistema",
+                customerName = customerName
             )
             
             when (val result = addSaleUseCase(input)) {

@@ -324,7 +324,7 @@ private fun SaleItem(
                 modifier = Modifier.size(56.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    val firstLetter = if (sale.items.isNotEmpty()) sale.items.first().productName.take(1).uppercase() else sale.productName.take(1).uppercase()
+                    val firstLetter = if (sale.customerName.isNotBlank()) sale.customerName.take(1).uppercase() else "C"
                     Text(
                         firstLetter,
                         style = MaterialTheme.typography.headlineSmall,
@@ -335,9 +335,7 @@ private fun SaleItem(
             }
 
             Column(modifier = Modifier.weight(1f)) {
-                val title = if (sale.items.isNotEmpty()) {
-                    if (sale.items.size == 1) sale.items.first().productName else "Venta de ${sale.items.size} productos"
-                } else sale.productName
+                val title = sale.customerName.ifBlank { "Cliente no especificado" }
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
@@ -357,14 +355,17 @@ private fun SaleItem(
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.Default.Person,
+                        Icons.Default.ShoppingCart,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
+                    val itemsText = if (sale.items.isNotEmpty()) {
+                        if (sale.items.size == 1) sale.items.first().productName else "${sale.items.size} productos"
+                    } else sale.productName
                     Text(
-                        text = sale.sellerName,
+                        text = itemsText,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -517,7 +518,7 @@ private fun SaleDetailDialog(sale: Sale, onDismiss: () -> Unit) {
                     org.salestrack.app.domain.model.PaymentMethod.DIGITAL_WALLET -> "Transferencia"
                 }
                 DetailRow(label = "Método de pago", value = paymentMethodDisplay)
-                DetailRow(label = "Vendedor", value = sale.sellerName)
+                DetailRow(label = "Cliente/Documento", value = sale.customerName.ifBlank { "No especificado" })
             }
         },
         confirmButton = {
