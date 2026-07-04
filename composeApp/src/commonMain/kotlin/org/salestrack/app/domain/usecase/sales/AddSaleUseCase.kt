@@ -16,61 +16,60 @@ class AddSaleUseCase(
     private val categoryRepository: CategoryRepository? = null,
 ) {
     suspend operator fun invoke(input: NewSaleInput): AppResult<Sale> {
-        if (input.productName.isBlank()) {
-            return AppResult.Failure(IllegalArgumentException("El producto es obligatorio"))
+        if (input.items.isEmpty()) {
+            return AppResult.Failure(IllegalArgumentException("El carrito no puede estar vacío"))
         }
 
         if (categoryRepository != null) {
             val activeCategories = categoryRepository.observeCategories().first()
-            val categoryExists = activeCategories.any { it.isActive && it.name.equals(input.category, ignoreCase = true) }
-            if (!categoryExists) {
-                return AppResult.Failure(IllegalArgumentException("La categoría '${input.category}' no es válida o no existe en la base de datos"))
+            for (item in input.items) {
+                val categoryExists = activeCategories.any { it.isActive && it.name.equals(item.category, ignoreCase = true) }
+                if (!categoryExists) {
+                    return AppResult.Failure(IllegalArgumentException("La categoría '${item.category}' del producto '${item.productName}' no es válida"))
+                }
             }
         }
-        if (input.quantity <= 0) {
-            return AppResult.Failure(IllegalArgumentException("La cantidad debe ser mayor a 0"))
+        
+        for (item in input.items) {
+            if (item.quantity <= 0) {
+                return AppResult.Failure(IllegalArgumentException("La cantidad de '${item.productName}' debe ser mayor a 0"))
+            }
+            if (item.unitPrice <= 0.0) {
+                return AppResult.Failure(IllegalArgumentException("El precio de '${item.productName}' debe ser mayor a 0"))
+            }
+            if (item.discount < 0.0) {
+                return AppResult.Failure(IllegalArgumentException("El descuento de '${item.productName}' no puede ser negativo"))
+            }
         }
-        if (input.unitPrice <= 0.0) {
-            return AppResult.Failure(IllegalArgumentException("El precio debe ser mayor a 0"))
-        }
-        if (input.discount < 0.0) {
-            return AppResult.Failure(IllegalArgumentException("El descuento no puede ser negativo"))
+        
+        if (input.globalDiscount < 0.0) {
+            return AppResult.Failure(IllegalArgumentException("El descuento global no puede ser negativo"))
         }
 
         val inventoryRepo = inventoryRepository
-        val matchingProduct = findMatchingProduct(input)
-        if (inventoryRepo != null && matchingProduct != null) {
-            when (
-                val stockResult = inventoryRepo.deductStock(
-                    productId = matchingProduct.id,
-                    quantity = input.quantity,
-                    reason = "Venta de ${input.productName}",
-                    sellerName = input.sellerName,
-                    platform = "App",
-                )
-            ) {
-                is AppResult.Success -> Unit
-                is AppResult.Failure -> return stockResult
+        if (inventoryRepo != null) {
+            val products = inventoryRepo.observeProducts().first()
+            for (item in input.items) {
+                val matchingProduct = products.find { it.id == item.productId } ?: products.firstOrNull { it.isActive && it.name.equals(item.productName, ignoreCase = true) }
+                
+                if (matchingProduct != null) {
+                    when (
+                        val stockResult = inventoryRepo.deductStock(
+                            productId = matchingProduct.id,
+                            quantity = item.quantity,
+                            reason = "Venta múltiple",
+                            sellerName = input.sellerName,
+                            platform = "App POS",
+                        )
+                    ) {
+                        is AppResult.Success -> Unit
+                        is AppResult.Failure -> return stockResult
+                    }
+                }
             }
         }
 
         return repository.addSale(input)
-    }
-
-    private suspend fun findMatchingProduct(input: NewSaleInput): Product? {
-        val inventoryRepo = inventoryRepository ?: return null
-        val products = inventoryRepo.observeProducts().first()
-        
-        // Prioritize ID if available
-        if (input.productId != null) {
-            val byId = products.find { it.id == input.productId }
-            if (byId != null) return byId
-        }
-        
-        // Fallback to name matching
-        return products.firstOrNull { product ->
-            product.isActive && product.name.equals(input.productName, ignoreCase = true)
-        }
     }
 }
 

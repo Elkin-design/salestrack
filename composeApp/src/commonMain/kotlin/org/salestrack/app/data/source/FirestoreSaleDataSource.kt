@@ -32,21 +32,26 @@ class FirestoreSaleDataSource(
 
     override suspend fun addSale(input: NewSaleInput): AppResult<Sale> {
         return try {
-            if (input.productName.isBlank()) {
-                return AppResult.Failure(IllegalArgumentException("El producto es obligatorio"))
+            if (input.items.isEmpty()) {
+                return AppResult.Failure(IllegalArgumentException("El carrito está vacío"))
             }
             val now = input.createdAtMillis ?: timeProvider.nowMillis()
             val id = "FS-$now-${Random.nextInt(1000, 9999)}"
+            val firstItem = input.items.first()
             val sale = Sale(
                 id = id,
-                productName = input.productName.trim(),
-                category = input.category.trim().ifBlank { "General" },
-                quantity = input.quantity,
-                unitPrice = input.unitPrice,
-                discount = input.discount,
+                items = input.items,
+                paymentMethod = input.paymentMethod,
+                globalDiscount = input.globalDiscount,
                 createdAtMillis = now,
                 sellerName = input.sellerName.trim().ifBlank { "Sin vendedor" },
-                productId = input.productId,
+                // Retrocompatibilidad con datos antiguos
+                productName = firstItem.productName,
+                category = firstItem.category,
+                quantity = firstItem.quantity,
+                unitPrice = firstItem.unitPrice,
+                discount = firstItem.discount,
+                productId = firstItem.productId,
             )
             
             salesCollection().document(id).set(sale)

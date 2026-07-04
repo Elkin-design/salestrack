@@ -92,15 +92,14 @@ import org.salestrack.app.presentation.app.AppContainer
 @Composable
 fun SalesRoute(
     container: AppContainer,
+    onNavigateToPos: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel = remember {
         SalesViewModel(
             dispatcherProvider = container.dispatcherProvider,
             repository = container.saleRepository,
-            inventoryRepository = container.inventoryRepository,
-            addSaleUseCase = container.addSaleUseCase,
-            updateSaleUseCase = container.updateSaleUseCase,
+
             deleteSaleUseCase = container.deleteSaleUseCase,
             filterSalesUseCase = container.filterSalesUseCase,
             observeCategoriesUseCase = container.observeCategoriesUseCase,
@@ -117,6 +116,7 @@ fun SalesRoute(
     SalesScreen(
         uiState = uiState,
         onEvent = viewModel::onEvent,
+        onNavigateToPos = onNavigateToPos,
         modifier = modifier,
     )
 }
@@ -126,6 +126,7 @@ fun SalesRoute(
 fun SalesScreen(
     uiState: SalesUiState,
     onEvent: (SalesUiEvent) -> Unit,
+    onNavigateToPos: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val lazyListState = rememberLazyListState()
@@ -157,7 +158,7 @@ fun SalesScreen(
             .fillMaxSize()
             .onPreviewKeyEvent { event ->
                 if (event.type == KeyEventType.KeyDown && event.isCtrlPressed && event.key == Key.N) {
-                    onEvent(SalesUiEvent.ToggleAddDialog(true))
+                    onNavigateToPos()
                     true
                 } else {
                     false
@@ -179,7 +180,7 @@ fun SalesScreen(
                 exit = scaleOut() + fadeOut(),
             ) {
                 FloatingActionButton(
-                    onClick = { onEvent(SalesUiEvent.ToggleAddDialog(true)) },
+                    onClick = onNavigateToPos,
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
@@ -279,7 +280,6 @@ fun SalesScreen(
                         SaleItem(
                             sale = sale,
                             onDetail = { onEvent(SalesUiEvent.ShowDetail(sale)) },
-                            onEdit = { onEvent(SalesUiEvent.StartEdit(sale)) },
                             onDelete = { onEvent(SalesUiEvent.DeleteSale(sale.id)) },
                         )
                     }
@@ -288,58 +288,10 @@ fun SalesScreen(
         }
     }
 
-    if (uiState.isAddDialogVisible) {
-        SaleFormDialog(
-            title = "Nueva venta",
-            inventoryProducts = uiState.inventoryProducts,
-            isSaving = uiState.isSaving,
-            errorMessage = uiState.errorMessage,
-            onDismiss = { onEvent(SalesUiEvent.ToggleAddDialog(false)) },
-            onSave = { product, category, quantity, unitPrice, discount, seller, productId ->
-                onEvent(
-                    SalesUiEvent.SaveNewSale(
-                        productName = product,
-                        category = category,
-                        quantity = quantity,
-                        unitPrice = unitPrice,
-                        discount = discount,
-                        seller = seller,
-                        productId = productId,
-                    ),
-                )
-            },
-        )
-    }
-
     uiState.detailSale?.let { sale ->
         SaleDetailDialog(
             sale = sale,
             onDismiss = { onEvent(SalesUiEvent.ShowDetail(null)) },
-        )
-    }
-
-    uiState.editingSale?.let { sale ->
-        SaleFormDialog(
-            title = "Editar venta",
-            initialSale = sale,
-            inventoryProducts = uiState.inventoryProducts,
-            isSaving = uiState.isSaving,
-            errorMessage = uiState.errorMessage,
-            onDismiss = { onEvent(SalesUiEvent.StartEdit(null)) },
-            onSave = { product, category, quantity, unitPrice, discount, seller, productId ->
-                onEvent(
-                    SalesUiEvent.SaveEditedSale(
-                        id = sale.id,
-                        productName = product,
-                        category = category,
-                        quantity = quantity,
-                        unitPrice = unitPrice,
-                        discount = discount,
-                        seller = seller,
-                        productId = productId,
-                    ),
-                )
-            },
         )
     }
 }
@@ -348,7 +300,6 @@ fun SalesScreen(
 private fun SaleItem(
     sale: Sale,
     onDetail: () -> Unit,
-    onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
     Card(
@@ -426,9 +377,6 @@ private fun SaleItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Row {
-                    IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
-                    }
                     IconButton(onClick = onDelete, modifier = Modifier.size(32.dp)) {
                         Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                     }

@@ -12,9 +12,6 @@ data class SalesUiState(
     val selectedCategory: String? = null,
     val availableCategories: List<String> = emptyList(),
     val sales: List<Sale> = emptyList(),
-    val inventoryProducts: List<Product> = emptyList(),
-    val isAddDialogVisible: Boolean = false,
-    val editingSale: Sale? = null,
     val detailSale: Sale? = null,
     val errorMessage: String? = null,
     val isSaving: Boolean = false,
@@ -24,28 +21,7 @@ sealed interface SalesUiEvent : UiEvent {
     data object Refresh : SalesUiEvent
     data class QueryChanged(val value: String) : SalesUiEvent
     data class CategoryChanged(val value: String?) : SalesUiEvent
-    data class ToggleAddDialog(val visible: Boolean) : SalesUiEvent
     data class ShowDetail(val sale: Sale?) : SalesUiEvent
-    data class StartEdit(val sale: Sale?) : SalesUiEvent
-    data class SaveNewSale(
-        val productName: String,
-        val category: String,
-        val quantity: Int,
-        val unitPrice: Double,
-        val discount: Double,
-        val seller: String,
-        val productId: String? = null,
-    ) : SalesUiEvent
-    data class SaveEditedSale(
-        val id: String,
-        val productName: String,
-        val category: String,
-        val quantity: Int,
-        val unitPrice: Double,
-        val discount: Double,
-        val seller: String,
-        val productId: String? = null,
-    ) : SalesUiEvent
     data class DeleteSale(val saleId: String) : SalesUiEvent
 }
 

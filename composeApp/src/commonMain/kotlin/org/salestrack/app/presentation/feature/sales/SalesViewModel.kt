@@ -19,9 +19,6 @@ import org.salestrack.app.domain.model.Category
 class SalesViewModel(
     dispatcherProvider: DispatcherProvider,
     private val repository: SaleRepository,
-    private val inventoryRepository: InventoryRepository,
-    private val addSaleUseCase: AddSaleUseCase,
-    private val updateSaleUseCase: UpdateSaleUseCase,
     private val deleteSaleUseCase: DeleteSaleUseCase,
     private val filterSalesUseCase: FilterSalesUseCase,
     private val observeCategoriesUseCase: ObserveCategoriesUseCase? = null,
@@ -35,7 +32,6 @@ class SalesViewModel(
 
     init {
         observeSales()
-        observeInventory()
         observeCategories()
     }
 
@@ -49,11 +45,7 @@ class SalesViewModel(
                 setState { it.copy(selectedCategory = event.value) }
                 applyFilters()
             }
-            is SalesUiEvent.ToggleAddDialog -> setState { it.copy(isAddDialogVisible = event.visible) }
             is SalesUiEvent.ShowDetail -> setState { it.copy(detailSale = event.sale) }
-            is SalesUiEvent.StartEdit -> setState { it.copy(editingSale = event.sale) }
-            is SalesUiEvent.SaveNewSale -> saveNewSale(event)
-            is SalesUiEvent.SaveEditedSale -> saveEditedSale(event)
             is SalesUiEvent.DeleteSale -> deleteSale(event.saleId)
             SalesUiEvent.Refresh -> applyFilters()
         }
@@ -79,13 +71,7 @@ class SalesViewModel(
         }
     }
 
-    private fun observeInventory() {
-        scope.launch {
-            inventoryRepository.observeProducts().collect { products ->
-                setState { it.copy(inventoryProducts = products) }
-            }
-        }
-    }
+
 
     private fun applyFilters() {
         val current = state.value
@@ -97,61 +83,7 @@ class SalesViewModel(
         setState { it.copy(sales = filtered, errorMessage = null) }
     }
 
-    private fun saveNewSale(event: SalesUiEvent.SaveNewSale) {
-        scope.launch {
-            setState { it.copy(isSaving = true, errorMessage = null) }
-            delay(1200) // Demora de animación premium para simular guardado en base de datos
-            val result = addSaleUseCase(
-                NewSaleInput(
-                    productName = event.productName,
-                    category = event.category,
-                    quantity = event.quantity,
-                    unitPrice = event.unitPrice,
-                    discount = event.discount,
-                    sellerName = event.seller,
-                    productId = event.productId,
-                ),
-            )
-            when (result) {
-                is AppResult.Success -> {
-                    setState { it.copy(isSaving = false, isAddDialogVisible = false) }
-                    emitEffect(SalesUiEffect.ShowMessage("Venta creada"))
-                }
-                is AppResult.Failure -> {
-                    setState { it.copy(isSaving = false, errorMessage = result.error.message ?: "Error al crear venta") }
-                }
-            }
-        }
-    }
 
-    private fun saveEditedSale(event: SalesUiEvent.SaveEditedSale) {
-        scope.launch {
-            setState { it.copy(isSaving = true, errorMessage = null) }
-            delay(1200) // Demora de animación premium para simular guardado en base de datos
-            val result = updateSaleUseCase(
-                Sale(
-                    id = event.id,
-                    productName = event.productName,
-                    category = event.category,
-                    quantity = event.quantity,
-                    unitPrice = event.unitPrice,
-                    discount = event.discount,
-                    sellerName = event.seller,
-                    productId = event.productId,
-                    createdAtMillis = latestSales.firstOrNull { it.id == event.id }?.createdAtMillis ?: 0L,
-                ),
-            )
-            when (result) {
-                is AppResult.Success -> {
-                    setState { it.copy(isSaving = false, editingSale = null) }
-                    emitEffect(SalesUiEffect.ShowMessage("Venta actualizada"))
-                }
-                is AppResult.Failure -> {
-                    setState { it.copy(isSaving = false, errorMessage = result.error.message ?: "Error al editar venta") }
-                }
-            }
-        }
-    }
 
     private fun deleteSale(saleId: String) {
         scope.launch {

@@ -68,13 +68,19 @@ object SampleDataGenerator {
         val discount = if (Random.nextFloat() > 0.8) (product.unitPrice * qty * 0.1) else 0.0
         
         return NewSaleInput(
-            productName = product.name,
-            category = product.category,
-            quantity = qty,
-            unitPrice = product.unitPrice,
-            discount = discount,
+            items = listOf(
+                org.salestrack.app.domain.model.SaleItem(
+                    productId = product.id,
+                    productName = product.name,
+                    category = product.category,
+                    quantity = qty,
+                    unitPrice = product.unitPrice,
+                    discount = discount
+                )
+            ),
+            paymentMethod = org.salestrack.app.domain.model.PaymentMethod.CASH,
+            globalDiscount = 0.0,
             sellerName = sellers.random(),
-            productId = product.id,
             createdAtMillis = timestamp
         )
     }

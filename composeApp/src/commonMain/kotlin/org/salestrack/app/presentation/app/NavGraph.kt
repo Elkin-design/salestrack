@@ -104,6 +104,7 @@ enum class AppDestination {
     Login,
     Dashboard,
     Sales,
+    Pos,
     Inventory,
     Reports,
     Settings,
@@ -185,7 +186,16 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         modifier = screenModifier
                     )
                 }
-                AppDestination.Sales -> SalesRoute(container = container, modifier = screenModifier)
+                AppDestination.Sales -> SalesRoute(
+                    container = container, 
+                    onNavigateToPos = { currentDestination = AppDestination.Pos },
+                    modifier = screenModifier
+                )
+                AppDestination.Pos -> org.salestrack.app.presentation.feature.sales.PosRoute(
+                    container = container,
+                    onNavigateBack = { currentDestination = AppDestination.Sales },
+                    modifier = screenModifier
+                )
                 AppDestination.Inventory -> InventoryRoute(container = container, modifier = screenModifier)
                 AppDestination.Reports -> ReportsRoute(
                     container = container, 

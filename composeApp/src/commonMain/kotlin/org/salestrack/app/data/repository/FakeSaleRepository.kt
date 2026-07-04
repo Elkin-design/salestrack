@@ -16,16 +16,21 @@ class FakeSaleRepository(
     override fun observeSales(): Flow<List<Sale>> = dataSource.observe()
 
     override suspend fun addSale(input: NewSaleInput): AppResult<Sale> {
+        val firstItem = input.items.firstOrNull() ?: return AppResult.Failure(IllegalArgumentException("El carrito está vacío"))
         val sale = Sale(
             id = "S-${timeProvider.nowMillis()}",
-            productName = input.productName,
-            category = input.category,
-            quantity = input.quantity,
-            unitPrice = input.unitPrice,
-            discount = input.discount,
+            items = input.items,
+            paymentMethod = input.paymentMethod,
+            globalDiscount = input.globalDiscount,
             createdAtMillis = timeProvider.nowMillis(),
             sellerName = input.sellerName,
-            productId = input.productId,
+            // Retrocompatibilidad con datos antiguos
+            productName = firstItem.productName,
+            category = firstItem.category,
+            quantity = firstItem.quantity,
+            unitPrice = firstItem.unitPrice,
+            discount = firstItem.discount,
+            productId = firstItem.productId,
         )
         dataSource.replaceAll(dataSource.getCurrent() + sale)
         return AppResult.Success(sale)
