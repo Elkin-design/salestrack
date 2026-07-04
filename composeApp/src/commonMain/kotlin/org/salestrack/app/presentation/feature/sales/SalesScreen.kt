@@ -324,8 +324,9 @@ private fun SaleItem(
                 modifier = Modifier.size(56.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
+                    val firstLetter = if (sale.items.isNotEmpty()) sale.items.first().productName.take(1).uppercase() else sale.productName.take(1).uppercase()
                     Text(
-                        sale.productName.take(1).uppercase(),
+                        firstLetter,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -334,16 +335,22 @@ private fun SaleItem(
             }
 
             Column(modifier = Modifier.weight(1f)) {
+                val title = if (sale.items.isNotEmpty()) {
+                    if (sale.items.size == 1) sale.items.first().productName else "Venta de ${sale.items.size} productos"
+                } else sale.productName
                 Text(
-                    text = sale.productName,
+                    text = title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                val categoryDisplay = if (sale.items.isNotEmpty()) {
+                    if (sale.items.size == 1) sale.items.first().category else "Varias categorías"
+                } else sale.category
                 Text(
-                    text = sale.category,
+                    text = categoryDisplay,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -371,8 +378,9 @@ private fun SaleItem(
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.primary
                 )
+                val totalQty = if (sale.items.isNotEmpty()) sale.items.sumOf { it.quantity } else sale.quantity
                 Text(
-                    text = "${sale.quantity} und",
+                    text = "$totalQty und",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -462,12 +470,38 @@ private fun SaleDetailDialog(sale: Sale, onDismiss: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                DetailRow(label = "Producto", value = sale.productName)
-                DetailRow(label = "Categoría", value = sale.category)
-                DetailRow(label = "Cantidad", value = sale.quantity.toString())
-                DetailRow(label = "Precio unitario", value = "$${formatMoney(sale.unitPrice)}")
-                DetailRow(label = "Descuento", value = "$${formatMoney(sale.discount)}")
+                if (sale.items.isNotEmpty()) {
+                    Text("Productos:", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    sale.items.forEach { item ->
+                        Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(item.productName, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                Text("$${formatMoney(item.netTotal)}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("${item.quantity} x $${formatMoney(item.unitPrice)}", style = MaterialTheme.typography.bodySmall)
+                                if (item.discount > 0) {
+                                    Text("- $${formatMoney(item.discount)}", style = MaterialTheme.typography.bodySmall, color = androidx.compose.ui.graphics.Color(0xFFE53935))
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    DetailRow(label = "Producto", value = sale.productName)
+                    DetailRow(label = "Categoría", value = sale.category)
+                    DetailRow(label = "Cantidad", value = sale.quantity.toString())
+                    DetailRow(label = "Precio unitario", value = "$${formatMoney(sale.unitPrice)}")
+                    DetailRow(label = "Descuento", value = "$${formatMoney(sale.discount)}")
+                }
+                
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                if (sale.globalDiscount > 0) {
+                    DetailRow(
+                        label = "Descuento global", 
+                        value = "-$${formatMoney(sale.globalDiscount)}", 
+                        valueStyle = MaterialTheme.typography.bodyMedium.copy(color = androidx.compose.ui.graphics.Color(0xFFE53935))
+                    )
+                }
                 DetailRow(
                     label = "Total neto",
                     value = "$${formatMoney(sale.netTotal)}",
@@ -476,6 +510,13 @@ private fun SaleDetailDialog(sale: Sale, onDismiss: () -> Unit) {
                         color = MaterialTheme.colorScheme.primary
                     )
                 )
+                
+                val paymentMethodDisplay = when(sale.paymentMethod) {
+                    org.salestrack.app.domain.model.PaymentMethod.CASH -> "Efectivo"
+                    org.salestrack.app.domain.model.PaymentMethod.CARD -> "Tarjeta"
+                    org.salestrack.app.domain.model.PaymentMethod.DIGITAL_WALLET -> "Transferencia"
+                }
+                DetailRow(label = "Método de pago", value = paymentMethodDisplay)
                 DetailRow(label = "Vendedor", value = sale.sellerName)
             }
         },
