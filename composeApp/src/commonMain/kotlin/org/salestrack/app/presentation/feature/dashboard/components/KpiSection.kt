@@ -82,10 +82,10 @@ fun KpiSection(
             )
         }
     } else {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 KpiCard(
                     title = "Ventas hoy",
@@ -108,7 +108,7 @@ fun KpiSection(
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 KpiCard(
                     title = "Producto Top",
@@ -145,12 +145,12 @@ private fun KpiCard(
 ) {
     ElevatedCard(
         modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(12.dp),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(12.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -183,7 +183,7 @@ private fun KpiCard(
                 }
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             
             Text(
                 text = value.takeIf { it.isNotBlank() } ?: "-",
@@ -194,7 +194,7 @@ private fun KpiCard(
                 overflow = TextOverflow.Ellipsis,
             )
             
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
             
             Text(
                 text = subtitle,

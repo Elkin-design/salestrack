@@ -9,32 +9,32 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF4F46E5), // Indigo premium
+    primary = Color(0xFF1E40AF), // Blue data
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFEEF2F6),
-    onPrimaryContainer = Color(0xFF1E293B),
-    secondary = Color(0xFF0D9488), // Teal premium
+    primaryContainer = Color(0xFFDBEAFE), // Border color
+    onPrimaryContainer = Color(0xFF1E3A8A),
+    secondary = Color(0xFFD97706), // Amber CTA
     onSecondary = Color.White,
-    background = Color(0xFFF8FAFC), // Beautiful soft background
-    onBackground = Color(0xFF0F172A),
+    background = Color(0xFFF8FAFC),
+    onBackground = Color(0xFF1E3A8A),
     surface = Color(0xFFFFFFFF),
-    onSurface = Color(0xFF0F172A),
-    error = Color(0xFFEF4444),
+    onSurface = Color(0xFF1E3A8A),
+    error = Color(0xFFDC2626),
     onError = Color.White,
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFF818CF8), // Indigo glow
-    onPrimary = Color(0xFF0F172A),
-    primaryContainer = Color(0xFF1E293B),
-    onPrimaryContainer = Color(0xFFF1F5F9),
-    secondary = Color(0xFF2DD4BF), // Teal glow
-    onSecondary = Color(0xFF0F172A),
-    background = Color(0xFF090D16), // Deep midnight space
-    onBackground = Color(0xFFF1F5F9),
-    surface = Color(0xFF0F172A),
-    onSurface = Color(0xFFF1F5F9),
-    error = Color(0xFFF87171),
+    primary = Color(0xFF3B82F6), // Blue secondary for dark mode
+    onPrimary = Color(0xFFF8FAFC),
+    primaryContainer = Color(0xFF1E40AF),
+    onPrimaryContainer = Color(0xFFDBEAFE),
+    secondary = Color(0xFFD97706), // Amber CTA
+    onSecondary = Color(0xFFF8FAFC),
+    background = Color(0xFF0F172A), // Dark space
+    onBackground = Color(0xFFE9EEF6),
+    surface = Color(0xFF1E293B),
+    onSurface = Color(0xFFE9EEF6),
+    error = Color(0xFFDC2626),
     onError = Color(0xFF0F172A),
 )
 

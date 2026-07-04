@@ -129,14 +129,13 @@ fun DashboardScreen(
             )
         }
 
-        // Main Content
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
             DashboardHeader(
                 transactionCountToday = uiState.summary.transactionCountToday,
                 isLoading = uiState.isLoading,
@@ -243,7 +242,7 @@ private fun DashboardContent(
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
                 KpiSection(
@@ -271,7 +270,7 @@ private fun DashboardContent(
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         WeeklyTrendCard(
                             trend = uiState.weeklyTrend,
