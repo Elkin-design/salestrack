@@ -81,11 +81,16 @@ class PosViewModel(
     }
 
     private fun addToCart(product: Product) {
+        if (product.stock <= 0) return
         val currentCart = state.value.cart.toMutableList()
         val existingIndex = currentCart.indexOfFirst { it.productId == product.id }
         
         if (existingIndex >= 0) {
             val existingItem = currentCart[existingIndex]
+            if (existingItem.quantity >= product.stock) {
+                emitEffect(PosUiEffect.ShowMessage("No puedes exceder el stock disponible de ${product.stock}"))
+                return
+            }
             currentCart[existingIndex] = existingItem.copy(quantity = existingItem.quantity + 1)
         } else {
             currentCart.add(
@@ -104,6 +109,11 @@ class PosViewModel(
     private fun updateQuantity(productId: String, quantity: Int) {
         if (quantity <= 0) {
             removeFromCart(productId)
+            return
+        }
+        val product = state.value.inventoryProducts.find { it.id == productId }
+        if (product != null && quantity > product.stock) {
+            emitEffect(PosUiEffect.ShowMessage("No puedes exceder el stock disponible de ${product.stock}"))
             return
         }
         val currentCart = state.value.cart.toMutableList()

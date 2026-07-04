@@ -242,7 +242,10 @@ fun ProductPosCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onAdd),
+            .clickable(
+                enabled = product.stock > 0 && quantityInCart < product.stock,
+                onClick = onAdd
+            ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -290,6 +293,12 @@ fun ProductPosCard(
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.ExtraBold
                 )
+                Text(
+                    text = "${product.stock} und",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (product.stock > 0) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             if (quantityInCart > 0) {
@@ -315,23 +324,32 @@ fun ProductPosCard(
                     )
                     Surface(
                         shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = if (quantityInCart < product.stock) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier
                             .size(32.dp)
-                            .clickable(onClick = onAdd)
+                            .clickable(
+                                enabled = quantityInCart < product.stock,
+                                onClick = onAdd
+                            )
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Más", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.padding(4.dp))
+                        Icon(Icons.Default.Add, contentDescription = "Más", tint = if (quantityInCart < product.stock) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(4.dp))
                     }
                 }
             } else {
                 Spacer(modifier = Modifier.height(8.dp))
+                val hasStock = product.stock > 0
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                    color = if (hasStock) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier.fillMaxWidth().height(32.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text("AGREGAR", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Text(
+                            if (hasStock) "AGREGAR" else "AGOTADO", 
+                            style = MaterialTheme.typography.labelMedium, 
+                            fontWeight = FontWeight.Bold, 
+                            color = if (hasStock) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
