@@ -160,6 +160,7 @@ class InventoryViewModel(
                         category = event.category,
                         initialStock = event.initialStock,
                         minimumStock = event.minimumStock,
+                        discount = event.discount,
                     ),
                 )
             ) {
@@ -194,6 +195,7 @@ class InventoryViewModel(
                         category = event.category,
                         stock = event.stock,
                         minimumStock = event.minimumStock,
+                        discount = event.discount,
                     ),
                 )
             ) {

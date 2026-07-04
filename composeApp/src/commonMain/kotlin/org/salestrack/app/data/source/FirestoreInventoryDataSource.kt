@@ -56,6 +56,7 @@ class FirestoreInventoryDataSource(
                 category = input.category.trim(),
                 stock = input.initialStock,
                 minimumStock = input.minimumStock,
+                discount = input.discount,
             )
             productsRef().document(id).set(product)
             

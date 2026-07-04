@@ -41,6 +41,8 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Percent
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -294,7 +296,7 @@ fun InventoryScreen(
             errorMessage = uiState.errorMessage,
             onDismiss = { onEvent(InventoryUiEvent.ToggleAddDialog(false)) },
             categoryOptions = uiState.availableCategories,
-            onSave = { name, description, price, unit, barcode, category, stock, minimum ->
+            onSave = { name, description, price, unit, barcode, category, stock, minimum, discount ->
                 onEvent(
                     InventoryUiEvent.SaveNewProduct(
                         name = name,
@@ -305,6 +307,7 @@ fun InventoryScreen(
                         category = category,
                         initialStock = stock,
                         minimumStock = minimum,
+                        discount = discount,
                     ),
                 )
             },
@@ -318,7 +321,7 @@ fun InventoryScreen(
             errorMessage = uiState.errorMessage,
             onDismiss = { onEvent(InventoryUiEvent.StartEdit(null)) },
             categoryOptions = uiState.availableCategories,
-            onSave = { name, description, price, unit, barcode, category, stock, minimum ->
+            onSave = { name, description, price, unit, barcode, category, stock, minimum, discount ->
                 onEvent(
                     InventoryUiEvent.SaveEditedProduct(
                         id = product.id,
@@ -330,6 +333,7 @@ fun InventoryScreen(
                         category = category,
                         stock = stock,
                         minimumStock = minimum,
+                        discount = discount,
                     ),
                 )
             },
@@ -580,12 +584,33 @@ private fun ProductCard(
             }
 
             Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "$${formatMoney(product.unitPrice)}",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                if (product.discount != null && product.discount > 0.0) {
+                    Text(
+                        text = "-${product.discount}%",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold
+                    )
+                    val finalPrice = product.unitPrice * (1 - product.discount / 100.0)
+                    Text(
+                        text = "$${formatMoney(finalPrice)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "$${formatMoney(product.unitPrice)}",
+                        style = MaterialTheme.typography.bodySmall.copy(textDecoration = TextDecoration.LineThrough),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    Text(
+                        text = "$${formatMoney(product.unitPrice)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
                 Row {
                     IconButton(onClick = onAdjust, modifier = Modifier.size(32.dp)) {
                         Icon(Icons.Default.Build, contentDescription = "Ajustar", tint = MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
@@ -608,7 +633,7 @@ private fun ProductFormDialog(
     title: String,
     errorMessage: String? = null,
     onDismiss: () -> Unit,
-    onSave: (String, String, Double, String, String?, String, Int, Int) -> Unit,
+    onSave: (String, String, Double, String, String?, String, Int, Int, Double?) -> Unit,
     initialProduct: Product? = null,
     categoryOptions: List<String> = emptyList(),
 ) {
@@ -625,6 +650,9 @@ private fun ProductFormDialog(
     }
     var minimum by remember(initialProduct) { 
         mutableStateOf(if (initialProduct == null) "" else initialProduct.minimumStock.toString()) 
+    }
+    var discount by remember(initialProduct) {
+        mutableStateOf(if (initialProduct?.discount == null) "" else initialProduct.discount.toString())
     }
 
     var expandedUnit by remember { mutableStateOf(false) }
@@ -810,6 +838,27 @@ private fun ProductFormDialog(
                             }
                         }
                     }
+
+                    OutlinedTextField(
+                        value = discount,
+                        onValueChange = { input ->
+                            val filtered = input.filter { it.isDigit() || it == '.' }
+                            discount = if (filtered.startsWith("0") && filtered.length > 1 && !filtered.startsWith("0.")) {
+                                filtered.removePrefix("0")
+                            } else {
+                                filtered
+                            }
+                        },
+                        label = { Text("Descuento (%)") },
+                        placeholder = { Text("Opcional") },
+                        leadingIcon = { Icon(Icons.Default.Percent, contentDescription = null) },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = premiumTextFieldColors,
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        singleLine = true,
+                        enabled = !isSaving
+                    )
                     
                     ExposedDropdownMenuBox(
                         expanded = expandedCategory && !isSaving,
@@ -922,6 +971,7 @@ private fun ProductFormDialog(
                                 category,
                                 stock.toIntOrNull() ?: 0,
                                 minimum.toIntOrNull() ?: 0,
+                                discount.toDoubleOrNull()
                             )
                         },
                         shape = RoundedCornerShape(12.dp),

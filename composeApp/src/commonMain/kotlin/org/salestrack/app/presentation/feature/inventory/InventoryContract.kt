@@ -64,6 +64,7 @@ sealed interface InventoryUiEvent : UiEvent {
         val category: String,
         val initialStock: Int,
         val minimumStock: Int,
+        val discount: Double?,
     ) : InventoryUiEvent
 
     data class SaveEditedProduct(
@@ -76,6 +77,7 @@ sealed interface InventoryUiEvent : UiEvent {
         val category: String,
         val stock: Int,
         val minimumStock: Int,
+        val discount: Double?,
     ) : InventoryUiEvent
 
     data class ApplyStockAdjustment(

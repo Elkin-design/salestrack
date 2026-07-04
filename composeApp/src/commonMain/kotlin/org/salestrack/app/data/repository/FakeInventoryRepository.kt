@@ -47,6 +47,7 @@ class FakeInventoryRepository(
             category = input.category,
             stock = input.initialStock,
             minimumStock = input.minimumStock,
+            discount = input.discount,
         )
 
         dataSource.replaceProducts(currentProducts + product)

@@ -91,8 +91,11 @@ class PosViewModel(
                 emitEffect(PosUiEffect.ShowMessage("No puedes exceder el stock disponible de ${product.stock}"))
                 return
             }
-            currentCart[existingIndex] = existingItem.copy(quantity = existingItem.quantity + 1)
+            val newQuantity = existingItem.quantity + 1
+            val discountAmount = newQuantity * product.unitPrice * ((product.discount ?: 0.0) / 100.0)
+            currentCart[existingIndex] = existingItem.copy(quantity = newQuantity, discount = discountAmount)
         } else {
+            val discountAmount = product.unitPrice * ((product.discount ?: 0.0) / 100.0)
             currentCart.add(
                 SaleItem(
                     productId = product.id,
@@ -100,6 +103,7 @@ class PosViewModel(
                     category = product.category,
                     quantity = 1,
                     unitPrice = product.unitPrice,
+                    discount = discountAmount
                 )
             )
         }
@@ -119,7 +123,8 @@ class PosViewModel(
         val currentCart = state.value.cart.toMutableList()
         val index = currentCart.indexOfFirst { it.productId == productId }
         if (index >= 0) {
-            currentCart[index] = currentCart[index].copy(quantity = quantity)
+            val discountAmount = if (product != null) quantity * product.unitPrice * ((product.discount ?: 0.0) / 100.0) else 0.0
+            currentCart[index] = currentCart[index].copy(quantity = quantity, discount = discountAmount)
             setState { it.copy(cart = currentCart) }
         }
     }

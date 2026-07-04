@@ -23,6 +23,7 @@ data class Product(
     val stock: Int,
     val minimumStock: Int,
     val isActive: Boolean = true,
+    val discount: Double? = null,
 )
 
 data class NewProductInput(
@@ -34,6 +35,7 @@ data class NewProductInput(
     val category: String,
     val initialStock: Int,
     val minimumStock: Int,
+    val discount: Double? = null,
 )
 
 @Serializable

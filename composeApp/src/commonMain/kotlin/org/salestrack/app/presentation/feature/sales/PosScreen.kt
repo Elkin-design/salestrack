@@ -62,6 +62,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextDecoration
 import org.salestrack.app.core.utils.formatMoney
 import org.salestrack.app.domain.model.Product
 import org.salestrack.app.presentation.app.AppContainer
@@ -287,12 +288,35 @@ fun ProductPosCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "$${formatMoney(product.unitPrice)}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.ExtraBold
-                )
+                if (product.discount != null && product.discount > 0.0) {
+                    Column {
+                        Text(
+                            text = "-${product.discount}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold
+                        )
+                        val finalPrice = product.unitPrice * (1 - product.discount / 100.0)
+                        Text(
+                            text = "$${formatMoney(finalPrice)}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Text(
+                            text = "$${formatMoney(product.unitPrice)}",
+                            style = MaterialTheme.typography.bodySmall.copy(textDecoration = TextDecoration.LineThrough),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "$${formatMoney(product.unitPrice)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
                 Text(
                     text = "${product.stock} und",
                     style = MaterialTheme.typography.bodySmall,

@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextDecoration
 import org.salestrack.app.core.utils.formatMoney
 import org.salestrack.app.domain.model.PaymentMethod
 
@@ -160,6 +161,19 @@ fun CheckoutDialog(
                         }
                         
                         Column(horizontalAlignment = Alignment.End) {
+                            if (item.discount > 0.0) {
+                                Text(
+                                    "Ahorras: $${formatMoney(item.discount)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    "$${formatMoney(item.grossTotal)}",
+                                    style = MaterialTheme.typography.labelSmall.copy(textDecoration = TextDecoration.LineThrough),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                             Text(
                                 "$${formatMoney(item.netTotal)}",
                                 fontWeight = FontWeight.ExtraBold,
