@@ -178,18 +178,18 @@ fun CheckoutDialog(
                             }
                         }
                     }
-                }
-            }
+                } // End of items block
+            
+                item {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            HorizontalDivider()
-
-            // Payment and Checkout section
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+                // Payment and Checkout section
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                 Text("Método de Pago", fontWeight = FontWeight.Bold)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -293,10 +293,12 @@ fun CheckoutDialog(
                         Text("Confirmar Venta", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                     }
                 }
-            }
-        }
-    }
-}
+                    } // End of Column (188)
+                } // End of item
+            } // End of LazyColumn
+        } // End of Column inside ModalBottomSheet
+    } // End of ModalBottomSheet
+} // End of CheckoutDialog
 
 @Composable
 fun PaymentChip(
