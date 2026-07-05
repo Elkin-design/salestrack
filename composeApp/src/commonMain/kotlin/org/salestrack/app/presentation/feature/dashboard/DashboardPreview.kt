@@ -232,5 +232,7 @@ private fun createPreviewContainer(): AppContainer {
         getAuthStateUseCase = GetAuthStateUseCase(authRepo),
         signOutUseCase = SignOutUseCase(authRepo),
         updateDisplayNameUseCase = UpdateDisplayNameUseCase(authRepo),
+        remoteConfigRepository = org.salestrack.app.data.repository.FakeRemoteConfigRepository(),
+        appViewModel = org.salestrack.app.presentation.app.AppViewModel(org.salestrack.app.data.repository.FakeRemoteConfigRepository())
     )
 }

@@ -13,6 +13,7 @@ Pod::Spec.new do |spec|
     spec.dependency 'FirebaseCore'
     spec.dependency 'FirebaseCrashlytics'
     spec.dependency 'FirebaseFirestore'
+    spec.dependency 'FirebaseRemoteConfig'
     if !Dir.exist?('build/cocoapods/framework/ComposeApp.framework') || Dir.empty?('build/cocoapods/framework/ComposeApp.framework')
         raise "
         Kotlin framework 'ComposeApp' doesn't exist yet, so a proper Xcode project can't be generated.

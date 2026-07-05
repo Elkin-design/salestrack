@@ -159,6 +159,12 @@ fun appModule(config: EnvironmentConfig) = module {
             googleSignInNavigator = platformGoogleSignInNavigator
         )
     }
+    
+    single {
+        org.salestrack.app.presentation.app.AppViewModel(
+            remoteConfigRepository = get()
+        )
+    }
 
     single { AddSaleUseCase(get(), get(), get()) }
     single { UpdateSaleUseCase(get()) }
@@ -253,6 +259,8 @@ fun appModule(config: EnvironmentConfig) = module {
             getAuthStateUseCase = get(),
             signOutUseCase = get(),
             updateDisplayNameUseCase = get(),
+            remoteConfigRepository = get(),
+            appViewModel = get(),
         )
     }
 }

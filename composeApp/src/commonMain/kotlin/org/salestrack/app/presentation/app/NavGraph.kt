@@ -110,6 +110,7 @@ enum class AppDestination {
     Settings,
     Export,
     Print,
+    ForceUpdate,
 }
 
 @Composable
@@ -118,14 +119,18 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     val authViewModel = container.authViewModel
     val authUiState by authViewModel.uiState.collectAsState()
     
+    val appViewModel = container.appViewModel
+    val appUiState by appViewModel.uiState.collectAsState()
+
     var currentDestination by remember {
         mutableStateOf(if (authUiState.isAuthenticated) AppDestination.Dashboard else AppDestination.Login)
     }
     var initialReportPeriod by remember { mutableStateOf(ReportPeriod.Daily) }
 
-    // Manejo de la navegación obligatoria basada en la autenticación
-    LaunchedEffect(authUiState.isAuthenticated) {
-        if (!authUiState.isAuthenticated) {
+    LaunchedEffect(authUiState.isAuthenticated, appUiState.forceUpdateRequired) {
+        if (appUiState.forceUpdateRequired) {
+            currentDestination = AppDestination.ForceUpdate
+        } else if (!authUiState.isAuthenticated) {
             currentDestination = AppDestination.Login
         } else if (currentDestination == AppDestination.Login) {
             currentDestination = AppDestination.Dashboard
@@ -214,10 +219,13 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     onBack = { currentDestination = AppDestination.Reports },
                     modifier = screenModifier,
                 )
+                AppDestination.ForceUpdate -> ForceUpdateScreen(
+                    modifier = screenModifier
+                )
             }
         }
 
-        if (currentDestination != AppDestination.Login) {
+        if (currentDestination != AppDestination.Login && currentDestination != AppDestination.ForceUpdate) {
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
                 tonalElevation = 0.dp,

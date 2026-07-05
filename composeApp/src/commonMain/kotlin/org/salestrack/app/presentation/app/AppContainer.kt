@@ -98,5 +98,7 @@ class AppContainer(
     val getAuthStateUseCase: GetAuthStateUseCase,
     val signOutUseCase: SignOutUseCase,
     val updateDisplayNameUseCase: UpdateDisplayNameUseCase,
+    val remoteConfigRepository: org.salestrack.app.domain.repository.RemoteConfigRepository,
+    val appViewModel: AppViewModel,
 )
 
