@@ -68,9 +68,12 @@ class JvmFirebaseInitializer : FirebaseInitializer {
      * Estos valores provienen de google-services.json / Firebase Console.
      */
     private fun initFirebaseApp() {
+        val firebaseApiKey = System.getenv("FIREBASE_API_KEY")
+            ?: throw IllegalStateException("FIREBASE_API_KEY environment variable is required for JVM Firebase initialization")
+
         val options = FirebaseOptions(
-            // Desde androidApp/google-services.json → api_key
-            apiKey = "AIzaSyAsBQmiPA5g62bje_BBRQSqFJRKjR6XK8g",
+            // Configurado via variable de entorno para evitar exponer claves en el repositorio
+            apiKey = firebaseApiKey,
             // Desde androidApp/google-services.json → mobilesdk_app_id
             applicationId = "1:402319710438:android:2d1c49ba433d86055e8327",
             // Desde androidApp/google-services.json → project_id
