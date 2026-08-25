@@ -29,3 +29,5 @@ google-services.json
 composeApp/google-services.json
 androidApp/google-services.json
 androidApp/release/
+composeApp/bin/
+composeApp/src/jvmMain/resources/serviceAccount.json
